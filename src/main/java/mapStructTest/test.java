@@ -6,6 +6,8 @@ import extense.Person;
 import java.util.Date;
 
 /**
+ * mapStruct测试
+ *
  * @author TangHaoKai
  * @version V1.0 2023-11-01 15:14
  **/
