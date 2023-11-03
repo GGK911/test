@@ -35,8 +35,10 @@ public class test {
                 "    \"coordinate\":\"200,350\"\n" +
                 "}";
         fastJson(reqHead, reqBody);
-        // 创建一个数组
+
+        // 创建一个长度为19的数组
         
+
     }
 
     @SneakyThrows

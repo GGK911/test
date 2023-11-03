@@ -18,12 +18,12 @@ import java.util.Date;
  * @author TangHaoKai
  * @version V1.0 2023-11-01 10:55
  **/
-public class test {
+public class certAnalysisTest {
     public static void main(String[] args) {
         JSONObject jsonObject = new JSONObject();
         File certFile = new File("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\certTest\\socialnetwork.cer");
-        CertificateFactory cf = null;
-        X509Certificate cert = null;
+        CertificateFactory cf;
+        X509Certificate cert;
         try {
             cf = CertificateFactory.getInstance("X.509");
             FileInputStream in = new FileInputStream(certFile);
