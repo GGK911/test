@@ -24,12 +24,12 @@ public class pfxCertAnalysisTest {
         String cert1 = "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\certTest\\socialnetwork.pfx";
         String cert2 = "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\certTest\\沙箱证书.pfx";
 
-        // Map<String, String> certMap = PFXUtil.decode(new File(cert2), "123456");
-        // System.out.println(JSONUtil.parseObj(certMap).toStringPretty());
+        Map<String, String> certMap = PFXUtil.decode(new File(cert2), "123456");
+        System.out.println(JSONUtil.parseObj(certMap).toStringPretty());
 
 
         PKCS12KeyStore store = new PKCS12KeyStore();
-        store.engineLoad(new FileInputStream(cert2), "123456".toCharArray());
+        store.engineLoad(new FileInputStream(cert1), "123456".toCharArray());
         Enumeration<String> enumeration = store.engineAliases();
         String keyAlias = enumeration.nextElement();
         Key key = store.engineGetKey(keyAlias, "123456".toCharArray());
