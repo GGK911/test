@@ -302,7 +302,7 @@ public class CertUtils {
      */
     public static ResultUtils signRSACert(byte[] certBytes, String originalText, String passWord) {
         ResultUtils result = new ResultUtils();
-        Map<String, Object> resultMap = new HashMap<String, Object>();
+        Map<String, Object> resultMap = new HashMap<>();
         String signData;
         try {
             signData = RSASignUtil.sign(originalText, new ByteArrayInputStream(certBytes), passWord);

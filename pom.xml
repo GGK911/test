@@ -135,7 +135,6 @@
             <artifactId>log4j-core</artifactId>
             <version>2.17.1</version>
         </dependency>
-
         <!-- word转pdf -->
         <dependency>
             <groupId>com.aspose</groupId>
@@ -145,7 +144,6 @@
             <scope>system</scope>
             <systemPath>${project.basedir}\src\main\resources\jar\aspose-words-22.7-jdk16.jar</systemPath>
         </dependency>
-
         <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on -->
         <dependency>
             <groupId>org.bouncycastle</groupId>

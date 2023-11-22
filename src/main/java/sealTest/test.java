@@ -17,7 +17,8 @@ import java.io.IOException;
 public class test {
     public static void main(String[] args) {
         // byte[] bytes = SealUtil.buildPersonSeal("测试", 18, 6, 0, 0, 0);
-        // FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\Desktop\\test.png");
+        byte[] bytes = SealUtil.buildSeal("成都华西妇幼医院");
+        FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\Desktop\\test.png");
 
         // BufferedImage buffer = drawThreeVerticalStringTest("测", "试", "章");
         // BufferedImage buffer = drawFiveVerticalTwoLeftStringTest("测", "试", "章", "五", "字");
@@ -26,15 +27,15 @@ public class test {
         // BufferedImage buffer = drawRectangleStringTest(drawFiveVerticalTwoLeftNotIsometricFontStringTest("测", "试", "章", "五", "字"));
         // BufferedImage buffer = drawOneStringStretchTest(drawOneStringHeight100Test("测"), 180, 100, 120);
         // BufferedImage buffer = drawRectangleStringTest(drawSixVerticalTwoRightIsometricFontStringTest("六", "字", "测", "试", "图", "章"));
-        BufferedImage buffer = drawRectangleStringTest(drawSixVerticalTwoRightIsometricFontStringTest("六", "字", "测", "试", "图", "章"));
-
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        try {
-            ImageIO.write(buffer, "png", outStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        FileUtil.writeBytes(outStream.toByteArray(), "C:\\Users\\ggk911\\Desktop\\IsometricSix.png");
+        // BufferedImage buffer = drawRectangleStringTest(drawSixVerticalTwoRightIsometricFontStringTest("六", "字", "测", "试", "图", "章"));
+        //
+        // ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        // try {
+        //     ImageIO.write(buffer, "png", outStream);
+        // } catch (IOException e) {
+        //     e.printStackTrace();
+        // }
+        // FileUtil.writeBytes(outStream.toByteArray(), "C:\\Users\\ggk911\\Desktop\\IsometricSix.png");
     }
 
     public static void drawStringTest() {

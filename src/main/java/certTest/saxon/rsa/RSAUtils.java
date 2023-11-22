@@ -7,8 +7,10 @@ import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.CRLDistPoint;
 import org.bouncycastle.asn1.x509.DistributionPoint;
 import org.bouncycastle.asn1.x509.DistributionPointName;
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -112,11 +114,11 @@ public class RSAUtils {
     }
 
     /**
-     * @param issuerStr
-     * @param subjectStr
-     * @param keyPair
+     * @param issuerStr      颁发机构信息
+     * @param subjectStr     使用者信息
+     * @param keyPair        密钥对
      * @param result
-     * @param certificateCRL
+     * @param certificateCRL 颁发地址
      * @param extensions
      * @return
      */
@@ -131,21 +133,22 @@ public class RSAUtils {
             Date notBefore = new Date();
 
             certExpire = 1L * certExpire * 24 * 60 * 60 * 1000;
-//			Calendar rightNow = Calendar.getInstance();
-//			rightNow.setTime(notBefore);
-//			// 日期加1年
-//			rightNow.add(Calendar.YEAR, 1);
-//			Date notAfter = rightNow.getTime();
+            // Calendar rightNow = Calendar.getInstance();
+            // rightNow.setTime(notBefore);
+            // // 日期加1年
+            // rightNow.add(Calendar.YEAR, 1);
+            // Date notAfter = rightNow.getTime();
             Date notAfter = new Date(System.currentTimeMillis() + certExpire);
             // 证书序列号
             BigInteger serial = BigInteger.probablePrime(256, new Random());
-            X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(
-                    new X500Name(issuerStr), serial, notBefore, notAfter, new X500Name(subjectStr), publicKey);
-            JcaContentSignerBuilder jBuilder = new JcaContentSignerBuilder("SHA1withRSA");//SHA256withRSA
+            X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(new X500Name(issuerStr), serial, notBefore, notAfter, new X500Name(subjectStr), publicKey);
+            // SHA256withRSA
+            JcaContentSignerBuilder jBuilder = new JcaContentSignerBuilder("SHA1withRSA");
             SecureRandom secureRandom = new SecureRandom();
             jBuilder.setSecureRandom(secureRandom);
+            // 私钥签名
             ContentSigner singer = jBuilder.setProvider(new BouncyCastleProvider()).build(privateKey);
-            // 分发点
+            // CRL分发点
             ASN1ObjectIdentifier cRLDistributionPoints = new ASN1ObjectIdentifier("2.5.29.31");
             GeneralName generalName = new GeneralName(GeneralName.uniformResourceIdentifier, certificateCRL);
             GeneralNames seneralNames = new GeneralNames(generalName);
@@ -158,9 +161,14 @@ public class RSAUtils {
             ASN1ObjectIdentifier keyUsage = new ASN1ObjectIdentifier("1.3.14.3.2.26");
             // | KeyUsage.nonRepudiation | KeyUsage.keyCertSign
             builder.addExtension(keyUsage, true, new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment));
-            // 基本限制 X509Extension.java
-            ASN1ObjectIdentifier basicConstraints = new ASN1ObjectIdentifier("2.5.29.19");
-            builder.addExtension(basicConstraints, true, new BasicConstraints(true));
+            if (false) {
+                // 基本限制 X509Extension.java
+                ASN1ObjectIdentifier basicConstraints = new ASN1ObjectIdentifier("2.5.29.19");
+                builder.addExtension(basicConstraints, true, new BasicConstraints(true));
+            } else {
+                // 时间戳
+                builder.addExtension(org.bouncycastle.asn1.x509.Extension.extendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeId.id_kp_timeStamping));
+            }
             // privKey:使用自己的私钥进行签名，CA证书
             if (extensions != null) {
                 for (Extension ext : extensions) {

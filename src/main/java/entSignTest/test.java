@@ -5,6 +5,8 @@ import cn.com.mcsca.pki.core.util.SignatureUtil;
 import cn.hutool.json.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import lombok.SneakyThrows;
+import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -23,22 +25,24 @@ public class test {
         Object reqHead = "{\n" +
                 "\t\t\"version\": \"1.0.0\",\n" +
                 "\t\t\"appId\": \"1217622160365867008\",\n" +
-                "\t\t\"reqTime\": \"20231022113900000\",\n" +
+                "\t\t\"reqTime\": \"20201222113900000\",\n" +
+                "                \"customerId\":\"\",\n" +
                 "\t\t\"productAppId\": \"\",\n" +
-                "\"customerId\":\"1028\",\n" +
-                "\t\t\"serialNo\": \"1028\"\n" +
-                "\t}";
-        Object reqBody = "{\n" +
-                "    \"userId\":\"1706510795195555840\",\n" +
-                "    \"smsCode\":\"175679\",\n" +
-                "    \"direction\":\"2\",\n" +
-                "    \"coordinate\":\"200,350\"\n" +
+                "\t\t\"serialNo\": \"1abc22\"\n" +
                 "}";
+        Object reqBody = "{ \"name\": \"唐好凯\",\n" +
+                " \"cardType\": \"01\", \n" +
+                "\"cardNo\": \"371724200206052210\",\n" +
+                " \"contactNo\": \"13983053455\", \n" +
+                "\"checkType\": \"11\", \n" +
+                " \"certAlg\": \"RSA\",\n" +
+                "\"certCycle\": \"1\",\n" +
+                "\"bankCardNo\": \"6217 5632 0002 5882 019\" \t}";
         fastJson(reqHead, reqBody);
 
         // 创建一个长度为19的数组
-        
-
+        byte[] decode = Hex.decode("3169301806092a864886f70d010903310b06092a864886f70d010701301c06092a864886f70d010905310f170d3233313131353039303534335a302f06092a864886f70d010904312204208d69a272b0c6bd7175a039759ddd8d8f17256360636569d3b59fe9fcfd442d77");
+        System.out.println(Base64.toBase64String(decode));
     }
 
     @SneakyThrows
