@@ -371,18 +371,19 @@ public class WordTemplateUtil {
                     int varLength = 0;
                     int dataLength = 0;
                     while ((matcher = matcher(runText)).find()) {
-                        // varLength = matcher.group(1).getBytes().length + 3;
-                        varLength = getStringViewLength(matcher.group(1)) + 3;
+                        varLength = matcher.group(1).getBytes().length + 3;
                         value = params.get(matcher.group(1).trim());
                         // runText =
                         // matcher.replaceFirst(replaceNum(String.valueOf(value
                         // == null ? " /" : value)));
-                        runText = matcher.replaceFirst(replaceNum(String.valueOf(value == null ? "/" : value)));
+                        runText = matcher.replaceFirst(replaceNum(String.valueOf(value == null ? "/" : String.valueOf(value).contains("\\") ? String.valueOf(value).replace("\\", "\\\\") : value)));
                         dataLength = runText.getBytes().length;
                     }
                     // 变量与数据参数长度不一致时的处理,保证word文件的格式不变
                     if (varLength >= dataLength) {
-                        runText = runText + BLANK.substring(0, varLength - getStringViewLength(runText));
+                        if (null == value || isEmpty(value.toString())) {// 传入值为空时，也需要显示,长度为参数长度
+                            runText = runText + BLANK.substring(0, varLength);
+                        }
                     } else {
                         // 数据长度大于变量长度时,先去掉前空格,不够再去掉后空格
                         handleDataLength(rowText, i, dataLength - varLength);

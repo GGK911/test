@@ -17,7 +17,7 @@ import java.io.IOException;
 public class test {
     public static void main(String[] args) {
         // byte[] bytes = SealUtil.buildPersonSeal("测试", 18, 6, 0, 0, 0);
-        byte[] bytes = SealUtil.buildSeal("成都华西妇幼医院");
+        byte[] bytes = SealUtil.buildSeal("四川华西妇幼细胞生物技术有限公司");
         FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\Desktop\\test.png");
 
         // BufferedImage buffer = drawThreeVerticalStringTest("测", "试", "章");

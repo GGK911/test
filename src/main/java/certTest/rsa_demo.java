@@ -5,13 +5,27 @@ import certTest.saxon.rsa.RSAUtils;
 import certTest.saxon.utils.ResultUtils;
 import cn.hutool.core.io.FileUtil;
 import lombok.SneakyThrows;
+import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
+import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemWriter;
 
+import javax.security.auth.x500.X500Principal;
 import java.io.ByteArrayInputStream;
+import java.io.StringWriter;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
 import java.security.Provider;
+import java.security.PublicKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Map;
@@ -44,8 +58,8 @@ public class rsa_demo {
         String certificateCRL = "https://www.mcsca.com.cn/";
 
         Map<String, byte[]> cert2 = RSAUtils.createCert(PWD, issuerStr, subjectStr, certificateCRL, 365, 2048);
-        FileUtil.writeBytes(cert2.get("keyStoreData"), "C:\\Users\\ggk911\\Desktop\\rsa_2048.p12");
-        FileUtil.writeBytes(cert2.get("certificateData"), "C:\\Users\\ggk911\\Desktop\\rsa_2048.cer");
+        // FileUtil.writeBytes(cert2.get("keyStoreData"), "C:\\Users\\ggk911\\Desktop\\rsa_2048.p12");
+        // FileUtil.writeBytes(cert2.get("certificateData"), "C:\\Users\\ggk911\\Desktop\\rsa_2048.cer");
 
         //*RSA签名
         ResultUtils signRSACert = CertUtils.signRSACert(cert2.get("keyStoreData"), M, PWD);
@@ -68,7 +82,35 @@ public class rsa_demo {
 
         System.out.println("//*************************************************RSA-CSR生成**********************************************************//");
 
-        System.out.println("RSA P10 BASE64:" + CsrUtil.generateCsr(true, "1234"));
+        // System.out.println("RSA P10 BASE64:" + CsrUtil.generateCsr(true, "1234"));
+
+        // 生成RSA1024公私钥
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", BC);
+        generator.initialize(1024);
+        KeyPair keyPair = generator.generateKeyPair();
+        // 打印私钥
+        PrivateKey privateKey = keyPair.getPrivate();
+        PemFormatUtil.priKeyToPem(privateKey);
+        // 打印公钥
+        PemFormatUtil.pubKeyToPem(keyPair.getPublic());
+
+        // Subject
+        String subjectParam = "CN=GGK911,OU=GGK911,O=GGK911,C=CN," + BCStyle.E + "=13983053455@163.com,L=重庆,ST=重庆";
+        X500Principal subject = new X500Principal(subjectParam);
+
+        // SHA256withRSA算法 签名者对象
+        ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA")
+                .setProvider(BC)
+                .build(privateKey);
+
+        // 创建 CSR
+        PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(subject, keyPair.getPublic());
+        PKCS10CertificationRequest rsaCsr = builder.build(signer);
+        // 打印 CSR
+        PemFormatUtil.csrToPem(rsaCsr);
+        System.out.println("----------打印Base64格式CSR");
+        System.out.println(Base64.toBase64String(rsaCsr.getEncoded()));
+
 
 
     }

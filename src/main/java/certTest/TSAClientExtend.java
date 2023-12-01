@@ -1,9 +1,7 @@
 package certTest;
 
 import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpUtil;
 import com.itextpdf.text.error_messages.MessageLocalization;
-import com.itextpdf.text.pdf.codec.Base64;
 import com.itextpdf.text.pdf.security.TSAClientBouncyCastle;
 import com.itextpdf.text.pdf.security.TSAInfoBouncyCastle;
 import org.bouncycastle.asn1.cmp.PKIFailureInfo;
@@ -13,12 +11,7 @@ import org.bouncycastle.tsp.TimeStampResponse;
 import org.bouncycastle.tsp.TimeStampToken;
 import org.bouncycastle.tsp.TimeStampTokenInfo;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 

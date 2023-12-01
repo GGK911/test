@@ -84,7 +84,11 @@ public class tsp_demo {
         // hash摘要
         CMSTimeStampedDataGenerator cmsTimeStampedDataGenerator = new CMSTimeStampedDataGenerator();
         BcDigestCalculatorProvider calculatorProvider = new BcDigestCalculatorProvider();
-        DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.SHA256));
+        // DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.MD5));
+        // DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.SHA1));
+        // DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.SHA256));
+        // DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.SHA512));
+        DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.SM3));
         cmsTimeStampedDataGenerator.initialiseMessageImprintDigestCalculator(hashCalculator);
         hashCalculator.getOutputStream().write(generateCertificateV3.getEncoded());
         hashCalculator.getOutputStream().close();
@@ -94,8 +98,8 @@ public class tsp_demo {
         Store certs = new JcaCertStore(x509Certificates);
         // 请求
         TimeStampRequestGenerator reqGen = new TimeStampRequestGenerator();
-        TimeStampRequest request = reqGen.generate(NISTObjectIdentifiers.id_sha256, digest2);
-        FileUtil.writeBytes(request.getEncoded(), "C:\\Users\\ggk911\\Desktop\\test.req");
+        TimeStampRequest request = reqGen.generate(new AlgorithmIdentifier(TSPAlgorithms.SM3), digest2);
+        // FileUtil.writeBytes(request.getEncoded(), "C:\\Users\\ggk911\\Desktop\\test.req");
         // 构造器
         TimeStampTokenGenerator tsTokenGen = new TimeStampTokenGenerator(new JcaSimpleSignerInfoGeneratorBuilder().setProvider(BC).build("SHA256withRSA", keyPairRsa.getPrivate(), generateCertificateV3), hashCalculator, new ASN1ObjectIdentifier("1.2"));
         tsTokenGen.addCertificates(certs);
