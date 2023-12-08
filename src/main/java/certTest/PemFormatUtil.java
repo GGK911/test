@@ -48,7 +48,7 @@ public class PemFormatUtil {
      * @return PEM格式
      */
     @SneakyThrows
-    private static String pemFormat(String pemPrefix, byte[] encoded) {
+    public static String pemFormat(String pemPrefix, byte[] encoded) {
         PemObject privateKeyPem = new PemObject(pemPrefix, encoded);
         StringWriter priStrWriter = new StringWriter();
         PemWriter priPemWriter = new PemWriter(priStrWriter);

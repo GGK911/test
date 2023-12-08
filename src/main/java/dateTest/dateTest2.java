@@ -29,7 +29,7 @@ public class dateTest2 {
 
         Date certEndTime = DateUtil.parse("2023-11-30 13:00:00");
         // Date now3 = DateUtil.parse("2023-11-30 12:57:59");
-        Date now3 = DateUtil.parse("2023-11-30 12:58:01");
+        Date now3 = DateUtil.parse("2023-11-30 12:58:00");
         if (DateUtil.offsetMinute(certEndTime, -2).getTime() < now3.getTime()) {
             System.out.println("证书过期");
         } else {
