@@ -12,6 +12,7 @@ import com.itextpdf.text.pdf.security.TSAClientBouncyCastle;
 import lombok.SneakyThrows;
 import org.apache.commons.compress.utils.Lists;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -57,7 +58,8 @@ public class tsp_demo {
      */
     private static final long CERT_EXPIRE = System.currentTimeMillis() + 1 * 1000L * 60 * 60 * 24 * 365;
 
-    private static final String TSA_URL = "http://127.0.0.1:8085/timestamp/ts/timestamp/rfc3161";
+    // private static final String TSA_URL = "http://127.0.0.1:8085/timestamp/ts/timestamp/rfc3161";
+    private static final String TSA_URL = "http://1.12.67.126:8082/tsa/sign?type=RSA";
 
     @SneakyThrows
     public static void main(String[] args) {
@@ -111,6 +113,7 @@ public class tsp_demo {
 
         TSAClient tsaClient = new TSAClientExtend(TSA_URL, null, null);
         byte[] timeStampToken2 = tsaClient.getTimeStampToken(request.getEncoded());
+        System.out.println(new DERBitString(timeStampToken2));
 
         System.out.println("//*************************************************时间戳验证**********************************************************//");
 
