@@ -289,7 +289,11 @@ public class CreateSealUtil {
 
     /**
      * 垂直二字
-     *
+     * +-----+
+     * |  A  |
+     * +-----+
+     * |  A  |
+     * +-----+
      * @param top    二字上，单字图像
      * @param bottom 二字下，单字图像
      * @return 图像
@@ -312,7 +316,9 @@ public class CreateSealUtil {
 
     /**
      * 画平行二字
-     *
+     * +-----+-----+
+     * |  A  |  A  |
+     * +-----+-----+
      * @param left  左字
      * @param right 右字
      * @return 图像
@@ -334,7 +340,13 @@ public class CreateSealUtil {
 
     /**
      * 画垂直三字
-     *
+     * +-----+
+     * |  A  |
+     * +-----+
+     * |  A  |
+     * +-----+
+     * |  A  |
+     * +-----+
      * @param top    三字上，单字图像
      * @param middle 三字中，单字图像
      * @param bottom 三字下，单字图像
@@ -358,6 +370,11 @@ public class CreateSealUtil {
 
     /**
      * 三字，二字在左
+     * +-----+-----+
+     * |  A  |     |
+     * +-----|  A  |
+     * |  A  |     |
+     * +-----+-----+
      *
      * @param leftTop    左上字
      * @param leftBottom 左下字
@@ -381,6 +398,11 @@ public class CreateSealUtil {
 
     /**
      * 三字，二字在右
+     * +-----+-----+
+     * |     |  A  |
+     * +  A  |-----+
+     * |     |  A  |
+     * +-----+-----+
      *
      * @param rightTop    右上
      * @param rightBottom 右下
@@ -404,7 +426,11 @@ public class CreateSealUtil {
 
     /**
      * 画四字
-     *
+     * +-----+-----+
+     * |  A  |  A  |
+     * +-----+-----+
+     * |  A  |  A  |
+     * +-----+-----+
      * @param leftTop     左上
      * @param leftBottom  左下
      * @param rightTop    右上
@@ -428,6 +454,13 @@ public class CreateSealUtil {
 
     /**
      * 五字，二字在左，等比例字体
+     * +-----+-----+
+     * |     |  A  |
+     * +  A  +-----+
+     * |-----|  A  |
+     * +  A  +-----+
+     * |     |  A  |
+     * +-----+-----+
      *
      * @param topThree    三字上
      * @param middleThree 三字中
@@ -453,6 +486,13 @@ public class CreateSealUtil {
 
     /**
      * 五字，二字在左，非等比例字体
+     * +-----+-----+
+     * |     |  A  |
+     * +  A  +-----+
+     * |-----|  A  |
+     * +  A  +-----+
+     * |     |  A  |
+     * +-----+-----+
      *
      * @param topThree    三字上
      * @param middleThree 三字中
@@ -478,6 +518,13 @@ public class CreateSealUtil {
 
     /**
      * 五字，二字在右，等比例字体
+     * +-----+-----+
+     * |  A  |     |
+     * +-----+  A  +
+     * |  A  |-----|
+     * +-----+  A  +
+     * |  A  |     |
+     * +-----+-----+
      *
      * @param topThree    三字上
      * @param middleThree 三字中
@@ -503,7 +550,13 @@ public class CreateSealUtil {
 
     /**
      * 五字，二字在右，非等比例字体
-     *
+     * +-----+-----+
+     * |  A  |     |
+     * +-----+  A  +
+     * |  A  |-----|
+     * +-----+  A  +
+     * |  A  |     |
+     * +-----+-----+
      * @param topThree    三字上
      * @param middleThree 三字中
      * @param bottomThree 三字下
@@ -528,6 +581,13 @@ public class CreateSealUtil {
 
     /**
      * 六字，非等比例字体
+     * +-----+-----+
+     * |  A  |  A  |
+     * +-----+-----+
+     * |  A  |  A  |
+     * +-----+-----+
+     * |  A  |  A  |
+     * +-----+-----+
      *
      * @param topLeft     三字左上
      * @param middleLeft  三字左中
@@ -554,6 +614,13 @@ public class CreateSealUtil {
 
     /**
      * 六字，等比例字体
+     * +-----+-----+
+     * |  A  |  A  |
+     * +-----+-----+
+     * |  A  |  A  |
+     * +-----+-----+
+     * |  A  |  A  |
+     * +-----+-----+
      *
      * @param topLeft     三字左上
      * @param middleLeft  三字左中
@@ -580,6 +647,9 @@ public class CreateSealUtil {
 
     /**
      * 画单字，高度为IMAGE_SIZE，宽度为IMAGE_SIZE / 2
+     * +-----+
+     * |  A  |
+     * +-----+
      *
      * @param str 字
      * @return 图像
@@ -600,6 +670,9 @@ public class CreateSealUtil {
 
     /**
      * 画单字，高度为IMAGE_SIZE / 2，宽度为IMAGE_SIZE / 2
+     * +-----+
+     * |  A  |
+     * +-----+
      *
      * @param str 字
      * @return 图像
@@ -625,6 +698,9 @@ public class CreateSealUtil {
 
     /**
      * 画单字，高度为IMAGE_SIZE / 3，宽度为IMAGE_SIZE / 2
+     * +-----+
+     * |  A  |
+     * +-----+
      *
      * @param str 字
      * @return 图像
@@ -650,6 +726,11 @@ public class CreateSealUtil {
 
     /**
      * 拉伸图像
+     * +---------+
+     * | +-----+ |
+     * | |  A  | |
+     * | +-----+ |
+     * +---------+
      *
      * @param bufferedImageOriginal 原始图像
      * @param width                 拉伸后宽
@@ -671,7 +752,7 @@ public class CreateSealUtil {
     }
 
     /**
-     * 画矩形外线（300X300）
+     * 画矩形外线（IMAGE_SIZE）
      *
      * @param bufferedImage 原始图像
      * @return 图像
