@@ -29,7 +29,7 @@ public class jacksonTest {
             e.printStackTrace();
         }
 
-        // 自定义序列号器
+        // 自定义序列化器
         ObjectMapper mapper1 = new ObjectMapper();
         FatherSerializer fatherSerializer = new FatherSerializer(Father.class);
         SimpleModule simpleModule = new SimpleModule("fatherSerializer", new Version(2, 1, 3, null, null, null));

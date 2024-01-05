@@ -1,7 +1,11 @@
 package certTest;
 
 import certTest.saxon.rsa.RSAUtils;
+import cn.hutool.core.io.FileUtil;
 import lombok.SneakyThrows;
+import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
+import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.DigestCalculator;
@@ -9,9 +13,12 @@ import org.bouncycastle.operator.bc.BcDigestCalculatorProvider;
 import org.bouncycastle.tsp.TSPAlgorithms;
 import org.bouncycastle.tsp.cms.CMSTimeStampedDataGenerator;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
+import org.junit.jupiter.api.Test;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
 import java.security.Provider;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
@@ -22,6 +29,14 @@ import java.util.HashMap;
  **/
 public class digest_demo {
     private static final Provider BC = new BouncyCastleProvider();
+
+    private static final byte[] bytes;
+    private static final BcDigestCalculatorProvider calculatorProvider;
+
+    static {
+        bytes = FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\劳动合同( 含变更+隐私声明 )-无固定期限5.pdf");
+        calculatorProvider = new BcDigestCalculatorProvider();
+    }
 
     @SneakyThrows
     public static void main(String[] args) {
@@ -37,7 +52,6 @@ public class digest_demo {
         X509Certificate generateCertificateV3 = (X509Certificate) RSAUtils.generateCertificateV3(issuerStr, subjectStr, keyPairRsa, new HashMap<>(1), certificateCRL, null, 3650);
 
         CMSTimeStampedDataGenerator cmsTimeStampedDataGenerator = new CMSTimeStampedDataGenerator();
-        BcDigestCalculatorProvider calculatorProvider = new BcDigestCalculatorProvider();
         // SHA-256 OID: 2.16.840.1.101.3.4.2.1
         DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.SHA256));
         cmsTimeStampedDataGenerator.initialiseMessageImprintDigestCalculator(hashCalculator);
@@ -58,5 +72,41 @@ public class digest_demo {
         // MD5 OID: 1.2.840.113549.2.5
         System.out.println("MD5:" + Base64.toBase64String(calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.MD5)).getDigest()));
 
+    }
+
+    @SneakyThrows
+    public void digest(DigestCalculator hashCalculator) {
+        hashCalculator.getOutputStream().write(bytes);
+        hashCalculator.getOutputStream().close();
+        System.out.println(Hex.toHexString(hashCalculator.getDigest()));
+    }
+
+    @Test
+    @SneakyThrows
+    public void sm3Test() {
+        DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(GMObjectIdentifiers.sm3));
+        digest(hashCalculator);
+    }
+
+    @Test
+    @SneakyThrows
+    public void md5Test() {
+        DigestCalculator digestCalculator = calculatorProvider.get(new AlgorithmIdentifier(PKCSObjectIdentifiers.md5));
+        digest(digestCalculator);
+    }
+
+    @Test
+    @SneakyThrows
+    public void sha256() {
+        DigestCalculator digestCalculator = calculatorProvider.get(new AlgorithmIdentifier(NISTObjectIdentifiers.id_sha256));
+        digest(digestCalculator);
+    }
+
+    @Test
+    @SneakyThrows
+    public void simpleDigest() {
+        MessageDigest digest = MessageDigest.getInstance("MD5");
+        digest.update(bytes);
+        System.out.println(Hex.toHexString(digest.digest()));
     }
 }

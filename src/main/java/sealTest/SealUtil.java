@@ -2,10 +2,15 @@ package sealTest;
 
 
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.util.StrUtil;
 import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Chunk;
 import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.FontSelector;
+import com.itextpdf.text.pdf.GrayColor;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -15,6 +20,9 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 印章工具类
@@ -57,15 +65,45 @@ public class SealUtil {
     // 基础宋体打底
     private final static BaseFont BASE_FONT;
 
-    // 其他字体数组（为调整字体添加）
-    private final static BaseFont[] BASE_FONTS_ARRAY;
+    // 备用字体
+    private final static Map<BaseFont, String> SPARE_FONT = new HashMap<>();
 
     static {
-        // 基础宋体打底
-        BASE_FONT = FontFactory.getFont("/font/SIMSUN.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK).getBaseFont();
-        // 初始化数组：每添加一个字体，数组长度加1
-        BASE_FONTS_ARRAY = new BaseFont[1];
-        BASE_FONTS_ARRAY[0] = FontFactory.getFont("/font/JinbiaoSong.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK).getBaseFont();
+        BASE_FONT = FontFactory.getFont("src/main/resources/font/SIMSUN.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK).getBaseFont();
+
+        GraphicsEnvironment genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
+
+        Font spareFont1 = null;
+        try {
+            spareFont1 = Font.createFont(Font.TRUETYPE_FONT, ResourceUtil.getStream("font/JinbiaoSong.TTF"));
+        } catch (FontFormatException | IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            genv.registerFont(spareFont1);
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+        BaseFont baseFont1 = FontFactory.getFont("src/main/resources/font/JinbiaoSong.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK).getBaseFont();
+        if (spareFont1 != null) {
+            SPARE_FONT.put(baseFont1, spareFont1.getName());
+        }
+
+        Font spareFont2 = null;
+        try {
+            spareFont2 = Font.createFont(Font.TRUETYPE_FONT, ResourceUtil.getStream("font/simsunb.ttf"));
+        } catch (FontFormatException | IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            genv.registerFont(spareFont2);
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+        BaseFont baseFont2 = FontFactory.getFont("src/main/resources/font/simsunb.ttf", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK).getBaseFont();
+        if (spareFont2 != null) {
+            SPARE_FONT.put(baseFont2, spareFont2.getName());
+        }
 
     }
 
@@ -144,14 +182,26 @@ public class SealUtil {
         FontRenderContext context = g2d.getFontRenderContext();
         Rectangle2D rectangle;
         Font f = null;
+        // 找到所有text合适字体
         if (font.getFontText().codePointCount(0, font.getFontText().length()) == 2) {
             f = new Font(font.getFontFamily(), Font.BOLD, PERSON_FONT_SIZE);
             g2d.setFont(f);
             rectangle = f.getStringBounds(subString(font.getFontText(), 0, 1), context);
             marginH = (float) (Math.abs(rectangle.getCenterY()) * 2 + marginW) + twoFixH;
-            g2d.drawString(subString(font.getFontText(), 0, 1), marginW + offsetW, marginH);
+            Map<String, Font> fitFont = getFitFont(name, PERSON_FONT_SIZE);
+            // 第一个字
+            String firstText = subString(font.getFontText(), 0, 1);
+            Font firstFont = fitFont.get(firstText);
+            g2d.setFont(firstFont);
+            g2d.drawString(firstText, marginW + offsetW, marginH);
+
             marginW += Math.abs(rectangle.getCenterX()) * 2 + (font.getFontSpace() == null ? INIT_BEGIN : font.getFontSpace());
-            g2d.drawString(subString(font.getFontText(), 1, 2), marginW + offsetW, marginH);
+
+            // 第二个字
+            String secondText = subString(font.getFontText(), 1, 2);
+            Font secondFont = fitFont.get(secondText);
+            g2d.setFont(secondFont);
+            g2d.drawString(secondText, marginW + offsetW, marginH);
             //拉伸 画正方形
             bi = getBI(bi);
         } else if (font.getFontText().codePointCount(0, font.getFontText().length()) == 3) {
@@ -244,6 +294,11 @@ public class SealUtil {
         int oldW = marginW;
 
         marginW += rectangle.getCenterX() * 2 + (font.getFontSpace() == null ? INIT_BEGIN : font.getFontSpace());
+        Map<String, Font> fitFont = getFitFont(font.getFontText(), PERSON_FONT_SIZE);
+        // 第一个字
+        String firstText = subString(font.getFontText(), 0, 1);
+        Font firstFont = fitFont.get(firstText);
+        g2d.setFont(firstFont);
         g2d.drawString(subString(font.getFontText(), 0, 1), marginW, marginH);
 
         //拉伸 画正方形
@@ -251,12 +306,20 @@ public class SealUtil {
 
         g2d = bi.createGraphics();
         g2d.setPaint(COLOR);
-        g2d.setFont(f);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
+        // 第二个字
+        String secondText = subString(font.getFontText(), 1, 2);
+        Font secondFont = fitFont.get(secondText);
+        g2d.setFont(secondFont);
         g2d.drawString(subString(font.getFontText(), 1, 2), oldW, marginH + fixH - threeMarginH);
+
         rectangle = f.getStringBounds(font.getFontText(), context);
         marginH += Math.abs(rectangle.getHeight());
+        // 第三个字
+        String thirdText = subString(font.getFontText(), 2, 3);
+        Font thirdFont = fitFont.get(thirdText);
+        g2d.setFont(thirdFont);
         g2d.drawString(subString(font.getFontText(), 2, 3), oldW, marginH);
 
         return bi;
@@ -286,15 +349,30 @@ public class SealUtil {
         g2d.setFont(f);
         Rectangle2D rectangle = f.getStringBounds(subString(font.getFontText(), 0, 1), context);//上坡度
         float marginH = (float) (Math.abs(rectangle.getCenterY()) * 2 + marginW) + fixH;
-
+        Map<String, Font> fitFont = getFitFont(font.getFontText(), PERSON_FONT_SIZE);
+        // 第三个字
+        String thirdText = subString(font.getFontText(), 2, 3);
+        Font thirdFont = fitFont.get(thirdText);
+        g2d.setFont(thirdFont);
         g2d.drawString(subString(font.getFontText(), 2, 3), marginW + offsetW, marginH);
         int oldW = marginW;
         marginW += Math.abs(rectangle.getCenterX()) * 2 + (font.getFontSpace() == null ? INIT_BEGIN : font.getFontSpace());
+        // 第一个字
+        String firstText = subString(font.getFontText(), 0, 1);
+        Font firstFont = fitFont.get(firstText);
+        g2d.setFont(firstFont);
         g2d.drawString(subString(font.getFontText(), 0, 1), marginW + offsetW, marginH);
         marginH += Math.abs(rectangle.getHeight());
+        // 第四个字
+        String fourText = subString(font.getFontText(), 3, 4);
+        Font fourFont = fitFont.get(fourText);
+        g2d.setFont(fourFont);
         g2d.drawString(subString(font.getFontText(), 3, 4), oldW + offsetW, marginH - offsetH);
+        // 第二个字
+        String secondText = subString(font.getFontText(), 1, 2);
+        Font secondFont = fitFont.get(secondText);
+        g2d.setFont(secondFont);
         g2d.drawString(subString(font.getFontText(), 1, 2), marginW + offsetW, marginH - offsetH);
-
         return bi;
     }
 
@@ -309,8 +387,7 @@ public class SealUtil {
         FontRenderContext context;
         Rectangle2D bounds;
         String sealName = mainFont.getFontText();
-        int fontSize = 15;
-        fontSize = mainFont.getFontSize();
+        int fontSize = mainFont.getFontSize();
         double scaleSize = 2;
 
         // 距离圆圈边界值  8
@@ -318,8 +395,8 @@ public class SealUtil {
         double circleRadius = IMAGE_SIZE / 3.4;
         int fontStyle = mainFont.isBold() == 1 ? Font.BOLD : Font.PLAIN;
 
-        final BaseFont baseFont = getMaxWidthFont(sealName);
-        f = new Font(baseFont.getFamilyFontName()[0][3], fontStyle, fontSize);
+        // f = new Font(baseFont.getFamilyFontName()[0][3], fontStyle, fontSize);
+        f = new Font("宋体", fontStyle, fontSize);
 
         context = g2d.getFontRenderContext();
         bounds = f.getStringBounds(sealName, context);
@@ -369,6 +446,7 @@ public class SealUtil {
         double gradient = 0.2;
         // 字体间是否靠近度    数值越大越靠近
         double distance = 0.9;
+        Map<String, Font> fitFont = getFitFont(sealName, fontSize);
         for (int i = 0; i < count; i++) {
             double aa = firstAngle - i * radianInterval;
             double ax = radis * Math.sin(Math.PI / 2 - aa);
@@ -381,6 +459,11 @@ public class SealUtil {
 
             // 防止文本和外圈间距
             transform.concatenate(scaleform);
+
+            // 字体更换
+            String text = subString(sealName, i, i + 1);
+            f = fitFont.get(text);
+
             Font f2 = f.deriveFont(transform);
             g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);//设置抗锯齿
             g2d.setFont(f2);
@@ -669,8 +752,7 @@ public class SealUtil {
     private static SealFont getPersonDefault(String fontText) {
         //获取个人印章字体配置
         SealFont sealFont = new SealFont();
-        final BaseFont baseFont = getMaxWidthFont(fontText);
-        sealFont.setFontFamily(baseFont.getFamilyFontName()[0][3]);
+        sealFont.setFontFamily(FONT_FAMILY);
         sealFont.setFontSize(FONT_SIZE);
         sealFont.setBold(Font.BOLD);
         sealFont.setFontText(fontText);
@@ -699,7 +781,7 @@ public class SealUtil {
      * @param endIndex   是我们常识认为的str中第几个字符的下标（下标从0开始，左闭右开）
      * @return 我们常识认为应该截取的从startIndex到endIndex的str中的子串
      */
-    private static String subString(String str, int startIndex, int endIndex) {
+    public static String subString(String str, int startIndex, int endIndex) {
         // 定义：str是我们常识认为的中文字符
         // startIndex是我们常识认为的str中第几个字符的下标（下标从0开始）
         // endIndex是我们常识认为的str中第几个字符的下标（下标从0开始）
@@ -742,22 +824,28 @@ public class SealUtil {
     }
 
     /**
-     * 遍历字体数组获取最合适字体
+     * 遍历字体获取text最合适字体(利用itext的FontSelector)
      *
      * @param text 文字
+     * @param fontSize 字体大小
      * @return 字体
      */
-    private static BaseFont getMaxWidthFont(String text) {
-        BaseFont baseFont = BASE_FONT;
-        float max = BASE_FONT.getWidthPoint(text, 12);
-        for (BaseFont font : BASE_FONTS_ARRAY) {
-            float widthPoint = font.getWidthPoint(text, 12);
-            if (widthPoint > max) {
-                max = widthPoint;
-                baseFont = font;
+    public static Map<String, Font> getFitFont(String text, int fontSize) {
+        FontSelector fs = new FontSelector();
+        for (Map.Entry<BaseFont, String> fontEntry : SPARE_FONT.entrySet()) {
+            fs.addFont(new com.itextpdf.text.Font(fontEntry.getKey(), 12, 0, GrayColor.GRAYBLACK));
+        }
+        Phrase process = fs.process(text);
+        List<Chunk> chunks = process.getChunks();
+        Map<String, Font> stringFontMap = new HashMap<>();
+        for (Chunk chunk : chunks) {
+            String content = chunk.getContent();
+            for (int i = 0; i < content.codePointCount(0, content.length()); i++) {
+                String fontName = SPARE_FONT.get(chunk.getFont().getBaseFont());
+                stringFontMap.put(subString(content, i, i + 1), new Font(fontName, Font.PLAIN, fontSize));
             }
         }
-        return baseFont;
+        return stringFontMap;
     }
 
 }

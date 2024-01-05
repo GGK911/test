@@ -51,17 +51,13 @@ import java.util.Random;
  **/
 public class tsp_demo {
 
-    private static final String M = "ggk911_RSA_demo";
-
     private static final Provider BC = new BouncyCastleProvider();
     /**
      * 1年后
      */
     private static final long CERT_EXPIRE = System.currentTimeMillis() + 1 * 1000L * 60 * 60 * 24 * 365;
 
-    private static final String PWD = "123456";
-
-    private static final String TSA_URL = "http://127.0.0.1:8084/timestamp/ts/timestamp/rfc3161";
+    private static final String TSA_URL = "http://127.0.0.1:8085/timestamp/ts/timestamp/rfc3161";
 
     @SneakyThrows
     public static void main(String[] args) {
@@ -73,6 +69,7 @@ public class tsp_demo {
         String subjectStr = "CN=GGK911,OU=GGK911,O=GGK911,C=CN,E=13983053455@163.com,L=重庆,ST=重庆";
         // 颁发地址，后续用到什么项目，公司地址等
         String certificateCRL = "https://www.mcsca.com.cn/";
+        // 序列号
         BigInteger serial = BigInteger.probablePrime(256, new Random());
 
 
@@ -86,9 +83,9 @@ public class tsp_demo {
         BcDigestCalculatorProvider calculatorProvider = new BcDigestCalculatorProvider();
         // DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.MD5));
         // DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.SHA1));
-        // DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.SHA256));
+        DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.SHA256));
         // DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.SHA512));
-        DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.SM3));
+        // DigestCalculator hashCalculator = calculatorProvider.get(new AlgorithmIdentifier(TSPAlgorithms.SM3));
         cmsTimeStampedDataGenerator.initialiseMessageImprintDigestCalculator(hashCalculator);
         hashCalculator.getOutputStream().write(generateCertificateV3.getEncoded());
         hashCalculator.getOutputStream().close();
@@ -98,8 +95,9 @@ public class tsp_demo {
         Store certs = new JcaCertStore(x509Certificates);
         // 请求
         TimeStampRequestGenerator reqGen = new TimeStampRequestGenerator();
-        TimeStampRequest request = reqGen.generate(new AlgorithmIdentifier(TSPAlgorithms.SM3), digest2);
-        // FileUtil.writeBytes(request.getEncoded(), "C:\\Users\\ggk911\\Desktop\\test.req");
+        // TimeStampRequest request = reqGen.generate(new AlgorithmIdentifier(TSPAlgorithms.SM3), digest2);
+        TimeStampRequest request = reqGen.generate(new AlgorithmIdentifier(TSPAlgorithms.SHA256), digest2);
+        FileUtil.writeBytes(request.getEncoded(), "C:\\Users\\ggk911\\Desktop\\test2.tsq");
         // 构造器
         TimeStampTokenGenerator tsTokenGen = new TimeStampTokenGenerator(new JcaSimpleSignerInfoGeneratorBuilder().setProvider(BC).build("SHA256withRSA", keyPairRsa.getPrivate(), generateCertificateV3), hashCalculator, new ASN1ObjectIdentifier("1.2"));
         tsTokenGen.addCertificates(certs);
@@ -107,6 +105,7 @@ public class tsp_demo {
         // 生成
         TimeStampResponse tsResp = tsRespGen.generate(request, serial, new Date());
         TimeStampToken timeStampToken = tsResp.getTimeStampToken();
+        FileUtil.writeBytes(tsResp.getEncoded(), "C:\\Users\\ggk911\\Desktop\\test2.tsr");
 
         System.out.println("//*************************************************URL请求时间戳**********************************************************//");
 
@@ -115,21 +114,20 @@ public class tsp_demo {
 
         System.out.println("//*************************************************时间戳验证**********************************************************//");
 
-        CMSTimeStampedData cmsTimeStampedData = cmsTimeStampedDataGenerator.generate(timeStampToken, generateCertificateV3.getEncoded());
-        byte[] timeStampedData = cmsTimeStampedData.getEncoded();
-        // verify
-        DigestCalculatorProvider newCalculatorProvider = new BcDigestCalculatorProvider();
-        DigestCalculator imprintCalculator = cmsTimeStampedData.getMessageImprintDigestCalculator(newCalculatorProvider);
-        CMSTimeStampedData newCMSTimeStampedData = new CMSTimeStampedData(timeStampedData);
-        byte[] newContent = newCMSTimeStampedData.getContent();
-        // 是否相等
-        imprintCalculator.getOutputStream().write(newContent);
-        byte[] digest = imprintCalculator.getDigest();
-        TimeStampToken[] tokens = cmsTimeStampedData.getTimeStampTokens();
-        for (TimeStampToken token : tokens) {
-            cmsTimeStampedData.validate(newCalculatorProvider, digest, token);
-        }
-
+        // CMSTimeStampedData cmsTimeStampedData = cmsTimeStampedDataGenerator.generate(timeStampToken, generateCertificateV3.getEncoded());
+        // byte[] timeStampedData = cmsTimeStampedData.getEncoded();
+        // // verify
+        // DigestCalculatorProvider newCalculatorProvider = new BcDigestCalculatorProvider();
+        // DigestCalculator imprintCalculator = cmsTimeStampedData.getMessageImprintDigestCalculator(newCalculatorProvider);
+        // CMSTimeStampedData newCMSTimeStampedData = new CMSTimeStampedData(timeStampedData);
+        // byte[] newContent = newCMSTimeStampedData.getContent();
+        // // 是否相等
+        // imprintCalculator.getOutputStream().write(newContent);
+        // byte[] digest = imprintCalculator.getDigest();
+        // TimeStampToken[] tokens = cmsTimeStampedData.getTimeStampTokens();
+        // for (TimeStampToken token : tokens) {
+        //     cmsTimeStampedData.validate(newCalculatorProvider, digest, token);
+        // }
 
 
     }

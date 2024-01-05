@@ -237,8 +237,9 @@ public class Pkcs12Test {
         X509v3CertificateBuilder v3CertBuilder = new JcaX509v3CertificateBuilder(
                 issuerBuilder.build(),
                 BigInteger.valueOf(3),
-                DateUtil.parse("202312070940000", "yyyyMMddHHmmssSSS"),
-                new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)),
+                // DateUtil.parse("202312070940000", "yyyyMMddHHmmssSSS"),
+                new Date(),
+                new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 365)),
                 subjectBuilder.build(),
                 pubKey);
         // 扩展

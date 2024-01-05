@@ -32,6 +32,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.encoders.Base64;
+import org.junit.jupiter.api.Test;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -39,11 +40,13 @@ import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.PublicKey;
@@ -76,26 +79,44 @@ public class sm2_demo {
     private static final long CERT_EXPIRE = System.currentTimeMillis() + 1 * 1000L * 60 * 60 * 24 * 365;
 
     private static final String PWD = "123456";
+    private static final PublicKey publicKey;
+    private static final PrivateKey privateKey;
+    private static final KeyPair keyPair;
+
+    static {
+        //加载BC
+        Security.addProvider(BC);
+        // 获取SM2椭圆曲线的参数
+        ECGenParameterSpec sm2Spec = new ECGenParameterSpec("sm2p256v1");
+        // 获取一个椭圆曲线类型的密钥对生成器
+        KeyPairGenerator kpg = null;
+        try {
+            kpg = KeyPairGenerator.getInstance("EC", BC);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        // 使用SM2参数初始化生成器
+        try {
+            assert kpg != null;
+            kpg.initialize(sm2Spec);
+        } catch (InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+        }
+        // 获取密钥对
+        keyPair = kpg.generateKeyPair();
+        publicKey = keyPair.getPublic();
+        System.out.println(publicKey.toString());
+        privateKey = keyPair.getPrivate();
+        System.out.println(privateKey.toString());
+
+    }
 
 
     @SneakyThrows
     public static void main(String[] args) {
-        //加载BC
-        Security.addProvider(BC);
 
         SM2Util sm2 = new SM2Util();
-        // 获取SM2椭圆曲线的参数
-        ECGenParameterSpec sm2Spec = new ECGenParameterSpec("sm2p256v1");
-        // 获取一个椭圆曲线类型的密钥对生成器
-        final KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC", BC);
-        // 使用SM2参数初始化生成器
-        kpg.initialize(sm2Spec);
-        // 获取密钥对
-        KeyPair keyPair = kpg.generateKeyPair();
-        PublicKey publicKey = keyPair.getPublic();
-        System.out.println(publicKey.toString());
-        PrivateKey privateKey = keyPair.getPrivate();
-        System.out.println(privateKey.toString());
+
         System.out.println("原文：" + M);
         String publicKeyBase64 = Base64.toBase64String(publicKey.getEncoded());
         System.out.println("公钥Base64：" + publicKeyBase64);
@@ -210,7 +231,7 @@ public class sm2_demo {
         byte[] asn1BinCert = certificate.getEncoded();
         // 编码为BASE64 便于传输
         byte[] base64EncodedCert = Base64.encode(asn1BinCert);
-        FileUtil.writeBytes(base64EncodedCert, "C:\\Users\\ggk911\\Desktop\\SM2DEMO证书.cer");
+        // FileUtil.writeBytes(base64EncodedCert, "C:\\Users\\ggk911\\Desktop\\SM2DEMO证书.cer");
 
         System.out.println("//*************************************************HuTool-SM2**********************************************************//");
 
@@ -269,10 +290,10 @@ public class sm2_demo {
         System.out.println(keyPair2.getPublic());
         Map<String, byte[]> cert = CertUtils.createSM2CertToOne("1", "1", "1", "1", "1", "1", 365, PWD);
 
-        FileUtil.writeBytes(cert.get("certData"), "C:\\Users\\ggk911\\Desktop\\SM2证书pfx.pfx");
-        FileUtil.writeBytes(Base64.encode(cert.get("publicKey")), "C:\\Users\\ggk911\\Desktop\\SM2证书pubkey.key");
-        FileUtil.writeBytes(Base64.encode(cert.get("privateKey")), "C:\\Users\\ggk911\\Desktop\\SM2证书prikey.key");
-        FileUtil.writeBytes(Base64.encode(cert.get("cer")), "C:\\Users\\ggk911\\Desktop\\SM2证书cer.cer");
+        // FileUtil.writeBytes(cert.get("certData"), "C:\\Users\\ggk911\\Desktop\\SM2证书pfx.pfx");
+        // FileUtil.writeBytes(Base64.encode(cert.get("publicKey")), "C:\\Users\\ggk911\\Desktop\\SM2证书pubkey.key");
+        // FileUtil.writeBytes(Base64.encode(cert.get("privateKey")), "C:\\Users\\ggk911\\Desktop\\SM2证书prikey.key");
+        // FileUtil.writeBytes(Base64.encode(cert.get("cer")), "C:\\Users\\ggk911\\Desktop\\SM2证书cer.cer");
 
         System.out.println("//*************************************************pfx转jks**********************************************************//");
 
@@ -299,8 +320,8 @@ public class sm2_demo {
                 outputKeyStore.setKeyEntry(keyAlias, key3, passwd, certChain);
             }
         }
-        FileOutputStream out = new FileOutputStream("C:\\Users\\ggk911\\Desktop\\SM2证书jks.jks");
-        outputKeyStore.store(out, passwd);
-        out.close();
+        // FileOutputStream out = new FileOutputStream("C:\\Users\\ggk911\\Desktop\\SM2证书jks.jks");
+        // outputKeyStore.store(out, passwd);
+        // out.close();
     }
 }

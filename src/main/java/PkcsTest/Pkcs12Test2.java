@@ -38,6 +38,7 @@ import org.bouncycastle.pkcs.PKCS12SafeBagBuilder;
 import org.bouncycastle.pkcs.bc.BcPKCS12MacCalculatorBuilder;
 import org.bouncycastle.pkcs.bc.BcPKCS12PBEOutputEncryptorBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS12SafeBagBuilder;
+import org.bouncycastle.util.encoders.Base64;
 
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -71,6 +72,8 @@ public class Pkcs12Test2 {
 
         PrivateKey privKey = p.getPrivate();
         PublicKey pubKey = p.getPublic();
+        System.out.println(Base64.toBase64String(pubKey.getEncoded()));
+        System.out.println(Base64.toBase64String(privKey.getEncoded()));
 
         // 证书链
         X509Certificate[] chain = createCertChain(g, pubKey);
@@ -173,8 +176,8 @@ public class Pkcs12Test2 {
                 // thk's todo 控制证书生效时间
                 // DateUtil.parse("202312081405000", "yyyyMMddHHmmssSSS"),
                 new Date(),
-                // new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 365)),
-                new Date(System.currentTimeMillis() + (1000L * 1)),
+                new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 365)),
+                // new Date(System.currentTimeMillis() + (1000L * 1)),
                 subjectBuilder.build(),
                 pubKey);
         // 扩展
