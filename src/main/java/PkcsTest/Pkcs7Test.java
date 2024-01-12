@@ -1,24 +1,25 @@
 package PkcsTest;
 
+import cn.com.mcsca.itextpdf.text.pdf.security.BouncyCastleDigest;
+import cn.com.mcsca.itextpdf.text.pdf.security.DigestAlgorithms;
+import cn.hutool.core.io.FileUtil;
 import lombok.SneakyThrows;
-import org.bouncycastle.asn1.ASN1Boolean;
-import org.bouncycastle.asn1.ASN1Choice;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.ASN1Integer;
-import org.bouncycastle.asn1.ASN1Null;
+import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.ASN1SequenceParser;
 import org.bouncycastle.asn1.ASN1Set;
-import org.bouncycastle.asn1.ASN1String;
 import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.ASN1UTCTime;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
 
+import java.io.ByteArrayInputStream;
+import java.security.MessageDigest;
 import java.security.Security;
+import java.security.Signature;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 
 /**
  * @author TangHaoKai
@@ -34,14 +35,132 @@ public class Pkcs7Test {
         //将hex转换为byte输出
         ASN1Primitive asn1Primitive;
         while ((asn1Primitive = asn1InputStream.readObject()) != null) {
-            //循环读取，分类解析。这样的解析方式可能不适合有两个同类的ASN1对象解析，如果遇到同类，那就需要按照顺序来调用readObject，就可以实现解析了。
             ASN1Sequence sequence = (ASN1Sequence) asn1Primitive;
-            System.out.println(sequence.size());
             ASN1TaggedObject taggedObject = (ASN1TaggedObject) sequence.getObjectAt(1);
             ASN1Sequence sequence1 = (ASN1Sequence) taggedObject.getBaseObject();
+
+            // 证书
             ASN1TaggedObject taggedObject1 = (ASN1TaggedObject) sequence1.getObjectAt(3);
-            ASN1Sequence sequence2 = (ASN1Sequence) taggedObject1.getBaseObject();
-            System.out.println(Base64.toBase64String(sequence2.getEncoded()));
+            ASN1Sequence cert = (ASN1Sequence) taggedObject1.getBaseObject();
+            System.out.println("证书" + Hex.toHexString(cert.getEncoded()));
+
+            // 属性Attr
+            ASN1Set signInfos = (ASN1Set) sequence1.getObjectAt(4);
+            ASN1Sequence signInfo = (ASN1Sequence) signInfos.getObjectAt(0);
+            ASN1TaggedObject signAttr = (ASN1TaggedObject) signInfo.getObjectAt(3);
+            ASN1Set signAttr2 = ASN1Set.getInstance(signAttr, false);
+            System.out.println("属性Attr" + Hex.toHexString(signAttr2.getEncoded()));
+
+            // 原文range摘要
+            ASN1Sequence signAttrSequence = (ASN1Sequence) signAttr.getBaseObject();
+            ASN1Sequence signAttrSequenceSeq = (ASN1Sequence) signAttrSequence.getObjectAt(2);
+            ASN1Set digestSet = (ASN1Set) signAttrSequenceSeq.getObjectAt(1);
+            ASN1OctetString digest = (ASN1OctetString) digestSet.getObjectAt(0);
+            System.out.println("原文range摘要" + Hex.toHexString(digest.getOctets()));
+
+            // 签名值(属性Attr)
+            ASN1OctetString signValueOcStr = (ASN1OctetString) signInfo.getObjectAt(5);
+            ASN1Sequence signValue = (ASN1Sequence) new ASN1InputStream(signValueOcStr.getOctets()).readObject();
+            System.out.println("签名值（属性Attr）" + Hex.toHexString(signValue.toASN1Primitive().getEncoded()));
+            // SM3
+            MessageDigest sm3 = new BouncyCastleDigest().getMessageDigest("SM3");
+            sm3.update(signValue.toASN1Primitive().getEncoded());
+            byte[] digest2 = sm3.digest();
+            System.out.println("SM3(签名值)" + Hex.toHexString(digest2));
+
+            // 时间戳
+            ASN1TaggedObject timeStampTag = (ASN1TaggedObject) signInfo.getObjectAt(6);
+            ASN1Sequence timeStampSequence = (ASN1Sequence) timeStampTag.getBaseObject();
+            ASN1Set timeStampSet = (ASN1Set) timeStampSequence.getObjectAt(1);
+            ASN1Sequence timeStampSequence2 = (ASN1Sequence) timeStampSet.getObjectAt(0);
+            System.out.println("时间戳" + Hex.toHexString(timeStampSequence2.getEncoded()));
+
+            ASN1TaggedObject timeStampTag2 = (ASN1TaggedObject) timeStampSequence2.getObjectAt(1);
+            ASN1Sequence timeStampSequence3 = (ASN1Sequence) timeStampTag2.getBaseObject();
+
+
+            // encapContentInfo eContent
+            ASN1Sequence eContentSequence = (ASN1Sequence) timeStampSequence3.getObjectAt(2);
+            ASN1TaggedObject eContentTag = (ASN1TaggedObject) eContentSequence.getObjectAt(1);
+            ASN1OctetString eContent = (ASN1OctetString) eContentTag.getBaseObject();
+            System.out.println("eContent" + Hex.toHexString(eContent.getOctets()));
+
+            // eContentSM3
+            sm3.reset();
+            sm3.update(eContent.getOctets());
+            System.out.println(Hex.toHexString(sm3.digest()));
+
+            // 时间戳证书
+            ASN1TaggedObject timeStampTag3 = (ASN1TaggedObject) timeStampSequence3.getObjectAt(3);
+            ASN1Sequence timeCert = (ASN1Sequence) timeStampTag3.getBaseObject();
+            System.out.println("时间戳证书" + Hex.toHexString(timeCert.getEncoded()));
+
+            // 时间戳证书哈希
+            sm3.reset();
+            sm3.update(timeCert.getEncoded());
+            System.out.println("时间戳证书哈希" + Hex.toHexString(sm3.digest()));
+
+            ASN1Set timeStampAttrSet = (ASN1Set) timeStampSequence3.getObjectAt(4);
+            ASN1Sequence timeStampAttrSequence = (ASN1Sequence) timeStampAttrSet.getObjectAt(0);
+
+            // 时间戳属性
+            ASN1TaggedObject timeStampAttrTag = (ASN1TaggedObject) timeStampAttrSequence.getObjectAt(3);
+            ASN1Set timeStampAttr = ASN1Set.getInstance(timeStampAttrTag, false);
+            System.out.println("时间戳属性" + Hex.toHexString(timeStampAttr.getEncoded()));
+
+            // 时间戳原文摘要
+            ASN1Sequence timeStampAttrOriHashSeq = (ASN1Sequence) timeStampAttr.getObjectAt(2);
+            ASN1Set timeStampAttrOriHashSet = (ASN1Set) timeStampAttrOriHashSeq.getObjectAt(1);
+            ASN1OctetString timeStampAttrOriHash = (ASN1OctetString) timeStampAttrOriHashSet.getObjectAt(0);
+            System.out.println("时间戳原文摘要" + Hex.toHexString(timeStampAttrOriHash.getOctets()));
+
+            // 时间戳签名值(时间戳属性)
+            ASN1OctetString timeStampSignValueOcStr = (ASN1OctetString) timeStampAttrSequence.getObjectAt(5);
+            ASN1Sequence timeStampSignValue = (ASN1Sequence) new ASN1InputStream(timeStampSignValueOcStr.getOctets()).readObject();
+            System.out.println("时间戳签名值" + Hex.toHexString(timeStampSignValue.getEncoded()));
+
+            // 验签名值
+            Signature signature = Signature.getInstance("SM3withSM2", "BC");
+            CertificateFactory fact = CertificateFactory.getInstance("X.509", "BC");
+            X509Certificate cert3 = (X509Certificate) fact.generateCertificate(new ByteArrayInputStream(cert.getEncoded()));
+            signature.initVerify(cert3.getPublicKey());
+            signature.update(signAttr2.getEncoded());
+            boolean verify = signature.verify(signValue.toASN1Primitive().getEncoded());
+            System.out.println("验签名值" + verify);
+
+            // pdf
+            byte[] pdfBytes = FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\个人信息授权书(2).pdf");
+            MessageDigest messageDigest = DigestAlgorithms.getMessageDigest("SM3", "BC");
+
+            // 签名原文
+            long[] longs = new long[]{0, 122174, 151076, 4745};
+            byte[] updateData = new byte[(int) (longs[1] + longs[3])];
+            System.arraycopy(pdfBytes, 0, updateData, 0, (int) longs[1]);
+            System.arraycopy(pdfBytes, (int) longs[2], updateData, (int) longs[1], (int) longs[3]);
+            ByteArrayInputStream input = new ByteArrayInputStream(updateData);
+            byte[] buf = new byte[8192];
+            int rd;
+            while ((rd = input.read(buf, 0, buf.length)) > 0) {
+                messageDigest.update(buf, 0, rd);
+            }
+
+            // 原文HASH
+            byte[] digest1 = messageDigest.digest();
+            System.out.println("原文哈希" + Hex.toHexString(digest1));
+
+            // 原文哈希 equals 原文range摘要
+            System.out.println("原文哈希 equals 原文range摘要" + Hex.toHexString(digest1).equals(Hex.toHexString(digest.getOctets())));
+
+            // 验时间戳签名值
+            Signature signature2 = Signature.getInstance("SM3withSM2", "BC");
+            CertificateFactory fact2 = CertificateFactory.getInstance("X.509", "BC");
+            X509Certificate cert4 = (X509Certificate) fact2.generateCertificate(new ByteArrayInputStream(timeCert.getEncoded()));
+            signature2.initVerify(cert4.getPublicKey());
+            signature2.update(timeStampAttr.getEncoded());
+            boolean verify2 = signature2.verify(timeStampSignValue.getEncoded());
+            System.out.println("验时间戳签名值" + verify2);
+
+
 
         }
     }

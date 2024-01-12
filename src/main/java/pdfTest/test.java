@@ -3,38 +3,47 @@ package pdfTest;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONUtil;
+import com.itextpdf.text.Annotation;
+import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.Image;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
-import com.itextpdf.text.pdf.AcroFields;
+import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.Barcode;
 import com.itextpdf.text.pdf.Barcode128;
 import com.itextpdf.text.pdf.Barcode39;
 import com.itextpdf.text.pdf.BarcodeEAN;
 import com.itextpdf.text.pdf.BarcodeQRCode;
 import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.ColumnText;
+import com.itextpdf.text.pdf.PdfAnnotation;
+import com.itextpdf.text.pdf.PdfAppearance;
 import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfDictionary;
+import com.itextpdf.text.pdf.PdfFormField;
+import com.itextpdf.text.pdf.PdfIndirectReference;
+import com.itextpdf.text.pdf.PdfLiteral;
+import com.itextpdf.text.pdf.PdfName;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
+import com.itextpdf.text.pdf.PdfString;
 import com.itextpdf.text.pdf.PdfWriter;
 import lombok.SneakyThrows;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.Security;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * pdf
@@ -149,7 +158,8 @@ public class test {
         // Rectangle pagesize = new Rectangle(216f, 720f);
         // Document document = new Document(pagesize, 36f, 72f, 108f, 180f);
         // rotate横向显示
-        Document document = new Document(PageSize.A4.rotate());
+        // Document document = new Document(PageSize.A4.rotate());
+        Document document = new Document(PageSize.A4);
         // Document document = new Document(PageSize.A4);
         FileOutputStream out = new FileOutputStream("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\create.pdf");
         // 2.创建PdfWriter 实例，并指定输出路径。
@@ -346,4 +356,187 @@ public class test {
         // 5. 关闭
         document.close();
     }
+
+    @Test
+    public void pdfAnnotTest() throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
+        Document document = new Document(PageSize.A4);
+        FileOutputStream out = new FileOutputStream("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\create2.pdf");
+        PdfWriter writer = PdfWriter.getInstance(document, out);
+        writer.setPdfVersion(PdfWriter.PDF_VERSION_1_4);
+        document.open();
+        document.add(new Paragraph("00000000000000000000000000000000000000"));
+
+        // PdfFormField signature = PdfFormField.createSignature(writer);
+        // signature.setWidget(new Rectangle(200, 200, 300, 300), PdfName.HIGHLIGHT);
+        // signature.setName("signname");
+        // signature.setFieldFlags(PdfAnnotation.FLAGS_HIDDEN);
+        // signature.setPage();
+        // signature.setMKBorderColor(BaseColor.BLACK);
+        // signature.setMKBackgroundColor(BaseColor.WHITE);
+        // PdfAppearance appearance1 = PdfAppearance.createAppearance(writer, 100, 100);
+        // appearance1.rectangle(0.5f, 0.5f, 99f, 99f);
+        // appearance1.stroke();
+        // signature.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, appearance1);
+        // writer.addAnnotation(signature);
+
+        document.close();
+
+        byte[] pdf = FileUtil.readBytes("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\create2.pdf");
+        PdfReader pdfReader = new PdfReader(pdf);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        PdfStamper pdfStamper = new PdfStamper(pdfReader, bos);
+
+        // 添加签名域并锁定
+        PdfFormField sigField = PdfFormField.createSignature(pdfStamper.getWriter());
+        sigField.setFieldName("signname");
+        pdfStamper.addAnnotation(sigField, 1);
+        pdfStamper.getWriter().setSigFlags(3);
+
+        Image image = Image.getInstance(FileUtil.readBytes("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\resources\\file\\image\\页眉log.png"));
+        int width = (int) image.getWidth();
+        int heifht = (int) image.getHeight();
+        int llx = 100;
+        int lly = 100;
+        int urx = llx + width;
+        int ury = lly + heifht;
+        PdfAppearance appearance = PdfAppearance.createAppearance(pdfStamper.getWriter(), width, heifht);
+
+        // PdfAnnotation pdfAnnotation = new PdfAnnotation(pdfStamper.getWriter(), new Rectangle(llx, lly, urx, ury));
+        // pdfAnnotation.put(PdfName.TYPE, new PdfLiteral("Annot"));
+        // pdfAnnotation.put(PdfName.SUBTYPE, new PdfLiteral("McsCa"));
+        // pdfAnnotation.put(PdfName.SIG, new PdfLiteral("sigTest"));
+
+        PdfAnnotation annotation = pdfStamper.getWriter().createAnnotation(new Rectangle(llx, lly, urx, ury), new PdfName("McsCa"));
+        PdfLiteral lit = new PdfLiteral(80);
+        annotation.put(new PdfName("test"), lit);
+        annotation.put(PdfName.TYPE, PdfName.ANNOT);
+
+        ColumnText text = new ColumnText(appearance);
+        text.addElement(image);
+        text.setSimpleColumn(new Rectangle(0, 0, width, heifht));
+        text.go();
+
+        annotation.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, appearance);
+        pdfStamper.addAnnotation(annotation, 1);
+        System.out.println(lit.getPosition());
+        System.out.println(lit.getPosLength());
+
+        pdfStamper.close();
+        byte[] returnBytes = bos.toByteArray();
+
+        // 取前面
+        byte[] bytes = new byte[(int) lit.getPosition()];
+        System.arraycopy(returnBytes, 0, bytes, 0, (int) lit.getPosition());
+        FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\Desktop\\range1");
+        // 取后面
+        long signValueLength = lit.getPosLength() + lit.getPosition();
+        long range2 = returnBytes.length - signValueLength;
+        byte[] bytes1 = new byte[(int) range2];
+        System.arraycopy(returnBytes, (int) signValueLength, bytes1, 0, (int) range2);
+        FileUtil.writeBytes(bytes1, "C:\\Users\\ggk911\\Desktop\\range2");
+
+        byte[] filleData = "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000".getBytes(StandardCharsets.UTF_8);
+        System.arraycopy(filleData, 0, returnBytes, (int) lit.getPosition(), lit.getPosLength());
+
+
+        bos.close();
+        pdfReader.close();
+        FileUtil.writeBytes(returnBytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\createAnnot.pdf");
+    }
+
+    @Test
+    public void pdfAnnotTest02() throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
+        Document document = new Document(PageSize.A4);
+        FileOutputStream out = new FileOutputStream("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\create2.pdf");
+        PdfWriter writer = PdfWriter.getInstance(document, out);
+        writer.setPdfVersion(PdfWriter.PDF_VERSION_1_4);
+        document.open();
+        // 4.添加内容
+        document.add(new Paragraph("00000000000000000000000000000000000000"));
+        document.close();
+
+        byte[] pdf = FileUtil.readBytes("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\create2.pdf");
+        PdfReader pdfReader = new PdfReader(pdf);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        PdfStamper pdfStamper = new PdfStamper(pdfReader, bos);
+
+        // pdfStamper.addSignature("signname", 1, 200, 200, 300, 300);
+        // AcroFields acroFields = pdfReader.getAcroFields();
+        // int totalRevisions = acroFields.getTotalRevisions();
+        // for (int i = 0; i < totalRevisions; i++) {
+        //     acroFields.signatureCoversWholeDocument("signname");
+        // }
+
+
+        int width = 245;
+        int heifht = 80;
+
+        Image image = Image.getInstance(FileUtil.readBytes("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\resources\\file\\image\\页眉log.png"));
+        image.scaleToFit(width, heifht);
+        image.setAbsolutePosition(100, 100);
+        Annotation annotation = new Annotation("test", "1234");
+        image.setAnnotation(annotation);
+        PdfContentByte overContent = pdfStamper.getOverContent(1);
+        overContent.addImage(image);
+
+        pdfStamper.close();
+        byte[] returnBytes = bos.toByteArray();
+        bos.close();
+        pdfReader.close();
+        FileUtil.writeBytes(returnBytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\createAnnot.pdf");
+    }
+
+    @Test
+    public void pdfAnnotTest03() throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
+        Document document = new Document(PageSize.A4);
+        FileOutputStream out = new FileOutputStream("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\create2.pdf");
+        PdfWriter writer = PdfWriter.getInstance(document, out);
+        writer.setPdfVersion(PdfWriter.PDF_VERSION_1_4);
+        document.open();
+        // 4.添加内容
+        document.add(new Paragraph("00000000000000000000000000000000000000"));
+        // 签名域
+        PdfFormField signature = PdfFormField.createSignature(writer);
+        signature.setWidget(new Rectangle(200, 200, 300, 300), PdfName.HIGHLIGHT);
+        signature.setName("signname");
+        signature.setFieldFlags(PdfAnnotation.FLAGS_HIDDEN);
+        signature.setPage();
+        signature.setMKBorderColor(BaseColor.BLACK);
+        signature.setMKBackgroundColor(BaseColor.WHITE);
+        PdfAppearance appearance = PdfAppearance.createAppearance(writer, 100, 100);
+        appearance.rectangle(0.5f, 0.5f, 99f, 99f);
+        appearance.stroke();
+        signature.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, appearance);
+        writer.addAnnotation(signature);
+        // writer.setSigFlags(3);
+        document.close();
+
+        byte[] pdf = FileUtil.readBytes("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\create2.pdf");
+        PdfReader pdfReader = new PdfReader(pdf);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        PdfStamper pdfStamper = new PdfStamper(pdfReader, bos);
+        pdfStamper.getWriter().setSigFlags(3);
+
+        // int width = 245;
+        // int heifht = 80;
+        // Image image = Image.getInstance(FileUtil.readBytes("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\resources\\file\\image\\页眉log.png"));
+        // image.scaleToFit(width, heifht);
+        // image.setAbsolutePosition(100, 100);
+        // Annotation annotation = new Annotation("test", "1234");
+        // image.setAnnotation(annotation);
+        // PdfContentByte overContent = pdfStamper.getOverContent(1);
+        // overContent.addImage(image);
+
+
+        pdfStamper.close();
+        byte[] returnBytes = bos.toByteArray();
+        bos.close();
+        pdfReader.close();
+        FileUtil.writeBytes(returnBytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\createAnnot.pdf");
+    }
+
+
 }
