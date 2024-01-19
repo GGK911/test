@@ -32,6 +32,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.KeyGenerator;
@@ -122,6 +123,9 @@ public class sm2_demo {
         System.out.println("公钥Base64：" + publicKeyBase64);
         String privateKeyBase64 = Base64.toBase64String(privateKey.getEncoded());
         System.out.println("密钥Base64：" + privateKeyBase64);
+
+        System.out.println("公钥Hex：" + Hex.toHexString(publicKey.getEncoded()));
+        System.out.println("私钥Hex：" + Hex.toHexString(privateKey.getEncoded()));
 
         System.out.println("//*************************************************加密-解密**********************************************************//");
 
