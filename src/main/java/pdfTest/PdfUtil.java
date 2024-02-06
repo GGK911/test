@@ -5,6 +5,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.itextpdf.text.BadElementException;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.DocumentException;
@@ -29,13 +30,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.SneakyThrows;
 import org.bouncycastle.util.encoders.Base64;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,7 +47,7 @@ import java.util.stream.Collectors;
  * @author TangHaoKai
  * @version V1.0 2023-10-19 11:19
  **/
-public class PdfUtil {
+public abstract class PdfUtil {
 
     /**
      * 基础字体
@@ -171,7 +172,7 @@ public class PdfUtil {
             for (Map.Entry<String, Object> next : fillData.entrySet()) {
                 String key = next.getKey();
                 if (form.getFieldItem(key) == null) {
-                    throw new RuntimeException("未知参数" + key);
+                    throw new IllegalArgumentException("未知参数" + key);
                 }
                 Object value = next.getValue();
                 // 文本类型
@@ -281,7 +282,7 @@ public class PdfUtil {
                 templateParameterList.add(templateParameter);
             }
         } catch (Exception e) {
-            throw new RuntimeException("参数上传模板-解析文本域-设置文本域内容异常");
+            throw new RuntimeException("参数上传模板-解析文本域异常");
         }
         try {
             stamper.close();
@@ -293,6 +294,81 @@ public class PdfUtil {
     }
 
     /**
+     * 去除PDF所有域
+     *
+     * @param pdfBytes PDF文件
+     * @return 文件
+     */
+    public static byte[] removeAllField(byte[] pdfBytes) {
+        return removeField(pdfBytes, null);
+    }
+
+    /**
+     * 去除指定PDF域
+     *
+     * @param pdfBytes      域文件
+     * @param fieldNameList 要去除的域名称
+     * @return 文件
+     */
+    public static byte[] removeFieldByNames(byte[] pdfBytes, List<String> fieldNameList) {
+        if (fieldNameList == null || fieldNameList.size() == 0) {
+            throw new IllegalArgumentException("要去除的字段为空");
+        }
+        return removeField(pdfBytes, fieldNameList);
+    }
+
+    //***************************************************私有方法*********************************************************//
+
+    /**
+     * 去除域(域名称)
+     *
+     * @param pdfBytes      PDF文件
+     * @param fieldNameList 要去除的域名称
+     * @return 文件
+     */
+    private static byte[] removeField(byte[] pdfBytes, List<String> fieldNameList) {
+        PdfReader reader;
+        PdfStamper stamper;
+        try {
+            reader = new PdfReader(new PdfReader(pdfBytes));
+        } catch (Exception e) {
+            throw new RuntimeException("参数上传模板-解析文本域-读取文件数据异常");
+        }
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try {
+            stamper = new PdfStamper(reader, bos);
+        } catch (Exception e) {
+            throw new RuntimeException("参数上传模板-解析文本域-pdf读取异常");
+        }
+        AcroFields form = stamper.getAcroFields();
+        if (ObjectUtil.isNull(form)) {
+            throw new RuntimeException("参数上传模板-解析文本域-空模板");
+        }
+        if (fieldNameList == null || fieldNameList.size() == 0) {
+            // 所有
+            final Map<String, AcroFields.Item> fields = form.getFields();
+            final List<String> keys = new ArrayList<>(fields.keySet());
+            for (String key : keys) {
+                form.removeField(key);
+            }
+        } else {
+            // 指定
+            for (String name : fieldNameList) {
+                form.removeField(name);
+                System.out.println("DELETE>>" + name);
+            }
+        }
+        try {
+            stamper.close();
+            bos.close();
+            reader.close();
+        } catch (Exception e) {
+            throw new RuntimeException("参数上传模板-解析文本域-关闭pdf解析工具异常");
+        }
+        return bos.toByteArray();
+    }
+
+    /**
      * PDF填充图片通过坐标
      *
      * @param stamper pdf文件
@@ -300,8 +376,10 @@ public class PdfUtil {
      * @param page    页数
      * @param x       图片左下坐标X
      * @param y       图片左下坐标Y
+     * @throws IOException       旋转图片异常
+     * @throws DocumentException PdfContentByte添加图片异常/旋转图片异常
      */
-    private static void fillImage(PdfStamper stamper, byte[] picByte, int page, float x, float y) {
+    private static void fillImage(PdfStamper stamper, byte[] picByte, int page, float x, float y) throws DocumentException, IOException {
         fillImageByCoordinate(stamper, picByte, page, x, y, null, null);
     }
 
@@ -314,8 +392,10 @@ public class PdfUtil {
      * @param x       图片左下坐标X
      * @param y       图片左下坐标Y
      * @param rotate  旋转角度 正数：顺时针 负数：逆时针
+     * @throws IOException       旋转图片异常
+     * @throws DocumentException 旋转图片异常/PdfContentByte添加图片异常
      */
-    private static void fillImage(PdfStamper stamper, byte[] picByte, int page, float x, float y, Double rotate) {
+    private static void fillImage(PdfStamper stamper, byte[] picByte, int page, float x, float y, Double rotate) throws DocumentException, IOException {
         if (rotate != null && rotate != 0) {
             picByte = rotate(picByte, rotate);
         }
@@ -330,8 +410,10 @@ public class PdfUtil {
      * @param form     pdf所有文本域
      * @param key      要填充的文本域
      * @param isCenter 是否居中文本域
+     * @throws IOException       读取图片异常
+     * @throws DocumentException 读取图片异常/PdfContentByte添加图片异常
      */
-    private static void fillImage(PdfStamper stamper, byte[] picByte, AcroFields form, String key, boolean isCenter) {
+    private static void fillImage(PdfStamper stamper, byte[] picByte, AcroFields form, String key, boolean isCenter) throws DocumentException, IOException {
         fillImageByField(stamper, picByte, form, key, false, isCenter);
     }
 
@@ -345,8 +427,10 @@ public class PdfUtil {
      * @param isScale  是否铺满整个文本域
      * @param isCenter 是否居中文本域
      * @param rotate   旋转角度 正数：顺时针 负数：逆时针
+     * @throws IOException         旋转图片异常
+     * @throws BadElementException 读取图片异常/PdfContentByte添加图片异常
      */
-    private static void fillImage(PdfStamper stamper, byte[] picByte, AcroFields form, String key, boolean isScale, boolean isCenter, Double rotate) {
+    private static void fillImage(PdfStamper stamper, byte[] picByte, AcroFields form, String key, boolean isScale, boolean isCenter, Double rotate) throws DocumentException, IOException {
         // 旋转
         if (rotate != null && rotate != 0) {
             picByte = rotate(picByte, rotate);
@@ -363,9 +447,10 @@ public class PdfUtil {
      * @param key      要填充的文本域
      * @param isScale  是否铺满整个文本域
      * @param isCenter 是否居中文本域
+     * @throws IOException       读取图片异常
+     * @throws DocumentException 读取图片异常/PdfContentByte添加图片异常
      */
-    @SneakyThrows
-    private static void fillImageByField(PdfStamper stamper, byte[] picByte, AcroFields form, String key, boolean isScale, boolean isCenter) {
+    private static void fillImageByField(PdfStamper stamper, byte[] picByte, AcroFields form, String key, boolean isScale, boolean isCenter) throws DocumentException, IOException {
         // 通过域名获取所在页和坐标，左下角为起点
         int pageNo = form.getFieldPositions(key).get(0).page;
         Rectangle signRect = form.getFieldPositions(key).get(0).position;
@@ -399,9 +484,10 @@ public class PdfUtil {
      * @param y       图片左下坐标Y
      * @param width   宽
      * @param height  高
+     * @throws IOException       读取图片异常
+     * @throws DocumentException PdfContentByte添加图片异常/旋转图片异常
      */
-    @SneakyThrows
-    private static void fillImageByCoordinate(PdfStamper stamper, byte[] picByte, int page, float x, float y, Float width, Float height) {
+    private static void fillImageByCoordinate(PdfStamper stamper, byte[] picByte, int page, float x, float y, Float width, Float height) throws DocumentException, IOException {
         // 获取操作的页面
         PdfContentByte under = stamper.getOverContent(page);
         Image image = Image.getInstance(picByte);
@@ -421,9 +507,10 @@ public class PdfUtil {
      * @param picByte 图片
      * @param rotate  旋转角度 正数：顺时针 负数：逆时针
      * @return 旋转后图片
+     * @throws IOException         读取图片异常
+     * @throws BadElementException 读取图片异常
      */
-    @SneakyThrows
-    private static byte[] rotate(byte[] picByte, Double rotate) {
+    private static byte[] rotate(byte[] picByte, Double rotate) throws BadElementException, IOException {
         ByteArrayOutputStream imageByte = new ByteArrayOutputStream();
         Image instance = Image.getInstance(picByte);
         ImageUtil.rotateByAngle(new ByteArrayInputStream(picByte), imageByte, (int) instance.getWidth(), (int) instance.getHeight(), rotate);
@@ -438,7 +525,6 @@ public class PdfUtil {
      * @param height  调整后高度
      * @return 调整宽高后图片
      */
-    @SneakyThrows
     private static byte[] scale(byte[] picByte, float width, float height) {
         ByteArrayOutputStream imageByte = new ByteArrayOutputStream();
         ImageUtil.scaleBySize(new ByteArrayInputStream(picByte), imageByte, (int) width, (int) height);
@@ -471,11 +557,17 @@ public class PdfUtil {
         EnumPdfDomainType pdfType = EnumPdfDomainType.getEnumByPdfCode(String.valueOf(fieldType));
         // 复选框
         if (pdfType == EnumPdfDomainType.CHECKBOX_DOMAIN) {
-            if (Boolean.TRUE.toString().equalsIgnoreCase(value) || "是".equals(value) || "1".equals(value)) {
-                form.setField(key, "true", true);
-                // thk's todo 在低版本itext中的 叉 会有bug,没有边框
-            } else if (Boolean.FALSE.toString().equalsIgnoreCase(value) || "否".equals(value) || "0".equals(value)) {
-                form.setField(key, "true", false);
+            // 参考 iText in Action 2nd edition (Bruno Lowagie) PAGE-240 8.2.2
+            String[] states = form.getAppearanceStates(key);
+            final String trueState = Arrays.stream(states).filter(state -> state.equalsIgnoreCase("on") || state.equalsIgnoreCase("true") || state.equalsIgnoreCase("是") || state.equalsIgnoreCase("1")).findFirst().orElse(null);
+            final String falseState = Arrays.stream(states).filter(state -> state.equalsIgnoreCase("off") || state.equalsIgnoreCase("false") || state.equalsIgnoreCase("否") || state.equalsIgnoreCase("0")).findFirst().orElse(null);
+            if (StrUtil.isEmpty(trueState) || StrUtil.isEmpty(falseState)) {
+                throw new IllegalArgumentException("复选框导出值错误");
+            }
+            if ("是".equalsIgnoreCase(value) || "1".equalsIgnoreCase(value) || "on".equalsIgnoreCase(value) || "true".equalsIgnoreCase(value)) {
+                form.setField(key, trueState, true);
+            } else if ("否".equalsIgnoreCase(value) || "0".equalsIgnoreCase(value) || "off".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+                form.setField(key, falseState, false);
             } else {
                 System.out.println("此复选框：" + key + "，值错误");
                 // thk's todo 是否抛出
@@ -550,6 +642,7 @@ public class PdfUtil {
         double realLine = Math.ceil(totalTextWidth / textBoxWidth);
         // 文本框最多显示全行数
         double boxMaxLine = Math.floor(textBoxHeight / (ascent * 1.25));
+        // PDF Reference PAGE-692 Multiline flag
         PdfObject directObject = form.getFieldItem(key).getMerged(0).getDirectObject(PdfName.FF);
         // 文本框高度只够写一行，并且文字宽度大于文本宽度，则缩小字体
         // 判断单行文本

@@ -270,11 +270,11 @@ public class Pkcs12Test {
         // );
 
         // Authority Info Access 授权信息访问
-        v3CertBuilder.addExtension(
-                Extension.authorityInfoAccess,
-                true,
-                new AuthorityInformationAccess(new AccessDescription[]{new AccessDescription(AccessDescription.id_ad_ocsp, new GeneralName(GeneralName.dNSName, "http://127.0.0.1/caissue.htm")), new AccessDescription(AccessDescription.id_ad_caIssuers, new GeneralName(GeneralName.dNSName, "http://127.0.0.1:20443"))})
-        );
+        // v3CertBuilder.addExtension(
+        //         Extension.authorityInfoAccess,
+        //         true,
+        //         new AuthorityInformationAccess(new AccessDescription[]{new AccessDescription(AccessDescription.id_ad_ocsp, new GeneralName(GeneralName.dNSName, "http://127.0.0.1/caissue.htm")), new AccessDescription(AccessDescription.id_ad_caIssuers, new GeneralName(GeneralName.dNSName, "http://127.0.0.1:20443"))})
+        // );
 
         // Key Usage 密钥用法
         v3CertBuilder.addExtension(
@@ -291,11 +291,11 @@ public class Pkcs12Test {
         );
 
         // Extended Key Usage 增强型密钥用法
-        v3CertBuilder.addExtension(
-                Extension.extendedKeyUsage,
-                true,
-                new ExtendedKeyUsage(KeyPurposeId.id_kp_timeStamping)
-        );
+        // v3CertBuilder.addExtension(
+        //         Extension.extendedKeyUsage,
+        //         true,
+        //         new ExtendedKeyUsage(KeyPurposeId.id_kp_timeStamping)
+        // );
         ContentSigner signer = new JcaContentSignerBuilder("SHA1withRSA").setProvider(BC).build(caPrivKey);
         X509CertificateHolder certificateHolder = v3CertBuilder.build(signer);
         X509Certificate certificate = new JcaX509CertificateConverter().setProvider(BC).getCertificate(certificateHolder);
@@ -322,8 +322,8 @@ public class Pkcs12Test {
         X509v3CertificateBuilder v3CertBuilder = new JcaX509v3CertificateBuilder(
                 JcaX500NameUtil.getIssuer(caCert),
                 BigInteger.valueOf(2),
-                new Date(System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 30),
-                new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)),
+                new Date(System.currentTimeMillis()),
+                new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 365 * 5)),
                 subjectBuilder.build(),
                 pubKey);
         // 扩展
@@ -374,7 +374,7 @@ public class Pkcs12Test {
                 new X500Name(issuer),
                 new BigInteger("1"),
                 new Date(),
-                new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)),
+                new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 365 * 10)),
                 new X500Name(subject),
                 caPubKey
         );

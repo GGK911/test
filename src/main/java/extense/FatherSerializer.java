@@ -8,6 +8,7 @@ import java.io.IOException;
 
 /**
  * Father的序列化器
+ * jacksonTest使用
  *
  * @author TangHaoKai
  * @version V1.0 2023-10-23 13:40

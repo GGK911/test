@@ -5,6 +5,7 @@ import cn.com.mcsca.itextpdf.text.pdf.PdfDictionary;
 import cn.com.mcsca.itextpdf.text.pdf.PdfName;
 import cn.com.mcsca.itextpdf.text.pdf.PdfObject;
 import cn.com.mcsca.itextpdf.text.pdf.PdfReader;
+import cn.com.mcsca.itextpdf.text.pdf.PdfStamper;
 import cn.com.mcsca.itextpdf.text.pdf.PdfString;
 import cn.com.mcsca.itextpdf.text.pdf.security.PdfPKCS7;
 import cn.hutool.core.io.FileUtil;
@@ -12,6 +13,7 @@ import lombok.SneakyThrows;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.security.Provider;
 
 /**
@@ -83,6 +85,22 @@ public class PdfAnalysisTest {
                 }
             }
         }
+    }
+
+    @Test
+    @SneakyThrows
+    public void analysisFullComTest() {
+        // 读取和解析 PDF 文档
+        // String pdf = "C:\\Users\\ggk911\\Desktop\\cfca.pdf";
+        // String pdf = "C:\\Users\\ggk911\\Desktop\\劳动合同( 含变更+隐私声明 )-无固定期限5.pdf";
+        String pdf = "C:\\Users\\ggk911\\Desktop\\域模板.pdf";
+        // String pdf = "C:\\Users\\ggk911\\Desktop\\多页测试1.pdf";
+        byte[] readBytes = FileUtil.readBytes(pdf);
+        PdfReader reader = new PdfReader(readBytes);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final PdfStamper pdfStamper = new PdfStamper(reader, bos, '\0', true);
+        // final PdfStamper pdfStamper = new PdfStamper(reader, bos);
+        System.out.println("是否1.5压缩：" + pdfStamper.getWriter().isFullCompression());
     }
 
 

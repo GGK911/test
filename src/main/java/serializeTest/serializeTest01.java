@@ -2,7 +2,10 @@ package serializeTest;
 
 import certTest.PemFormatUtil;
 import certTest.saxon.sm2.CertificateUtils;
+import cn.hutool.core.io.FileUtil;
 import lombok.SneakyThrows;
+import org.bouncycastle.asn1.DERPrintableString;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -81,16 +84,23 @@ public class serializeTest01 {
 
         // 创建 CSR
         PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(subject, keyPair.getPublic());
+
+        //
+        DERPrintableString password = new DERPrintableString("secret123");
+        builder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, password);
+
         PKCS10CertificationRequest sm2Csr = builder.build(signer);
         // 打印 CSR
         PemFormatUtil.csrToPem(sm2Csr);
         System.out.println("----------打印Base64格式CSR");
         System.out.println(Base64.toBase64String(sm2Csr.getEncoded()));
 
-        // System.out.println("//*************************************************SM2-CSR签发证书**********************************************************//");
-        //
-        // Certificate cert = CertificateUtils.makeCertificate(sm2Csr.getEncoded(), 365);
-        //
+        System.out.println("//*************************************************SM2-CSR签发证书**********************************************************//");
+
+        Certificate cert = CertificateUtils.makeCertificate(sm2Csr.getEncoded(), 365);
+
+        System.out.println(Base64.toBase64String(cert.getEncoded()));
+
         // System.out.println("//*************************************************SM2证书序列化**********************************************************//");
         //
         // String filePath = "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\serializeTest\\test.cer";

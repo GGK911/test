@@ -1,10 +1,10 @@
 package pdfTest;
 
-import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * @author TangHaoKai
@@ -19,13 +19,17 @@ public class ImageUtil {
      * @param width  宽
      * @param height 高
      **/
-    @SneakyThrows
     public static void scaleBySize(ByteArrayInputStream in, ByteArrayOutputStream out, Integer width, Integer height) {
-        Thumbnails.of(in)
-                .size(width, height)
-                // 默认是按照比例缩放的
-                .keepAspectRatio(false)
-                .toOutputStream(out);
+        try {
+            Thumbnails.of(in)
+                    .size(width, height)
+                    // 默认是按照比例缩放的
+                    .keepAspectRatio(false)
+                    .toOutputStream(out);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("缩放图片后输出流异常");
+        }
     }
 
     /**
@@ -36,11 +40,15 @@ public class ImageUtil {
      * @param width  宽
      * @param height 高
      */
-    @SneakyThrows
     public static void scaleBySizeKeepRatio(ByteArrayInputStream in, ByteArrayOutputStream out, Integer width, Integer height) {
-        Thumbnails.of(in)
-                .size(width, height)
-                .toOutputStream(out);
+        try {
+            Thumbnails.of(in)
+                    .size(width, height)
+                    .toOutputStream(out);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("缩放图片后输出流异常");
+        }
     }
 
     /**
@@ -50,11 +58,15 @@ public class ImageUtil {
      * @param out   文件字节输出流
      * @param angle 旋转角度 正数：顺时针 负数：逆时针
      */
-    @SneakyThrows
     public static void rotateByAngle(ByteArrayInputStream in, ByteArrayOutputStream out, Integer width, Integer height, Double angle) {
-        Thumbnails.of(in)
-                .size(width, height)
-                .rotate(angle)
-                .toOutputStream(out);
+        try {
+            Thumbnails.of(in)
+                    .size(width, height)
+                    .rotate(angle)
+                    .toOutputStream(out);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("缩放图片后输出流异常");
+        }
     }
 }
