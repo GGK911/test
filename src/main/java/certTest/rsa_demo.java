@@ -15,12 +15,15 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
 
+import javax.crypto.Cipher;
 import javax.security.auth.x500.X500Principal;
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
@@ -92,7 +95,8 @@ public class rsa_demo {
         PrivateKey privateKey = keyPair.getPrivate();
         PemFormatUtil.priKeyToPem(privateKey);
         // 打印公钥
-        PemFormatUtil.pubKeyToPem(keyPair.getPublic());
+        PublicKey publicKey = keyPair.getPublic();
+        PemFormatUtil.pubKeyToPem(publicKey);
 
         // Subject
         String subjectParam = "CN=GGK911,OU=GGK911,O=GGK911,C=CN," + BCStyle.E + "=13983053455@163.com,L=重庆,ST=重庆";
@@ -104,14 +108,23 @@ public class rsa_demo {
                 .build(privateKey);
 
         // 创建 CSR
-        PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(subject, keyPair.getPublic());
+        PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(subject, publicKey);
         PKCS10CertificationRequest rsaCsr = builder.build(signer);
         // 打印 CSR
         PemFormatUtil.csrToPem(rsaCsr);
         System.out.println("----------打印Base64格式CSR");
         System.out.println(Base64.toBase64String(rsaCsr.getEncoded()));
 
+        System.out.println("//*************************************************加密-解密**********************************************************//");
 
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", BC);
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+        byte[] encData = cipher.doFinal(M.getBytes(StandardCharsets.UTF_8));
+        System.out.println("ENC>> "+ Hex.toHexString(encData));
+
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        byte[] deData = cipher.doFinal(encData);
+        System.out.println("解密>> "+new String(deData));
 
     }
 }

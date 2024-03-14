@@ -191,6 +191,14 @@ public class CertificateUtils {
         // 获取签发者信息
         X500Name issuerX500Name = CertificateUtils.generateIssuerX500Name();
 
+        // 自定义证书主题DN，不使用csr来的主题DN
+        X500NameBuilder diyDn = new X500NameBuilder(BCStyle.INSTANCE);
+        // 国家代码
+        diyDn.addRDN(BCStyle.C, "CN");
+        // 通用
+        diyDn.addRDN(BCStyle.CN, "ggk911");
+        final X500Name diyDnName = diyDn.build();
+
         // 证书请求
         PKCS10CertificationRequest pkcs10CertificationRequest = new PKCS10CertificationRequest(csr);
 
@@ -206,7 +214,8 @@ public class CertificateUtils {
                 issuerX500Name, snAllocator,//
                 new Date(System.currentTimeMillis()), //
                 new Date(System.currentTimeMillis() + certExpire),//
-                pkcs10CertificationRequest.getSubject(), bcecPublicKey);
+                // pkcs10CertificationRequest.getSubject(), bcecPublicKey);
+                diyDnName, bcecPublicKey);
         // 添加扩展信息
         v3CertGen.addExtension(Extension.keyUsage, true, keyUsage);
 

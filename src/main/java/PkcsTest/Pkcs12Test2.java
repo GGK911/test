@@ -41,6 +41,7 @@ import org.bouncycastle.pkcs.jcajce.JcaPKCS12SafeBagBuilder;
 import org.bouncycastle.util.encoders.Base64;
 
 import java.math.BigInteger;
+import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
@@ -218,7 +219,7 @@ public class Pkcs12Test2 {
         v3CertBuilder.addExtension(
                 Extension.keyUsage,
                 true,
-                new KeyUsage(KeyUsage.digitalSignature | KeyUsage.nonRepudiation)
+                new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment)
         );
 
         // Basic Constraints 基本约束
@@ -280,8 +281,18 @@ public class Pkcs12Test2 {
         // 基本约束
         v3CertBuilder.addExtension(
                 Extension.basicConstraints,
-                true,
+                false,
                 new BasicConstraints(0));
+
+        // Key Usage 密钥用法
+        v3CertBuilder.addExtension(
+                Extension.keyUsage,
+                false,
+                new KeyUsage(KeyUsage.keyCertSign | KeyUsage.cRLSign | KeyUsage.digitalSignature | KeyUsage.keyEncipherment)
+                // new KeyUsage(KeyUsage.cRLSign | KeyUsage.digitalSignature | KeyUsage.keyEncipherment)
+        );
+
+
         ContentSigner signer = new JcaContentSignerBuilder("SM3withSM2").setProvider(BC).build(caPrivKey);
         X509CertificateHolder certificateHolder = v3CertBuilder.build(signer);
         X509Certificate certificate = new JcaX509CertificateConverter().setProvider(BC).getCertificate(certificateHolder);
@@ -301,22 +312,22 @@ public class Pkcs12Test2 {
         String issuer = "C=CN,O=China,OU=CA";
         // 使用者
         String subject = "C=CN,O=China,OU=CA";
-        // // V3版本
-        // JcaX509v3CertificateBuilder certificateBuilder = new JcaX509v3CertificateBuilder(new X500Name(issuer),
-        //         new BigInteger("1234567812345678"),
-        //         new Date(),
-        //         new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)),
-        //         new X500Name(subject),
-        //         caPubKey);
-        // V1版本
-        JcaX509v1CertificateBuilder certificateBuilder = new JcaX509v1CertificateBuilder(
-                new X500Name(issuer),
-                new BigInteger("1"),
+        // V3版本
+        JcaX509v3CertificateBuilder certificateBuilder = new JcaX509v3CertificateBuilder(new X500Name(issuer),
+                new BigInteger("1234567812345678"),
                 new Date(),
-                new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 365)),
+                new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)),
                 new X500Name(subject),
-                caPubKey
-        );
+                caPubKey);
+        // V1版本
+        // JcaX509v1CertificateBuilder certificateBuilder = new JcaX509v1CertificateBuilder(
+        //         new X500Name(issuer),
+        //         new BigInteger("1"),
+        //         new Date(),
+        //         new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 365)),
+        //         new X500Name(subject),
+        //         caPubKey
+        // );
 
         ContentSigner signer = new JcaContentSignerBuilder("SM3withSM2").setProvider(BC).build(caPrivKey);
         X509CertificateHolder certificateHolder = certificateBuilder.build(signer);

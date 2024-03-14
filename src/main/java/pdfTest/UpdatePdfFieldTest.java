@@ -157,17 +157,35 @@ public class UpdatePdfFieldTest {
 
     @Test
     public void fillTest() throws Exception {
-        Path path = Paths.get("src/main/java/pdfTest", "fieldTest.pdf");
+        // Path path = Paths.get("src/main/java/pdfTest", "fieldTest.pdf");
+        Path path = Paths.get("src/main/java/pdfTest", "updateFieldTest.pdf");
         Path out = Paths.get("src\\main\\java\\pdfTest\\fillTest.pdf");
         Map<String, String> key = new HashMap<>();
-        key.put("createField01", "1");
-        key.put("checkbox01", "1");
-        key.put("checkbox02", "1");
-        // key.put("Check Box3", "1");
+        // key.put("createField01", "1");
+        // key.put("checkbox01", "1");
+        // key.put("checkbox02", "1");
+        // key.put("Check Box1", "1");
         // key.put("Check Box4", "1");
+        key.put("test01", "false");
         final byte[] bytes = PdfUtil.pdfFill(Files.readAllBytes(path), key);
         FileUtil.writeBytes(bytes, out.toAbsolutePath().toString());
         System.out.println(">> " + out.toAbsolutePath());
+    }
+
+    /**
+     * 工具类
+     */
+    @Test
+    public void updateFieldTest() throws Exception {
+        Path path = Paths.get("src/main/java/pdfTest", "合同测试模板.pdf");
+        Path fieldChange = Paths.get("src\\main\\java\\pdfTest\\updateFieldTest.pdf");
+        final byte[] pdfBytes = Files.readAllBytes(path);
+        // final String fieldType = "TEXT";
+        final String fieldType = "SIGNATURE";
+        // final String fieldType = "CHECKBOX";
+        final byte[] bytes = PdfUtil.addField(pdfBytes, "test01", fieldType, new Rectangle(100, 100, 200, 200), 1);
+        FileUtil.writeBytes(bytes, fieldChange.toAbsolutePath().toString());
+        System.out.println(">> " + fieldChange.toAbsolutePath());
     }
 
 }

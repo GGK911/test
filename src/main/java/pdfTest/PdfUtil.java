@@ -18,13 +18,18 @@ import com.itextpdf.text.pdf.AcroFields;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.FontSelector;
 import com.itextpdf.text.pdf.GrayColor;
+import com.itextpdf.text.pdf.PdfAnnotation;
+import com.itextpdf.text.pdf.PdfAppearance;
+import com.itextpdf.text.pdf.PdfBorderDictionary;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfDictionary;
+import com.itextpdf.text.pdf.PdfFormField;
 import com.itextpdf.text.pdf.PdfName;
 import com.itextpdf.text.pdf.PdfObject;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
 import com.itextpdf.text.pdf.PdfString;
+import com.itextpdf.text.pdf.RadioCheckField;
 import com.itextpdf.text.pdf.TextField;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -47,7 +52,7 @@ import java.util.stream.Collectors;
  * @author TangHaoKai
  * @version V1.0 2023-10-19 11:19
  **/
-public abstract class PdfUtil {
+public class PdfUtil {
 
     /**
      * 基础字体
@@ -74,6 +79,9 @@ public abstract class PdfUtil {
         }
     }
 
+    /**
+     * 图片填充参数
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -231,17 +239,17 @@ public abstract class PdfUtil {
         try {
             reader = new PdfReader(new PdfReader(bytes));
         } catch (Exception e) {
-            throw new RuntimeException("参数上传模板-解析文本域-读取文件数据异常");
+            throw new RuntimeException("获取PDF参数-解析文本域-读取文件数据异常");
         }
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try {
             stamper = new PdfStamper(reader, bos);
         } catch (Exception e) {
-            throw new RuntimeException("参数上传模板-解析文本域-pdf读取异常");
+            throw new RuntimeException("获取PDF参数-解析文本域-pdf读取异常");
         }
         AcroFields form = stamper.getAcroFields();
         if (ObjectUtil.isNull(form)) {
-            throw new RuntimeException("参数上传模板-解析文本域-请根据模板要求上传数据");
+            throw new RuntimeException("获取PDF参数-解析文本域-请根据模板要求上传数据");
         }
         try {
             for (String name : form.getFields().keySet()) {
@@ -282,14 +290,14 @@ public abstract class PdfUtil {
                 templateParameterList.add(templateParameter);
             }
         } catch (Exception e) {
-            throw new RuntimeException("参数上传模板-解析文本域异常");
+            throw new RuntimeException("获取PDF参数-解析文本域异常");
         }
         try {
             stamper.close();
             bos.close();
             reader.close();
         } catch (Exception e) {
-            throw new RuntimeException("参数上传模板-解析文本域-关闭pdf解析工具异常");
+            throw new RuntimeException("获取PDF参数-解析文本域-关闭pdf解析工具异常");
         }
     }
 
@@ -315,6 +323,92 @@ public abstract class PdfUtil {
             throw new IllegalArgumentException("要去除的字段为空");
         }
         return removeField(pdfBytes, fieldNameList);
+    }
+
+    /**
+     * PDF添加域(删除之前所有域)
+     *
+     * @param pdfBytes  PDF文件
+     * @param fieldName 域名称
+     * @param fieldType 类型(文本/签名域/复选框)
+     * @param rectangle 位置
+     * @param page      页数
+     * @return 添加后文件
+     */
+    public static byte[] addField(byte[] pdfBytes, String fieldName, String fieldType, Rectangle rectangle, int page) {
+        byte[] bytes = removeAllField(pdfBytes);
+        PdfReader reader;
+        PdfStamper stamper;
+        try {
+            reader = new PdfReader(new PdfReader(bytes));
+        } catch (Exception e) {
+            throw new RuntimeException("PDF添加域-解析文本域-读取文件数据异常");
+        }
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try {
+            stamper = new PdfStamper(reader, bos);
+        } catch (Exception e) {
+            throw new RuntimeException("PDF添加域-解析文本域-pdf读取异常");
+        }
+        AcroFields form = stamper.getAcroFields();
+        if (ObjectUtil.isNull(form)) {
+            throw new RuntimeException("PDF添加域-解析文本域-请根据模板要求上传数据");
+        }
+        PdfFormField field;
+        try {
+            if ("TEXT".equals(fieldType)) {
+                final TextField textField1 = new TextField(stamper.getWriter(), rectangle, fieldName);
+                textField1.setFont(BASE_FONT);
+                // 默认多行
+                textField1.setOptions(TextField.MULTILINE);
+                field = textField1.getTextField();
+                field.setPlaceInPage(page);
+            } else if ("SIGNATURE".equals(fieldType)) {
+                field = PdfFormField.createSignature(stamper.getWriter());
+                field.setFieldName(fieldName);
+                field.setWidget(rectangle, PdfAnnotation.HIGHLIGHT_NONE);
+                field.setFlags(PdfAnnotation.FLAGS_PRINT);
+                // 设置区域宽高和边框厚度，以及边框颜色，填充颜色
+                PdfAppearance appearance = PdfAppearance.createAppearance(stamper.getWriter(), rectangle.getWidth(), rectangle.getHeight());
+                appearance.fillStroke();
+                field.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, appearance);
+            } else if ("CHECKBOX".equals(fieldType)) {
+                PdfContentByte directContent = stamper.getUnderContent(page);
+                directContent.moveTo(0, 0);
+                PdfAppearance tpOff = directContent.createAppearance(rectangle.getWidth(), rectangle.getHeight());
+                tpOff.rectangle(1, 1, 18, 18);
+                tpOff.stroke();
+                RadioCheckField checkField = new RadioCheckField(stamper.getWriter(), rectangle, fieldName, "On");
+                checkField.setCheckType(RadioCheckField.TYPE_CHECK);
+                checkField.setBorderColor(BaseColor.BLACK);
+                checkField.setBorderStyle(PdfBorderDictionary.STYLE_SOLID);
+                checkField.setBorderWidth(1);
+                // 字体大小
+                checkField.setFontSize(rectangle.getHeight() - 4);
+                // 勾选样式
+                // checkField.setCheckType(RadioCheckField.TYPE_STAR);
+                // checkField.setCheckType(RadioCheckField.TYPE_CROSS);
+                field = checkField.getCheckField();
+                field.setFlags(5);
+                field.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, "Off", tpOff);
+                field.setMKBorderColor(BaseColor.BLACK);
+                field.setMKBackgroundColor(BaseColor.WHITE);
+            } else {
+                throw new IllegalArgumentException("域类型错误");
+            }
+        } catch (IOException | DocumentException e) {
+            e.printStackTrace();
+            throw new RuntimeException("创建域异常");
+        }
+        stamper.addAnnotation(field, page);
+        try {
+            stamper.close();
+            bos.close();
+            reader.close();
+        } catch (Exception e) {
+            throw new RuntimeException("PDF添加域-解析文本域-关闭pdf解析工具异常");
+        }
+        return bos.toByteArray();
     }
 
     //***************************************************私有方法*********************************************************//
@@ -366,55 +460,6 @@ public abstract class PdfUtil {
             throw new RuntimeException("参数上传模板-解析文本域-关闭pdf解析工具异常");
         }
         return bos.toByteArray();
-    }
-
-    /**
-     * PDF填充图片通过坐标
-     *
-     * @param stamper pdf文件
-     * @param picByte 图片
-     * @param page    页数
-     * @param x       图片左下坐标X
-     * @param y       图片左下坐标Y
-     * @throws IOException       旋转图片异常
-     * @throws DocumentException PdfContentByte添加图片异常/旋转图片异常
-     */
-    private static void fillImage(PdfStamper stamper, byte[] picByte, int page, float x, float y) throws DocumentException, IOException {
-        fillImageByCoordinate(stamper, picByte, page, x, y, null, null);
-    }
-
-    /**
-     * PDF填充图片通过坐标
-     *
-     * @param stamper pdf文件
-     * @param picByte 图片
-     * @param page    页数
-     * @param x       图片左下坐标X
-     * @param y       图片左下坐标Y
-     * @param rotate  旋转角度 正数：顺时针 负数：逆时针
-     * @throws IOException       旋转图片异常
-     * @throws DocumentException 旋转图片异常/PdfContentByte添加图片异常
-     */
-    private static void fillImage(PdfStamper stamper, byte[] picByte, int page, float x, float y, Double rotate) throws DocumentException, IOException {
-        if (rotate != null && rotate != 0) {
-            picByte = rotate(picByte, rotate);
-        }
-        fillImageByCoordinate(stamper, picByte, page, x, y, null, null);
-    }
-
-    /**
-     * PDF填充图片通过域
-     *
-     * @param stamper  pdf文件
-     * @param picByte  图片
-     * @param form     pdf所有文本域
-     * @param key      要填充的文本域
-     * @param isCenter 是否居中文本域
-     * @throws IOException       读取图片异常
-     * @throws DocumentException 读取图片异常/PdfContentByte添加图片异常
-     */
-    private static void fillImage(PdfStamper stamper, byte[] picByte, AcroFields form, String key, boolean isCenter) throws DocumentException, IOException {
-        fillImageByField(stamper, picByte, form, key, false, isCenter);
     }
 
     /**

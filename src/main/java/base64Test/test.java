@@ -1,5 +1,10 @@
 package base64Test;
 
+import cn.hutool.core.codec.Base64Decoder;
+import org.bouncycastle.util.encoders.Base64;
+
+import java.util.Arrays;
+
 /**
  * @author TangHaoKai
  * @version V1.0 2023-10-24 09:32
@@ -14,6 +19,10 @@ public class test {
         System.out.println(encode);
         long decode = BaseConversionUtil.base62Decode(encode);
         System.out.println(decode);
+
+        String base64 = "MIICuDCCAlygAwIBAgIQSKvBF/SzFz/Ja5/YVop9qjAMBggqgRzPVQGDdQUAMC0xCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVNQ1NDQTEOMAwGA1UEAwwFTUNTQ0EwHhcNMjQwMzAxMTA0NTE5WhcNMjkwMjI4MTA0NTE5WjB5MQswCQYDVQQGEwJDTjEMMAoGA1UECgwD5pegMRAwDgYDVQQLDAdsb2NhbFJBMRswGQYDVQQFDBIzNzE3MjQyMDAyMDYwNTIyMTAxLTArBgNVBAMMJDE3NjMwMTc2ODY5NDc4MDcyMzJA5ZSQ5aW95YevQDAxQDA1NzBZMBMGByqGSM49AgEGCCqBHM9VAYItA0IABOBsbbbtjW68mSvhEVstFggJ7+jX6nfJYQ82PoDmz7HvvzKFYJTfVnoWi7ki/qLjWMQ+9hOuf7TTlNVU31W4AFujggEOMIIBCjALBgNVHQ8EBAMCBDAwgboGA1UdHwSBsjCBrzAuoCygKoYoaHR0cDovL3d3dy5tY3NjYS5jb20uY24vc20yL2NybC9jcmwwLmNybDB9oHugeYZ3bGRhcDovL3d3dy5tY3NjYS5jb20uY246Mzg5L0NOPWNybDAsT1U9Q1JMLE89TUNTQ0EsQz1DTj9jZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnQwHQYDVR0OBBYEFCEdKcd0eaDwNJJ5vJLfNT5F7+oPMB8GA1UdIwQYMBaAFPEiCmeYjfXjsqrDF2vAQh++S712MAwGCCqBHM9VAYN1BQADSAAwRQIgPfjzCE1H1cqSAvXtk0FSwWhlEEbyVDtU/iVeXenQ93UCIQCVEJilvi+CgfCiK4hA1hM6PBsQrtTaB5tsqw1bMYDf9Q==";
+        System.out.println(Arrays.toString(Base64.decode(base64)));
+        System.out.println(Arrays.toString(Base64Decoder.decode(base64)));
 
     }
 }

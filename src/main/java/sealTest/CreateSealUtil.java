@@ -1,6 +1,7 @@
 package sealTest;
 
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.resource.ResourceUtil;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
@@ -92,12 +93,12 @@ public class CreateSealUtil {
         // byte[] seal = createSquareSeal("国");
         // byte[] seal = createSquareSeal("陈佳");
         // byte[] seal = createSquareSeal("张淋然");
-        // byte[] seal = createSquareSeal("大陆云盾");
+        byte[] seal = createSquareSeal("添加测试");
         // byte[] seal = createSquareSeal("国国国国国");
         // byte[] seal = createSquareSeal("史蒂夫罗杰斯");
         //
-        byte[] seal = createCircleSeal("四川华西妇幼细胞生物技术有限公司");
-        // FileUtil.writeBytes(seal, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\sealTest\\test2.png");
+        // byte[] seal = createCircleSeal("四川华西妇幼细胞生物技术有限公司");
+        FileUtil.writeBytes(seal, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\sealTest\\test2.png");
     }
 
     /**
@@ -108,9 +109,9 @@ public class CreateSealUtil {
      */
     public static byte[] createSquareSeal(String name) {
         // 两字是否在左
-        boolean twoLeft = true;
+        boolean twoLeft = false;
         // 是否保持字体宽度，不拉伸
-        boolean isometricFont = true;
+        boolean isometricFont = false;
         int pointCount = name.codePointCount(0, name.length());
         BufferedImage bufferedImage = null;
         if (pointCount == 1) {
@@ -136,10 +137,15 @@ public class CreateSealUtil {
                 bufferedImage = drawFiveVerticalTwoRightIsometricFontStringTest(StrUtil.subString(name, 2, 3), StrUtil.subString(name, 3, 4), StrUtil.subString(name, 4, 5), StrUtil.subString(name, 0, 1), StrUtil.subString(name, 1, 2));
             }
         } else if (pointCount == 6) {
-            if (isometricFont) {
+            if (twoLeft && isometricFont) {
                 bufferedImage = drawSixVerticalTwoRightIsometricFontStringTest(StrUtil.subString(name, 0, 1), StrUtil.subString(name, 1, 2), StrUtil.subString(name, 2, 3), StrUtil.subString(name, 3, 4), StrUtil.subString(name, 4, 5), StrUtil.subString(name, 5, 6));
-            } else {
+            } else if (twoLeft && !isometricFont) {
                 bufferedImage = drawSixVerticalTwoRightNotIsometricFontStringTest(StrUtil.subString(name, 0, 1), StrUtil.subString(name, 1, 2), StrUtil.subString(name, 2, 3), StrUtil.subString(name, 3, 4), StrUtil.subString(name, 4, 5), StrUtil.subString(name, 5, 6));
+            } else if (!twoLeft && !isometricFont) {
+                // 因为对称，所以调换字序就行了
+                bufferedImage = drawSixVerticalTwoRightNotIsometricFontStringTest(StrUtil.subString(name, 3, 4), StrUtil.subString(name, 4, 5), StrUtil.subString(name, 5, 6), StrUtil.subString(name, 0, 1), StrUtil.subString(name, 1, 2), StrUtil.subString(name, 2, 3));
+            } else if (!twoLeft && isometricFont) {
+                bufferedImage = drawSixVerticalTwoRightIsometricFontStringTest(StrUtil.subString(name, 3, 4), StrUtil.subString(name, 4, 5), StrUtil.subString(name, 5, 6), StrUtil.subString(name, 0, 1), StrUtil.subString(name, 1, 2), StrUtil.subString(name, 2, 3));
             }
         } else {
             System.out.println("字数过长，推荐自定义图章");

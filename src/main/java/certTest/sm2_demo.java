@@ -287,6 +287,8 @@ public class sm2_demo {
         boolean verify5 = sm25.verify(M.getBytes(StandardCharsets.UTF_8), HexUtil.decodeHex(HexUtil.encodeHexStr(sign3)));
         System.out.println("SM2验签结果:" + verify5);
 
+
+
         System.out.println("//*************************************************封装的SM2工具类**********************************************************//");
 
         KeyPair keyPair2 = Sm2Utils.generateKeyPair();

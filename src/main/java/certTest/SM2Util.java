@@ -22,8 +22,9 @@ import java.security.SecureRandom;
 public class SM2Util {
     /**
      * SM2加密算法
-     * @param publicKey     公钥
-     * @param data          明文数据
+     *
+     * @param publicKey 公钥
+     * @param data      明文数据
      * @return
      */
     public String encrypt(PublicKey publicKey, String data) {
@@ -42,7 +43,7 @@ public class SM2Util {
         byte[] arrayOfBytes = null;
         try {
             byte[] in = data.getBytes(StandardCharsets.UTF_8);
-            arrayOfBytes = sm2Engine.processBlock(in,0, in.length);
+            arrayOfBytes = sm2Engine.processBlock(in, 0, in.length);
         } catch (Exception e) {
             System.out.println("SM2加密时出现异常:");
         }
@@ -51,8 +52,9 @@ public class SM2Util {
 
     /**
      * SM2解密算法
-     * @param privateKey        私钥
-     * @param cipherData        密文数据
+     *
+     * @param privateKey 私钥
+     * @param cipherData 密文数据
      * @return
      */
     public String decrypt(PrivateKey privateKey, String cipherData) {
@@ -68,16 +70,14 @@ public class SM2Util {
         SM2Engine sm2Engine = new SM2Engine();
         sm2Engine.init(false, ecPrivateKeyParameters);
 
-        String result = null;
         try {
             byte[] arrayOfBytes = sm2Engine.processBlock(cipherDataByte, 0, cipherDataByte.length);
             return new String(arrayOfBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            System.out.println("SM2解密时出现异常");
+            e.printStackTrace();
+            throw new RuntimeException("SM2解密时出现异常");
         }
-        return result;
     }
-
 
 
 }
