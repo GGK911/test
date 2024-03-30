@@ -107,8 +107,10 @@ public class sm2_demo {
         keyPair = kpg.generateKeyPair();
         publicKey = keyPair.getPublic();
         System.out.println(publicKey.toString());
+        System.out.println(Base64.toBase64String(publicKey.getEncoded()));
         privateKey = keyPair.getPrivate();
         System.out.println(privateKey.toString());
+        System.out.println(Base64.toBase64String(privateKey.getEncoded()));
 
     }
 
@@ -175,7 +177,8 @@ public class sm2_demo {
 
         ContentSigner sigGen = new JcaContentSignerBuilder("SM3withSM2")
                 .setProvider(BC)
-                .build(keyPair.getPrivate());
+                // .build(keyPair.getPrivate());
+                .build(privateKey);
 
         //*构造标识信息构造（DN）
         X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
@@ -211,7 +214,8 @@ public class sm2_demo {
                 // 使用者信息（PS：由于是自签证书，所以颁发者和使用者DN都相同）
                 , builder.build()
                 // 证书公钥
-                , keyPair.getPublic())
+                // , keyPair.getPublic())
+                , publicKey)
                 /*
                 设置证书扩展
                 证书扩展属性，请根据需求设定，参数请参考 《RFC 5280》
@@ -236,6 +240,7 @@ public class sm2_demo {
         // 编码为BASE64 便于传输
         byte[] base64EncodedCert = Base64.encode(asn1BinCert);
         // FileUtil.writeBytes(base64EncodedCert, "C:\\Users\\ggk911\\Desktop\\SM2DEMO证书.cer");
+        System.out.println("sm2证书>> "+new String(base64EncodedCert));
 
         System.out.println("//*************************************************HuTool-SM2**********************************************************//");
 
@@ -286,7 +291,6 @@ public class sm2_demo {
         sm25.setMode(SM2Engine.Mode.C1C2C3);
         boolean verify5 = sm25.verify(M.getBytes(StandardCharsets.UTF_8), HexUtil.decodeHex(HexUtil.encodeHexStr(sign3)));
         System.out.println("SM2验签结果:" + verify5);
-
 
 
         System.out.println("//*************************************************封装的SM2工具类**********************************************************//");

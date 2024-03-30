@@ -26,7 +26,19 @@ public class PdfCutRangeTest {
         for (Map.Entry<String, long[]> entry : rangMap.entrySet()) {
             cutByRange("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\cutRangeTest\\" + entry.getKey(), pdf, entry.getValue());
         }
+    }
 
+    @Test
+    @SneakyThrows
+    public void special20240319Test() {
+        Map<String, long[]> rangMap = new HashMap<>();
+        rangMap.put("range1", new long[]{0, 3722185, 3742667, 1412});
+        // String file = "C:\\Users\\ggk911\\Documents\\WeChat Files\\wxid_46xaqz9ckmyg12\\FileStorage\\File\\2024-03\\公证文书(5).pdf";
+        String file = "C:\\Users\\ggk911\\IdeaProjects\\pki-base\\target\\test01.pdf";
+        byte[] pdf = FileUtil.readBytes(file);
+        for (Map.Entry<String, long[]> entry : rangMap.entrySet()) {
+            cutByRange("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\cutRangeTest2\\" + entry.getKey(), pdf, entry.getValue());
+        }
     }
 
     public byte[][] cutByRange(String path, byte[] pdf, long[] range) {
@@ -39,19 +51,24 @@ public class PdfCutRangeTest {
         // 后
         byte[] rangeAfter = new byte[(int) range[3]];
         // 前+后
-        byte[] rangeBeforeAndAfter = new byte[(int) (range[1] + rangeMiddle.length + range[3])];
+        byte[] rangeBeforeAndAfter = new byte[(int) (range[1] + range[3])];
+        // 前+空+后
+        byte[] rangeBeforeAndMiddleAndAfter = new byte[(int) (range[1] + rangeMiddle.length + range[3])];
 
         System.arraycopy(pdf, (int) range[0], rangeBefore, 0, (int) range[1]);
         System.arraycopy(pdf, (int) range[1] + (int) range[0], rangeMiddle, 0, BMATotalLength - (int) (range[1] + range[3]));
         System.arraycopy(pdf, (int) range[2], rangeAfter, 0, (int) range[3]);
-        System.arraycopy(rangeBefore, 0, rangeBeforeAndAfter, 0, rangeBefore.length);
+        System.arraycopy(rangeBefore, 0, rangeBeforeAndMiddleAndAfter, 0, rangeBefore.length);
         byte[] middle = new byte[rangeMiddle.length];
         Arrays.fill(middle, (byte) 48);
-        System.arraycopy(middle, 0, rangeBeforeAndAfter, rangeBefore.length, middle.length);
-        System.arraycopy(rangeAfter, 0, rangeBeforeAndAfter, rangeBefore.length + middle.length, rangeAfter.length);
+        System.arraycopy(middle, 0, rangeBeforeAndMiddleAndAfter, rangeBefore.length, middle.length);
+        System.arraycopy(rangeAfter, 0, rangeBeforeAndMiddleAndAfter, rangeBefore.length + middle.length, rangeAfter.length);
+        System.arraycopy(rangeBefore, 0, rangeBeforeAndAfter, 0, rangeBefore.length);
+        System.arraycopy(rangeAfter, 0, rangeBeforeAndAfter, rangeBefore.length, rangeAfter.length);
         FileUtil.writeBytes(rangeBefore, path + "Before");
         FileUtil.writeBytes(rangeMiddle, path + "Middle");
         FileUtil.writeBytes(rangeAfter, path + "After");
+        FileUtil.writeBytes(rangeBeforeAndMiddleAndAfter, path + "BeforeAndMiddleAndAfter.pdf");
         FileUtil.writeBytes(rangeBeforeAndAfter, path + "BeforeAndAfter.pdf");
         return new byte[][]{rangeBefore, rangeMiddle, rangeAfter};
     }

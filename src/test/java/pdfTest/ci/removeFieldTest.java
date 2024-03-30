@@ -5,7 +5,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import pdfTest.PdfParameterEntity;
 import pdfTest.PdfUtil;
 
 import java.io.IOException;
@@ -13,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,9 +26,8 @@ public class removeFieldTest {
 
     @BeforeAll
     public static void getParam() throws IOException {
-        List<PdfParameterEntity> param = new ArrayList<>();
-        PdfUtil.getPdfDomain(Files.readAllBytes(file), param, null);
-        System.out.println(param.stream().map(PdfParameterEntity::getKeyword).collect(Collectors.joining(",")));
+        List<PdfUtil.PdfParameterEntity> param = PdfUtil.getPdfDomain(Files.readAllBytes(file));
+        System.out.println(param.stream().map(PdfUtil.PdfParameterEntity::getKeyword).collect(Collectors.joining(",")));
     }
 
     static byte[] bytes;
@@ -57,12 +54,11 @@ public class removeFieldTest {
 
     @AfterAll
     public static void getParam2() {
-        List<PdfParameterEntity> param = new ArrayList<>();
-        PdfUtil.getPdfDomain(bytes, param, null);
+        List<PdfUtil.PdfParameterEntity> param = PdfUtil.getPdfDomain(bytes);
         if (param.size() == 0) {
             System.out.println("空");
         } else {
-            System.out.println(param.stream().map(PdfParameterEntity::getKeyword).collect(Collectors.joining(",")));
+            System.out.println(param.stream().map(PdfUtil.PdfParameterEntity::getKeyword).collect(Collectors.joining(",")));
         }
         FileUtil.writeBytes(bytes, out.toAbsolutePath().toString());
     }

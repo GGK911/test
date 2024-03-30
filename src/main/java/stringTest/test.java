@@ -2,6 +2,7 @@ package stringTest;
 
 import cn.com.mcsca.extend.SecuEngine;
 import cn.com.mcsca.util.EncryptUtil;
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.StrUtil;
 import lombok.SneakyThrows;
 import org.bouncycastle.util.encoders.Base64;
@@ -87,6 +88,18 @@ public class test {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    @SneakyThrows
+    public void numberToChnieseTest() {
+        // 金额
+        System.out.println(Convert.digitToChinese(11));
+        // 纯中文
+        System.out.println(Convert.numberToChinese(11, false));
+        System.out.println(Convert.numberToChinese(21, false));
+        System.out.println(Convert.numberToChinese(31, false));
+        System.out.println(Convert.numberToChinese(111, false));
     }
 
 }

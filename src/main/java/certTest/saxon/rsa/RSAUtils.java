@@ -58,7 +58,7 @@ public class RSAUtils {
      * @return
      * @throws NoSuchAlgorithmException
      */
-    private static KeyPair getKey(int certNum) throws NoSuchAlgorithmException {
+    public static KeyPair getKey(int certNum) throws NoSuchAlgorithmException {
         // 密钥对 生成器，RSA算法 生成的  提供者是 BouncyCastle
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", new BouncyCastleProvider());
         // 密钥长度 1024
@@ -206,6 +206,92 @@ public class RSAUtils {
         }
         return cert;
     }
+
+    public static Certificate generateCertificateV3(String issuerStr, String subjectStr, PublicKey publicKey, PrivateKey privateKey, Map<String, byte[]> result, String certificateCRL, List<Extension> extensions, long certExpire) {
+
+        ByteArrayInputStream bout = null;
+        X509Certificate cert = null;
+        try {
+            // System.out.println("公钥：" + keyPair.getPublic());
+            // PublicKey publicKey = keyPair.getPublic();
+            // PrivateKey privateKey = keyPair.getPrivate();
+            Date notBefore = new Date();
+
+            certExpire = 1L * certExpire * 24 * 60 * 60 * 1000;
+            // Calendar rightNow = Calendar.getInstance();
+            // rightNow.setTime(notBefore);
+            // // 日期加1年
+            // rightNow.add(Calendar.YEAR, 1);
+            // Date notAfter = rightNow.getTime();
+            Date notAfter = new Date(System.currentTimeMillis() + certExpire);
+            // 证书序列号
+            BigInteger serial = BigInteger.probablePrime(256, new Random());
+            X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(new X500Name(issuerStr), serial, notBefore, notAfter, new X500Name(subjectStr), publicKey);
+            // SHA256withRSA
+            JcaContentSignerBuilder jBuilder = new JcaContentSignerBuilder("SHA1withRSA");
+            SecureRandom secureRandom = new SecureRandom();
+            jBuilder.setSecureRandom(secureRandom);
+            // 私钥签名
+            ContentSigner singer = jBuilder.setProvider(new BouncyCastleProvider()).build(privateKey);
+            // CRL分发点
+            ASN1ObjectIdentifier cRLDistributionPoints = new ASN1ObjectIdentifier("2.5.29.31");
+            GeneralName generalName = new GeneralName(GeneralName.uniformResourceIdentifier, certificateCRL);
+            GeneralNames seneralNames = new GeneralNames(generalName);
+            DistributionPointName distributionPoint = new DistributionPointName(seneralNames);
+            DistributionPoint[] points = new DistributionPoint[1];
+            points[0] = new DistributionPoint(distributionPoint, null, null);
+            CRLDistPoint cRLDistPoint = new CRLDistPoint(points);
+            builder.addExtension(cRLDistributionPoints, true, cRLDistPoint);
+            // 用途
+            ASN1ObjectIdentifier keyUsage = new ASN1ObjectIdentifier("1.3.14.3.2.26");
+            // | KeyUsage.nonRepudiation | KeyUsage.keyCertSign
+            builder.addExtension(keyUsage, true, new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment));
+            if (false) {
+                // 基本限制 X509Extension.java
+                ASN1ObjectIdentifier basicConstraints = new ASN1ObjectIdentifier("2.5.29.19");
+                builder.addExtension(basicConstraints, true, new BasicConstraints(true));
+            } else {
+                // 时间戳
+                builder.addExtension(org.bouncycastle.asn1.x509.Extension.extendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeId.id_kp_timeStamping));
+            }
+            // privKey:使用自己的私钥进行签名，CA证书
+            if (extensions != null) {
+                for (Extension ext : extensions) {
+                    builder.addExtension(
+                            new ASN1ObjectIdentifier(ext.getOid()),
+                            ext.isCritical(),
+                            ASN1Primitive.fromByteArray(ext.getValue()));
+                }
+            }
+            X509CertificateHolder holder = builder.build(singer);
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            bout = new ByteArrayInputStream(holder.toASN1Structure().getEncoded());
+            cert = (X509Certificate) cf.generateCertificate(bout);
+            byte[] certBuf = holder.getEncoded();
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+            // 证书数据
+            result.put("certificateData", certBuf);
+            //公钥
+            result.put("publicKey", publicKey.getEncoded());
+            //私钥
+            result.put("privateKey", privateKey.getEncoded());
+            //证书有效开始时间
+            result.put("notBefore", format.format(notBefore).getBytes(StandardCharsets.UTF_8));
+            //证书有效结束时间
+            result.put("notAfter", format.format(notAfter).getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (bout != null) {
+                try {
+                    bout.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        return cert;
+    }
+
 
     public static void main(String[] args) throws Exception {
         Security.addProvider(new BouncyCastleProvider());

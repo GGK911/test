@@ -16,12 +16,15 @@ import com.itextpdf.text.pdf.PdfStamper;
 import com.itextpdf.text.pdf.RadioCheckField;
 import com.itextpdf.text.pdf.TextField;
 import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -158,15 +161,17 @@ public class UpdatePdfFieldTest {
     @Test
     public void fillTest() throws Exception {
         // Path path = Paths.get("src/main/java/pdfTest", "fieldTest.pdf");
-        Path path = Paths.get("src/main/java/pdfTest", "updateFieldTest.pdf");
+        // Path path = Paths.get("src/main/java/pdfTest", "updateFieldTest.pdf");
+        Path path = Paths.get("C:\\Users\\ggk911\\Desktop\\域模板.pdf");
         Path out = Paths.get("src\\main\\java\\pdfTest\\fillTest.pdf");
         Map<String, String> key = new HashMap<>();
         // key.put("createField01", "1");
         // key.put("checkbox01", "1");
         // key.put("checkbox02", "1");
-        // key.put("Check Box1", "1");
-        // key.put("Check Box4", "1");
-        key.put("test01", "false");
+        // key.put("Check Box1", "false");
+        key.put("Check Box4", "0");
+        key.put("Check Box5", "0");
+        // key.put("test01", "false");
         final byte[] bytes = PdfUtil.pdfFill(Files.readAllBytes(path), key);
         FileUtil.writeBytes(bytes, out.toAbsolutePath().toString());
         System.out.println(">> " + out.toAbsolutePath());
@@ -184,6 +189,24 @@ public class UpdatePdfFieldTest {
         final String fieldType = "SIGNATURE";
         // final String fieldType = "CHECKBOX";
         final byte[] bytes = PdfUtil.addField(pdfBytes, "test01", fieldType, new Rectangle(100, 100, 200, 200), 1);
+        FileUtil.writeBytes(bytes, fieldChange.toAbsolutePath().toString());
+        System.out.println(">> " + fieldChange.toAbsolutePath());
+    }
+
+    @Test
+    @SneakyThrows
+    public void addFieldsTest() {
+        Path path = Paths.get("src/main/java/pdfTest", "合同测试模板.pdf");
+        Path fieldChange = Paths.get("src\\main\\java\\pdfTest\\updateFieldTest.pdf");
+        byte[] pdfBytes = Files.readAllBytes(path);
+        List<PdfUtil.PdfParameterEntity> parameterEntityList = new ArrayList<>();
+        PdfUtil.PdfParameterEntity text01 = new PdfUtil.PdfParameterEntity("1", "100", "100", "200", "200", "text01", "1");
+        PdfUtil.PdfParameterEntity text02 = new PdfUtil.PdfParameterEntity("100", "200", "200", "300", "300", "sign01", "2");
+        PdfUtil.PdfParameterEntity text03 = new PdfUtil.PdfParameterEntity("100", "300", "300", "400", "400", "check01", "3");
+        parameterEntityList.add(text01);
+        parameterEntityList.add(text02);
+        parameterEntityList.add(text03);
+        byte[] bytes = PdfUtil.addFields(pdfBytes, parameterEntityList);
         FileUtil.writeBytes(bytes, fieldChange.toAbsolutePath().toString());
         System.out.println(">> " + fieldChange.toAbsolutePath());
     }

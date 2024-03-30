@@ -35,7 +35,10 @@ public class digest_demo {
     private static final BcDigestCalculatorProvider calculatorProvider;
 
     static {
-        bytes = FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\劳动合同( 含变更+隐私声明 )-无固定期限5.pdf");
+        String filePath = "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\cutRangeTest2\\range1BeforeAndAfter.pdf";
+        filePath = "C:\\Users\\ggk911\\Desktop\\测试证书签署的文件供验证系统测试.pdf";
+
+        bytes = FileUtil.readBytes(filePath);
         calculatorProvider = new BcDigestCalculatorProvider();
     }
 

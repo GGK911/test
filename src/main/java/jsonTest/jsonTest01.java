@@ -1,9 +1,12 @@
 package jsonTest;
 
 import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONConfig;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import extense.Person;
+import lombok.SneakyThrows;
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 import pdfTest.PdfUtil;
 
@@ -41,5 +44,11 @@ public class jsonTest01 {
             System.out.println(person.getName());
             System.out.println(person.getAge());
         }
+    }
+
+    @Test
+    @SneakyThrows
+    public void jsonConfig() {
+
     }
 }

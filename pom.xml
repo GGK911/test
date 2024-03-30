@@ -100,6 +100,13 @@
             <scope>system</scope>
             <systemPath>${project.basedir}\src\main\resources\jar\mcsca_util-1.0.30-20200710.034723-4.jar</systemPath>
         </dependency>
+        <dependency>
+            <groupId>cn.com.mcsca</groupId>
+            <artifactId>mcsca_base</artifactId>
+            <version>1.0.30-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}\src\main\resources\jar\mcsca_base-1.0.30-SNAPSHOT.jar</systemPath>
+        </dependency>
 
         <!-- poi Start -->
         <dependency>
@@ -137,6 +144,14 @@
             <artifactId>log4j-core</artifactId>
             <version>2.17.1</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.github.librepdf/openpdf -->
+        <!--JDK11的包-->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>1.4.1</version>
+        </dependency>
+
         <!-- word转pdf -->
         <dependency>
             <groupId>com.aspose</groupId>

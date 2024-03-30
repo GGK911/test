@@ -11,13 +11,14 @@ import cn.com.mcsca.util.CertUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONUtil;
 import com.itextpdf.text.Anchor;
-import com.itextpdf.text.Annotation;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
+import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.Image;
+import com.itextpdf.text.ListItem;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
@@ -28,18 +29,13 @@ import com.itextpdf.text.pdf.Barcode39;
 import com.itextpdf.text.pdf.BarcodeEAN;
 import com.itextpdf.text.pdf.BarcodeQRCode;
 import com.itextpdf.text.pdf.BaseFont;
-import com.itextpdf.text.pdf.ColumnText;
-import com.itextpdf.text.pdf.PRIndirectReference;
 import com.itextpdf.text.pdf.PdfAction;
 import com.itextpdf.text.pdf.PdfAnnotation;
-import com.itextpdf.text.pdf.PdfAppearance;
 import com.itextpdf.text.pdf.PdfContentByte;
-import com.itextpdf.text.pdf.PdfCopy;
 import com.itextpdf.text.pdf.PdfDate;
 import com.itextpdf.text.pdf.PdfDictionary;
 import com.itextpdf.text.pdf.PdfFormField;
 import com.itextpdf.text.pdf.PdfIndirectObject;
-import com.itextpdf.text.pdf.PdfIndirectReference;
 import com.itextpdf.text.pdf.PdfLiteral;
 import com.itextpdf.text.pdf.PdfName;
 import com.itextpdf.text.pdf.PdfPCell;
@@ -55,7 +51,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -89,8 +84,7 @@ public class CreatePdfTest01 {
 
         String pdf = "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\合同测试模板.pdf";
         byte[] pdfBytes = FileUtil.readBytes(pdf);
-        List<PdfParameterEntity> pdfParameterEntityList = new ArrayList<>();
-        PdfUtil.getPdfDomain(pdfBytes, pdfParameterEntityList, null);
+        List<PdfUtil.PdfParameterEntity> pdfParameterEntityList = PdfUtil.getPdfDomain(pdfBytes);
         System.out.println(JSONUtil.parse(pdfParameterEntityList).toStringPretty());
 
         System.out.println("//*************************************************PDF域填充**********************************************************//");
@@ -173,12 +167,16 @@ public class CreatePdfTest01 {
     @Test
     @SneakyThrows
     public void createPdfTest() {
+        Font font1 = FontFactory.getFont("src/main/resources/font/JinbiaoSong.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, Font.NORMAL, BaseColor.BLACK);
+        BaseFont jinbiaoFont = font1.getBaseFont();
         BaseFont baseFont = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
 
         // 加粗， 斜体，删除线
         Font styleFont = new Font(baseFont, 12f, Font.BOLD | Font.ITALIC | Font.STRIKETHRU);
         // 正常字体
         Font normalFont = new Font(baseFont, 12f);
+        // 金标正常字体
+        Font normalJBFont = new Font(jinbiaoFont, 12f);
 
         System.out.println("//*************************************************创建一个PDF**********************************************************//");
         // 1.创建document实例
@@ -197,7 +195,7 @@ public class CreatePdfTest01 {
         // open前 设置行距
         writer.setInitialLeading(100f);
         // 自定义事件:页眉和水印
-        writer.setPageEvent(new PdfCustomEvent(baseFont));
+        writer.setPageEvent(new PdfCustomEvent2(baseFont));
         // 3. 打开 document实例，开始document中添加内容
         document.open();
         // 4.添加内容
@@ -251,7 +249,7 @@ public class CreatePdfTest01 {
         // 直接添加Phrase不会分段换行，只会超过行限制后换行，默认行距
         paragraph.add(new Phrase("国国国国国国国国国国国国国国国国", normalFont));
         paragraph.add(new Phrase("国国国国国国国国国国国国国国国国", normalFont));
-        paragraph.add(new Phrase("国国国国国国国国国国国国国国国国", normalFont));
+        paragraph.add(new Phrase("国国国国国国国国国国国国国国国国", styleFont));
         paragraph.setSpacingBefore(10f);
         document.add(paragraph);
 
@@ -355,6 +353,26 @@ public class CreatePdfTest01 {
 
         document.add(table);
 
+        document.newPage();
+
+        PdfPTable table3 = new PdfPTable(2);
+        // 表格前后
+        table3.setSpacingBefore(50);
+        table3.setSpacingAfter(20);
+        // 单个高度
+        table3.getDefaultCell().setFixedHeight(28);
+        table3.getDefaultCell().setVerticalAlignment(Element.ALIGN_MIDDLE);
+        // table3.getDefaultCell().setHorizontalAlignment(Element.ALIGN_CENTER);
+        table3.setWidthPercentage(100);
+        table3.setWidths(new int[]{1, 5});
+        table3.addCell(new Phrase("文档名称", normalFont));
+        table3.addCell(new Phrase("RSA", normalFont));
+        table3.addCell(new Phrase("杂凑算法", normalFont));
+        table3.addCell(new Phrase("SHA1", normalFont));
+        table3.addCell(new Phrase("杂凑值", normalFont));
+        table3.addCell(new Phrase("123321123123121111111111111111", normalFont));
+
+        document.add(table3);
 
         PdfContentByte pdfContentByte = writer.getDirectContent();
         // 二维码
@@ -378,7 +396,27 @@ public class CreatePdfTest01 {
         barcodeEAN.setCodeType(Barcode.EAN13);
         Image codeEANImage = barcodeEAN.createImageWithBarcode(pdfContentByte, null, null);
         document.add(codeEANImage);
-        document.newPage();
+
+        // itext LIST
+        com.itextpdf.text.List orderedList = new com.itextpdf.text.List(com.itextpdf.text.List.ORDERED);
+        orderedList.setIndentationLeft(24f);
+        orderedList.add(new ListItem(30f, "111111111111111", normalFont));
+        orderedList.add(new ListItem(30f, "222222222222222", normalFont));
+        orderedList.add(new ListItem(30f, "555555555555555", normalFont));
+        orderedList.add(new ListItem(30f, "唐唐唐唐唐唐唐唐", normalFont));
+        ListItem endItem = new ListItem(30f, "唐唐唐唐唐唐唐唐", normalJBFont);
+        endItem.setSpacingAfter(100);
+        orderedList.add(endItem);
+
+
+
+        for (int i = 0; i < 100; i++) {
+            document.newPage();
+            document.add(new Chunk("new Page"));
+        }
+
+
+
 
 
         // 5. 关闭
@@ -507,7 +545,6 @@ public class CreatePdfTest01 {
         btnField.put(new PdfName("test"), new PdfString("test1234"));
 
         // 生成pkcs7signData
-
 
 
         PdfDictionary pdfDictionary = new PdfDictionary();

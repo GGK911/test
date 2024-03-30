@@ -24,9 +24,9 @@ import java.io.IOException;
 public class test {
     public static void main(String[] args) {
         // byte[] bytes = SealUtil.buildSeal("\uD870\uDF86\uD84D\uDCC3\uD852\uDE4A\uE27E㵥\uE4A1");
-        byte[] bytes = SealUtil.buildPersonSeal("陈佳", 18, 6, 0, 0, 0);;
-        FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\sealTest\\test2.png");
-        // drawStringTest();
+        // byte[] bytes = SealUtil.buildPersonSeal("陈佳", 18, 6, 0, 0, 0);;
+        // FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\sealTest\\test2.png");
+        drawStringTest();
 
     }
 
@@ -37,7 +37,7 @@ public class test {
         // 画笔
         Graphics2D graphics = bufferedImage.createGraphics();
         // 画笔颜色
-        graphics.setPaint(Color.BLUE);
+        // graphics.setPaint(Color.BLUE);
         // 抗锯齿设置
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         // 字体
@@ -49,7 +49,8 @@ public class test {
         // 填充背景
         // graphics.fillRect(0, 0, 300, 150);
         // 换颜色
-        graphics.setPaint(Color.RED);
+        // graphics.setPaint(Color.RED);
+        // graphics.setPaint(Color.BLACK);
 
         graphics.drawString("㵥", 10, 120);
 
@@ -57,7 +58,8 @@ public class test {
 
         BufferedImage bufferedImage1 = new BufferedImage(300, 300, bufferedImage.getType());
         Graphics2D graphics1 = bufferedImage1.createGraphics();
-        graphics1.setPaint(Color.red);
+        // graphics1.setPaint(Color.red);
+        // graphics1.setPaint(Color.BLACK);
         graphics1.drawImage(bufferedImage, 0, 0, 300, 300, null);
         graphics1.setStroke(new BasicStroke(16));
         graphics1.drawRect(0, 0, 300, 300);

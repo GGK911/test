@@ -1,6 +1,5 @@
 package pdfTest;
 
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -8,6 +7,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.itextpdf.text.BadElementException;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
+import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.FontFactory;
@@ -22,6 +22,7 @@ import com.itextpdf.text.pdf.PdfAnnotation;
 import com.itextpdf.text.pdf.PdfAppearance;
 import com.itextpdf.text.pdf.PdfBorderDictionary;
 import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfCopy;
 import com.itextpdf.text.pdf.PdfDictionary;
 import com.itextpdf.text.pdf.PdfFormField;
 import com.itextpdf.text.pdf.PdfName;
@@ -32,6 +33,7 @@ import com.itextpdf.text.pdf.PdfString;
 import com.itextpdf.text.pdf.RadioCheckField;
 import com.itextpdf.text.pdf.TextField;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -84,6 +86,7 @@ public class PdfUtil {
      */
     @Getter
     @Setter
+    @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     public static class FillImageParam {
@@ -109,6 +112,79 @@ public class PdfUtil {
          */
         String isCenter;
     }
+
+
+    /**
+     * 模板参数表
+     */
+    @Getter
+    @Setter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PdfParameterEntity {
+
+        /**
+         * Column -- 页数 --length:3
+         */
+        private String pageNo;
+
+        /**
+         * Column -- 位置X1 --length:32
+         */
+        private String positionXl;
+
+        /**
+         * Column -- 位置Y1 --length:32
+         */
+        private String positionYl;
+
+        /**
+         * Column -- 位置X2 --length:32
+         */
+        private String positionXr;
+
+        /**
+         * Column -- 位置Y2 --length:32
+         */
+        private String positionYr;
+
+        /**
+         * Column -- 模板域key值 --length:64
+         */
+        private String keyword;
+
+        /**
+         * Column -- 类型：1:表单文本域，2：签名域，3：复选框 --length:2
+         */
+        private String type;
+
+        /**
+         * Column -- 文本域字体 --length:32
+         */
+        private String textFont;
+
+        /**
+         * Column -- 文本域字体大小 --length:32
+         */
+        private String textSize;
+
+        /**
+         * Column -- 文本域长度 --length:32
+         */
+        private String textLength;
+
+        public PdfParameterEntity(String pageNo, String positionXl, String positionYl, String positionXr, String positionYr, String keyword, String type) {
+            this.pageNo = pageNo;
+            this.positionXl = positionXl;
+            this.positionYl = positionYl;
+            this.positionXr = positionXr;
+            this.positionYr = positionYr;
+            this.keyword = keyword;
+            this.type = type;
+        }
+    }
+
 
     /**
      * 文本域、复选框填充
@@ -150,6 +226,7 @@ public class PdfUtil {
      * @param picByte  填充图片 填充图片默认使用FillImageParam中的Base64，如为空则用此
      * @return 填充后的pdf
      */
+    // thk's todo 2024/3/27 16:42 这里做复杂了
     public static byte[] pdfFill(byte[] pdfByte, Map<String, Object> fillData, byte[] picByte) {
         PdfReader reader;
         try {
@@ -229,11 +306,10 @@ public class PdfUtil {
     /**
      * 获取PDF参数
      *
-     * @param bytes                 模板
-     * @param templateParameterList 参数list
-     * @param templateId            模板ID
+     * @param bytes 模板
      */
-    public static void getPdfDomain(byte[] bytes, List<PdfParameterEntity> templateParameterList, String templateId) {
+    public static List<PdfParameterEntity> getPdfDomain(byte[] bytes) {
+        List<PdfParameterEntity> templateParameterList = new ArrayList<>();
         PdfReader reader;
         PdfStamper stamper;
         try {
@@ -274,7 +350,6 @@ public class PdfUtil {
                 }
                 // 模板参数构造
                 PdfParameterEntity templateParameter = PdfParameterEntity.builder()
-                        .templateId(templateId)
                         .pageNo(page + "")
                         .positionXl(fieldPosition.position.getLeft() + "")
                         .positionXr(fieldPosition.position.getRight() + "")
@@ -285,7 +360,6 @@ public class PdfUtil {
                         .textFont(textField == null ? null : textField.getFont().getFullFontName()[0][3])
                         .textSize(String.valueOf(size))
                         .textLength(String.valueOf(fieldPosition.position.getRight() - fieldPosition.position.getLeft()))
-                        .createTime(DateUtil.date())
                         .build();
                 templateParameterList.add(templateParameter);
             }
@@ -299,6 +373,7 @@ public class PdfUtil {
         } catch (Exception e) {
             throw new RuntimeException("获取PDF参数-解析文本域-关闭pdf解析工具异常");
         }
+        return templateParameterList;
     }
 
     /**
@@ -336,6 +411,20 @@ public class PdfUtil {
      * @return 添加后文件
      */
     public static byte[] addField(byte[] pdfBytes, String fieldName, String fieldType, Rectangle rectangle, int page) {
+        PdfParameterEntity pdfParameterEntity = new PdfParameterEntity(String.valueOf(page), String.valueOf(rectangle.getLeft()), String.valueOf(rectangle.getBottom()), String.valueOf(rectangle.getRight()), String.valueOf(rectangle.getTop()), fieldName, fieldType);
+        ArrayList<PdfParameterEntity> paramList = new ArrayList<>();
+        paramList.add(pdfParameterEntity);
+        return addFields(pdfBytes, paramList);
+    }
+
+    /**
+     * PDF添加域(删除之前所有域)
+     *
+     * @param pdfBytes            PDF文件
+     * @param parameterEntityList 参数
+     * @return 添加后文件
+     */
+    public static byte[] addFields(byte[] pdfBytes, List<PdfParameterEntity> parameterEntityList) {
         byte[] bytes = removeAllField(pdfBytes);
         PdfReader reader;
         PdfStamper stamper;
@@ -354,53 +443,66 @@ public class PdfUtil {
         if (ObjectUtil.isNull(form)) {
             throw new RuntimeException("PDF添加域-解析文本域-请根据模板要求上传数据");
         }
-        PdfFormField field;
-        try {
-            if ("TEXT".equals(fieldType)) {
-                final TextField textField1 = new TextField(stamper.getWriter(), rectangle, fieldName);
-                textField1.setFont(BASE_FONT);
-                // 默认多行
-                textField1.setOptions(TextField.MULTILINE);
-                field = textField1.getTextField();
-                field.setPlaceInPage(page);
-            } else if ("SIGNATURE".equals(fieldType)) {
-                field = PdfFormField.createSignature(stamper.getWriter());
-                field.setFieldName(fieldName);
-                field.setWidget(rectangle, PdfAnnotation.HIGHLIGHT_NONE);
-                field.setFlags(PdfAnnotation.FLAGS_PRINT);
-                // 设置区域宽高和边框厚度，以及边框颜色，填充颜色
-                PdfAppearance appearance = PdfAppearance.createAppearance(stamper.getWriter(), rectangle.getWidth(), rectangle.getHeight());
-                appearance.fillStroke();
-                field.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, appearance);
-            } else if ("CHECKBOX".equals(fieldType)) {
-                PdfContentByte directContent = stamper.getUnderContent(page);
-                directContent.moveTo(0, 0);
-                PdfAppearance tpOff = directContent.createAppearance(rectangle.getWidth(), rectangle.getHeight());
-                tpOff.rectangle(1, 1, 18, 18);
-                tpOff.stroke();
-                RadioCheckField checkField = new RadioCheckField(stamper.getWriter(), rectangle, fieldName, "On");
-                checkField.setCheckType(RadioCheckField.TYPE_CHECK);
-                checkField.setBorderColor(BaseColor.BLACK);
-                checkField.setBorderStyle(PdfBorderDictionary.STYLE_SOLID);
-                checkField.setBorderWidth(1);
-                // 字体大小
-                checkField.setFontSize(rectangle.getHeight() - 4);
-                // 勾选样式
-                // checkField.setCheckType(RadioCheckField.TYPE_STAR);
-                // checkField.setCheckType(RadioCheckField.TYPE_CROSS);
-                field = checkField.getCheckField();
-                field.setFlags(5);
-                field.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, "Off", tpOff);
-                field.setMKBorderColor(BaseColor.BLACK);
-                field.setMKBackgroundColor(BaseColor.WHITE);
-            } else {
-                throw new IllegalArgumentException("域类型错误");
+        for (PdfParameterEntity parameter : parameterEntityList) {
+            int page = Integer.parseInt(parameter.getPageNo());
+            String fieldType = parameter.getType();
+            String fieldName = parameter.getKeyword();
+            float lx = Float.parseFloat(parameter.getPositionXl());
+            float ly = Float.parseFloat(parameter.getPositionYl());
+            float rx = Float.parseFloat(parameter.getPositionXr());
+            float ry = Float.parseFloat(parameter.getPositionYr());
+            Rectangle rectangle = new Rectangle(lx, ly, rx, ry);
+            PdfFormField field;
+            try {
+                if ("1".equals(fieldType)) {
+                    final TextField textField1 = new TextField(stamper.getWriter(), rectangle, fieldName);
+                    textField1.setFont(BASE_FONT);
+                    // 默认多行
+                    textField1.setOptions(TextField.MULTILINE);
+                    field = textField1.getTextField();
+                    field.setPlaceInPage(page);
+                } else if ("2".equals(fieldType)) {
+                    field = PdfFormField.createSignature(stamper.getWriter());
+                    field.setFieldName(fieldName);
+                    field.setWidget(rectangle, PdfAnnotation.HIGHLIGHT_NONE);
+                    field.setFlags(PdfAnnotation.FLAGS_PRINT);
+                    // 设置区域宽高和边框厚度，以及边框颜色，填充颜色
+                    PdfAppearance appearance = PdfAppearance.createAppearance(stamper.getWriter(), rectangle.getWidth(), rectangle.getHeight());
+                    appearance.fillStroke();
+                    field.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, appearance);
+                } else if ("3".equals(fieldType)) {
+                    PdfContentByte directContent = stamper.getUnderContent(page);
+                    if (directContent == null) {
+                        throw new IllegalArgumentException("页码非法");
+                    }
+                    directContent.moveTo(0, 0);
+                    PdfAppearance tpOff = directContent.createAppearance(rectangle.getWidth(), rectangle.getHeight());
+                    tpOff.rectangle(1, 1, 18, 18);
+                    tpOff.stroke();
+                    RadioCheckField checkField = new RadioCheckField(stamper.getWriter(), rectangle, fieldName, "On");
+                    checkField.setCheckType(RadioCheckField.TYPE_CHECK);
+                    checkField.setBorderColor(BaseColor.BLACK);
+                    checkField.setBorderStyle(PdfBorderDictionary.STYLE_SOLID);
+                    checkField.setBorderWidth(1);
+                    // 字体大小
+                    checkField.setFontSize(rectangle.getHeight() - 4);
+                    // 勾选样式
+                    // checkField.setCheckType(RadioCheckField.TYPE_STAR);
+                    // checkField.setCheckType(RadioCheckField.TYPE_CROSS);
+                    field = checkField.getCheckField();
+                    field.setFlags(5);
+                    field.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, "Off", tpOff);
+                    field.setMKBorderColor(BaseColor.BLACK);
+                    field.setMKBackgroundColor(BaseColor.WHITE);
+                } else {
+                    throw new IllegalArgumentException("域类型错误");
+                }
+            } catch (IOException | DocumentException e) {
+                e.printStackTrace();
+                throw new RuntimeException("创建域异常");
             }
-        } catch (IOException | DocumentException e) {
-            e.printStackTrace();
-            throw new RuntimeException("创建域异常");
+            stamper.addAnnotation(field, page);
         }
-        stamper.addAnnotation(field, page);
         try {
             stamper.close();
             bos.close();
@@ -411,7 +513,53 @@ public class PdfUtil {
         return bos.toByteArray();
     }
 
+    /**
+     * 获取PDF总页数
+     *
+     * @param pdfBytes PDF文件
+     * @return PDF总页数
+     */
+    public static int getTotalPage(byte[] pdfBytes) {
+        PdfReader reader = null;
+        try {
+            reader = new PdfReader(new PdfReader(pdfBytes));
+            return reader.getNumberOfPages();
+        } catch (Exception e) {
+            throw new RuntimeException("参数上传模板-解析文本域-读取文件数据异常");
+        } finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
+    }
+
+
+
     //***************************************************私有方法*********************************************************//
+
+    private static byte[] copyAnyPage(byte[] pdfBytes, List<Integer> pages) {
+        PdfReader reader;
+        try {
+            reader = new PdfReader(new PdfReader(pdfBytes));
+        } catch (Exception e) {
+            throw new RuntimeException("参数上传模板-解析文本域-读取文件数据异常");
+        }
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        // 总页数
+        int totalPage = reader.getNumberOfPages();
+        // if (pageStart > pageNum || pageEnd > pageNum) {
+        //     throw new IllegalArgumentException("页码越界");
+        // }
+        Document document = new Document();
+        PdfCopy copy = null;
+        try {
+            copy = new PdfCopy(document, bos);
+        } catch (DocumentException e) {
+            throw new RuntimeException("创建复制类异常");
+        }
+
+        return null;
+    }
 
     /**
      * 去除域(域名称)
