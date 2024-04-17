@@ -33,6 +33,7 @@ import org.bouncycastle.tsp.cms.CMSTimeStampedData;
 import org.bouncycastle.tsp.cms.CMSTimeStampedDataGenerator;
 import org.bouncycastle.util.Store;
 import org.bouncycastle.util.encoders.Base64;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -131,7 +132,6 @@ public class tsp_demo {
         // for (TimeStampToken token : tokens) {
         //     cmsTimeStampedData.validate(newCalculatorProvider, digest, token);
         // }
-
-
     }
+
 }

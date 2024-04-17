@@ -24,11 +24,9 @@ import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.CertificationRequest;
 import org.bouncycastle.asn1.pkcs.CertificationRequestInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
-import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.digests.SM3Digest;
 import org.bouncycastle.crypto.engines.SM2Engine;
@@ -77,7 +75,6 @@ import java.security.Security;
 import java.security.Signature;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.ECPrivateKey;
 import java.security.spec.ECPoint;
 import java.security.spec.ECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
@@ -125,8 +122,10 @@ public class Pkcs10Test {
         KeyPair keyPair = generator.generateKeyPair();
         PrivateKey aPrivate = keyPair.getPrivate();
         System.out.println("privateKey>> " + Hex.toHexString(aPrivate.getEncoded()));
+        System.out.println("privateKeyBase64>> " + Base64.toBase64String(aPrivate.getEncoded()));
         PublicKey aPublic = keyPair.getPublic();
         System.out.println("publicKey>> " + Hex.toHexString(aPublic.getEncoded()));
+        System.out.println("publicKeyBase64>> " + Base64.toBase64String(aPublic.getEncoded()));
 
         String subjectParam = "CN=GGK911,OU=GGK911,O=GGK911,C=CN,EMAILADDRESS=13983053455@163.com,L=重庆,ST=重庆";
         X500Principal subject = new X500Principal(subjectParam);
@@ -159,16 +158,17 @@ public class Pkcs10Test {
         final PublicKey aPublic = keyPair.getPublic();
         final PrivateKey aPrivate = keyPair.getPrivate();
         System.out.println("privateKey>> " + Hex.toHexString(aPrivate.getEncoded()));
+        System.out.println("privateKeyBase64>> " + Base64.toBase64String(aPrivate.getEncoded()));
         System.out.println("pubKey>> " + Hex.toHexString(aPublic.getEncoded()));
-        System.out.println("pubKeyInfo>> " + Hex.toHexString(aPublic.getEncoded()));
-        String subjectParam = "CN=GGK911,OU=GGK911,O=GGK911,C=CN";
+        System.out.println("pubKeyBase64>> " + Base64.toBase64String(aPublic.getEncoded()));
+        String subjectParam = "CN=MCSCA";
         X500Principal subject = new X500Principal(subjectParam);
         ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA")
                 .setProvider(BC)
                 .build(aPrivate);
         PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(subject, aPublic);
-        DERPrintableString password = new DERPrintableString("secret123");
-        builder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, password);
+        // DERPrintableString password = new DERPrintableString("secret123");
+        // builder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, password);
 
         PKCS10CertificationRequest csr = builder.build(signer);
         System.out.println("CSR>> " + Base64.toBase64String(csr.getEncoded()));
@@ -440,6 +440,7 @@ public class Pkcs10Test {
         ECPrivateKeySpec ecPrivateKeySpec = new ECPrivateKeySpec(d, new ECParameterSpec(sm2Spec.getCurve(), sm2Spec.getG(), sm2Spec.getN(), sm2Spec.getH()));
         KeyFactory keyFact2 = KeyFactory.getInstance("EC", new BouncyCastleProvider());
         BCECPrivateKey privateKey = (BCECPrivateKey) keyFact2.generatePrivate(ecPrivateKeySpec);
+
         String base64SM2Pri = Base64.toBase64String(privateKey.getEncoded());
 
         KeyFactory kf = KeyFactory.getInstance("EC", BC);
@@ -749,7 +750,8 @@ public class Pkcs10Test {
         String encDataLineLength = model + encDataLine.length();
         String suffix = "0000000000000001" +
                 "0000000000000001" +
-                "0000000000000306" +
+                "0000000000000000" +
+                // "0000000000000306" +
                 secretKeyLineLength.substring(secretKeyLineLength.length() - 16) +
                 secretKeyLine +
                 encDataLineLength.substring(encDataLineLength.length() - 16) +

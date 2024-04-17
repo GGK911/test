@@ -2,7 +2,7 @@ package certTest;
 
 import certTest.saxon.CertUtils;
 import certTest.saxon.sm2.Sm2Utils;
-import cn.hutool.core.io.FileUtil;
+import cn.com.mcsca.extend.SecuEngine;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.crypto.BCUtil;
 import cn.hutool.crypto.SecureUtil;
@@ -19,26 +19,26 @@ import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
-import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.crypto.engines.SM2Engine;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jce.X509KeyUsage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.spec.ECPublicKeySpec;
+import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
-import org.junit.jupiter.api.Test;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
@@ -240,7 +240,7 @@ public class sm2_demo {
         // 编码为BASE64 便于传输
         byte[] base64EncodedCert = Base64.encode(asn1BinCert);
         // FileUtil.writeBytes(base64EncodedCert, "C:\\Users\\ggk911\\Desktop\\SM2DEMO证书.cer");
-        System.out.println("sm2证书>> "+new String(base64EncodedCert));
+        System.out.println("sm2证书>> " + new String(base64EncodedCert));
 
         System.out.println("//*************************************************HuTool-SM2**********************************************************//");
 
@@ -333,5 +333,29 @@ public class sm2_demo {
         // FileOutputStream out = new FileOutputStream("C:\\Users\\ggk911\\Desktop\\SM2证书jks.jks");
         // outputKeyStore.store(out, passwd);
         // out.close();
+
+        System.out.println("//*************************************************工具密钥对生成**********************************************************//");
+
+        SecuEngine secuEngine = new SecuEngine();
+        String pri22 = secuEngine.GenKey(2, 256);
+        KeyFactory kf = KeyFactory.getInstance("EC", BC);
+        //初始化sm2加密
+        BCECPrivateKey privateKey22 = (BCECPrivateKey) kf.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(pri22)));
+        System.out.println("privateKey22>> " + Base64.toBase64String(privateKey22.getEncoded()));
+        ECPoint publicPoint = privateKey22.getParameters().getG().multiply(privateKey22.getD());
+        // 使用SM2算法创建EC公钥规范
+        // ECPublicKeyParameters publicKeyParameters = new ECPublicKeyParameters(publicPoint, ECUtil.getDomainParameters(BouncyCastleProvider.CONFIGURATION, privateKey22.getParameters()));
+        BCECPublicKey publicKey22 = (BCECPublicKey) kf.generatePublic(new ECPublicKeySpec(publicPoint, privateKey22.getParameters()));
+        byte[] Q = new byte[64];
+        byte[] x = publicKey22.getQ().getRawXCoord().getEncoded();
+        byte[] y = publicKey22.getQ().getRawYCoord().getEncoded();
+        System.arraycopy(x, 0, Q, 0, x.length);
+        System.arraycopy(y, 0, Q, 32, y.length);
+        System.out.println("publicKey22>> " + Base64.toBase64String(Q));
+
+        String test01 = "MIICxDCCAmigAwIBAgIQFsXYtLT0AtkQ8Vhf0nQ5PDAMBggqgRzPVQGDdQUAMC0xCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVNQ1NDQTEOMAwGA1UEAwwFTUNTQ0EwHhcNMjQwNDE3MDgyNjU2WhcNMjUwNDE3MDgyNjU2WjB3MQswCQYDVQQGEwJDTjENMAsGA1UECgwEdGVzdDEQMA4GA1UECwwHbG9jYWxSQTEVMBMGA1UEBQwMdGVzdDg4OTQ3ODgyMTAwLgYDVQQDDCcxNzY1MjI1MjIzMDA0NzAwNjcyQHRlc3Q5MTIyNTYwNUAwMUAwMDEwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAATuSL3yBH4qoqbNjPTi8IZVPHlbVvm1fuHJUAKpyoyj0XuZGo/gwpOvC7EjnWp6XY2R7git4hJMG5Tv/FihdJ4Ro4IBHDCCARgwHwYDVR0jBBgwFoAU8SIKZ5iN9eOyqsMXa8BCH75LvXYwHQYDVR0OBBYEFEld9e+6/DxyouXRNOY9vC5QAQ2KMAwGA1UdEwQFMAMBAQAwCwYDVR0PBAQDAgTwMIG6BgNVHR8EgbIwga8wLqAsoCqGKGh0dHA6Ly93d3cubWNzY2EuY29tLmNuL3NtMi9jcmwvY3JsMC5jcmwwfaB7oHmGd2xkYXA6Ly93d3cubWNzY2EuY29tLmNuOjM4OS9DTj1jcmwwLE9VPUNSTCxPPU1DU0NBLEM9Q04/Y2VydGlmaWNhdGVSZXZvY2F0aW9uTGlzdD9iYXNlP29iamVjdGNsYXNzPWNSTERpc3RyaWJ1dGlvblBvaW50MAwGCCqBHM9VAYN1BQADSAAwRQIhAOi6xaeBj09b4Ee/3p1XP/s6zgE60kYCPvzCIgHHvFYMAiAkM5Tax4D1o+h9ExOwuUPhpWUKcTrlQn9nfXu9aqU14g==";
+        CertificateFactory factory = CertificateFactory.getInstance("X.509", BC);
+        Certificate certificate1 = factory.generateCertificate(new ByteArrayInputStream(Base64.decode(test01)));
+        System.out.println(certificate1);
     }
 }

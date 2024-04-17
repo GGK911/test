@@ -1,17 +1,14 @@
 package stringTest;
 
-import cn.com.mcsca.extend.SecuEngine;
 import cn.com.mcsca.util.EncryptUtil;
 import cn.hutool.core.convert.Convert;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.URLUtil;
 import lombok.SneakyThrows;
-import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.Test;
 
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author TangHaoKai
@@ -100,6 +97,21 @@ public class test {
         System.out.println(Convert.numberToChinese(21, false));
         System.out.println(Convert.numberToChinese(31, false));
         System.out.println(Convert.numberToChinese(111, false));
+    }
+
+    @Test
+    @SneakyThrows
+    public void fileExtTest() {
+        final String extName = FileUtil.extName("tem/2024/3/15/1768551801419796480.pdf");
+        System.out.println(extName);
+    }
+
+    @Test
+    @SneakyThrows
+    public void urlDecodeTest() {
+        String url = "MIIDxjCCAq4CAQAwPjEYMBYGA1UEAwwPY2VydFJlcXVpc2l0aW9uMRUwEwYDVQQKDAxDRkNBIFRFU1QgQ0ExCzAJBgNVBAYTAkNOMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAiZDe8fvxlJkt%2B2jz7Kr3Uqy6%2F883ZGYttapmsbQ2IZi32GnIVU8Zm%2F%2FUsVgxTdXHGTTu%2BBFKFiFAWloF9k2tOPt7EGLnbfFoaGSTnm%2FSafgEiDUZlWsogVl6S6J%2BqIjLTWAhyF4WBr8gHtzJB1G%2FhjK%2FURREMmNijk9pzU7Z1scfpe%2Bsr1rw39n%2Bw%2BwbY5SEKIUd%2F8KbQTyUqQ2Fo72QpSaqha86uoKjZsG3S0Zl2JFbipM9u3j5gSJUXZ%2FnrnWCP7GkLybQSeLPEls9Q4DOfn%2FhMUWmaSVsS821vuWREdtRKANoTLWMbsjn0QGsejq6sugss95SQLYvccLkP%2BAJpwIDAQABoIIBQTATBgkqhkiG9w0BCQcTBjExMTExMTCCASgGCSqGSIb3DQEJPwSCARkwggEVAgEBBIIBDjCCAQoCggEBAIqK8yRhx1Tq%2BZCD9bzHrRS6eGst8OjYsHZnkjXXcdWCCo3pjSZK1EhKwLINe7aiT3CspkI8DySfATpOHdOjh1fu0V3w%2FxX05Q5ePzanpGNIY5QQ6NVYTuB4LdvnaWFqIPZQ9ZrP1H5l2%2BASRUM83DuDy%2F%2BhWS8IaITFx0ueDEjByc5P5rbEvhOlleYpdnb0P3BzXgz%2FHZelbLvyJBX6SZ%2BqQdrc3Dw45GfGm2azv5%2BbMzP1XKmKQ3Pb%2FciR2FXObqnhA3XMx0UOwpLyRYwfHMiEh7sg80QMOQ5GR3oyZRCS4fRW9Fi3O8cWKihHNkBgYzfjadhbB%2F65pHZuMypNfd0CAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAG27391%2BbNyW8G3WR9D0xmRgvpoW1OqGFJ0EdOnMd8Mnjq9fG5PLz4mUnx6R1a%2FkLhk33j%2BWK3yMoKrTlzLMt5bXjA8aUTGt2nL9nftwITF2PTm9Kk8Tfg9xBM8C2NIoXstbeGWF93lC%2FrVAz7IKd5eoWLiBxYfUPRsFyJ7VDLYFshFKLx0zz6s66vd3yijSQofCSMtV8MZARhANhdXBx9tuNDy6D5OgRGHseEaYnSjBMAt9KBsAWxeqFnebNuyzx2eZKQIDmy1kfkbyAoonf27dilXLptjxkf8v4%2FnjKWvDWurgb4XOIa0U2CevPzkrIwh2jZ1aaB2n1wLmzl4BriA%3D%3D";
+        System.out.println(URLUtil.decode(url, "UTF-8"));
+        System.out.println(URLUtil.encode("MIIDxjCCAq4CAQAwPjEYMBYGA1UEAwwPY2VydFJlcXVpc2l0aW9uMRUwEwYDVQQKDAxDRkNBIFRFU1QgQ0ExCzAJBgNVBAYTAkNOMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAiZDe8fvxlJkt+2jz7Kr3Uqy6/883ZGYttapmsbQ2IZi32GnIVU8Zm//UsVgxTdXHGTTu+BFKFiFAWloF9k2tOPt7EGLnbfFoaGSTnm/SafgEiDUZlWsogVl6S6J+qIjLTWAhyF4WBr8gHtzJB1G/hjK/URREMmNijk9pzU7Z1scfpe+sr1rw39n+w+wbY5SEKIUd/8KbQTyUqQ2Fo72QpSaqha86uoKjZsG3S0Zl2JFbipM9u3j5gSJUXZ/nrnWCP7GkLybQSeLPEls9Q4DOfn/hMUWmaSVsS821vuWREdtRKANoTLWMbsjn0QGsejq6sugss95SQLYvccLkP+AJpwIDAQABoIIBQTATBgkqhkiG9w0BCQcTBjExMTExMTCCASgGCSqGSIb3DQEJPwSCARkwggEVAgEBBIIBDjCCAQoCggEBAIqK8yRhx1Tq+ZCD9bzHrRS6eGst8OjYsHZnkjXXcdWCCo3pjSZK1EhKwLINe7aiT3CspkI8DySfATpOHdOjh1fu0V3w/xX05Q5ePzanpGNIY5QQ6NVYTuB4LdvnaWFqIPZQ9ZrP1H5l2+ASRUM83DuDy/+hWS8IaITFx0ueDEjByc5P5rbEvhOlleYpdnb0P3BzXgz/HZelbLvyJBX6SZ+qQdrc3Dw45GfGm2azv5+bMzP1XKmKQ3Pb/ciR2FXObqnhA3XMx0UOwpLyRYwfHMiEh7sg80QMOQ5GR3oyZRCS4fRW9Fi3O8cWKihHNkBgYzfjadhbB/65pHZuMypNfd0CAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAG27391+bNyW8G3WR9D0xmRgvpoW1OqGFJ0EdOnMd8Mnjq9fG5PLz4mUnx6R1a/kLhk33j+WK3yMoKrTlzLMt5bXjA8aUTGt2nL9nftwITF2PTm9Kk8Tfg9xBM8C2NIoXstbeGWF93lC/rVAz7IKd5eoWLiBxYfUPRsFyJ7VDLYFshFKLx0zz6s66vd3yijSQofCSMtV8MZARhANhdXBx9tuNDy6D5OgRGHseEaYnSjBMAt9KBsAWxeqFnebNuyzx2eZKQIDmy1kfkbyAoonf27dilXLptjxkf8v4/njKWvDWurgb4XOIa0U2CevPzkrIwh2jZ1aaB2n1wLmzl4BriA==", StandardCharsets.UTF_8));
     }
 
 }

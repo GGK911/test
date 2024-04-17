@@ -845,7 +845,7 @@ public class PdfUtil {
                 fontSize--;
                 if (fontSize < 6) {
                     System.out.println("字体长度超限");
-                    throw new RuntimeException("文本域：" + key + "文本长度超限，请调整");
+                    throw new RuntimeException("文本域：" + key + "文本长度超限，请调整模板");
                 }
                 textWidth = getPhraseAllChunkWidth(phrase, fontSize);
             }
@@ -855,7 +855,7 @@ public class PdfUtil {
                 fontSize--;
                 if (fontSize < 6) {
                     System.out.println("字体长度超限");
-                    throw new RuntimeException("文本域：" + key + "文本长度超限，请调整");
+                    throw new RuntimeException("文本域：" + key + "文本长度超限，请调整模板");
                 }
                 ascent = BASE_FONT.getFontDescriptor(BaseFont.ASCENT, fontSize);
                 // 字体减小后的理想总长度

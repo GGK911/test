@@ -1,14 +1,19 @@
 package jsonTest;
 
+import cn.com.mcsca.pki.core.util.SignatureUtil;
 import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONConfig;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import extense.Person;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.SneakyThrows;
-import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 import pdfTest.PdfUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author TangHaoKai
@@ -48,7 +53,63 @@ public class jsonTest01 {
 
     @Test
     @SneakyThrows
-    public void jsonConfig() {
-
+    public void mapToJson() {
+        Map<String, String> map = new HashMap<>();
+        map.put("123", "qwe");
+        map.put("456", "asd");
+        map.put("789", "zxc");
+        System.out.println(JSONUtil.toJsonPrettyStr(JSONUtil.toJsonStr(map)));
     }
+
+    @Test
+    @SneakyThrows
+    public void objToJsonStrTest01() {
+        Map<String, String> map = new HashMap<>();
+        map.put("reqHead", "{\n" +
+                "    \"version\": \"1\",\n" +
+                "    \"appId\": \"1346996908593262592\",\n" +
+                "    \"reqTime\": \"20240401104700000\",\n" +
+                "    \"productAppId\": \"mcsca-4qsnlfee12\"\n" +
+                "}");
+        map.put("reqBody", "{\n" +
+                "    \"isSeal\": \"1\"\n" +
+                "}");
+        System.out.println(com.alibaba.fastjson.JSONObject.toJSONString(map, SerializerFeature.MapSortField, SerializerFeature.SortField));
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class ReqHead {
+        String appId;
+        String version;
+        String productAppId;
+        String reqTime;
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class ReqBody {
+        String isSeal;
+    }
+
+    @Test
+    @SneakyThrows
+    public void objToJsonStrTest02() {
+        String priKey = "MIICBQIBADCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBBIIBDzCCAQsCAQEEIH+X+j2Lh38yuQMXCYlHpPYU6Wk2lG0/TRygmNZc//atoIHjMIHgAgEBMCwGByqGSM49AQECIQD////+/////////////////////wAAAAD//////////zBEBCD////+/////////////////////wAAAAD//////////AQgKOn6np2fXjRNWp5Lz2UJp/OXifUVq4+S3by9QU2UDpMEQQQyxK4sHxmBGV+ZBEZqOcmUj+MLv/JmC+FxWkWJM0x0x7w3NqL09necWb3O42tpIVPQqYd8xipHQALfMuUhOfCgAiEA/////v///////////////3ID32shxgUrU7v0CTnVQSMCAQE=";
+        Map<String, Object> map = new HashMap<>();
+        ReqHead reqHead = new ReqHead("1346996908593262592", "1", "mcsca-4qsnlfee12", "20240401104700000");
+        reqHead = new ReqHead("1346996908593262592", "1", null, "20240401104700000");
+        ReqBody reqBody = new ReqBody("1");
+        map.put("reqHead", reqHead);
+        map.put("reqBody", reqBody);
+        String signJson = com.alibaba.fastjson.JSONObject.toJSONString(map, SerializerFeature.MapSortField, SerializerFeature.SortField);
+        System.out.println("签名原文>> " + signJson);
+
+        String sign = SignatureUtil.doSign(priKey, signJson);
+        System.out.println("签名值>> " + sign);
+
+        String test = null;
+        System.out.println(test.toString());
+    }
+
 }

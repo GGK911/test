@@ -14,12 +14,12 @@ import cn.com.mcsca.pdf.signature.PdfVerify;
 import cn.com.mcsca.util.CertUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
-import pdfTest.mcscaVeirfy.DateFormatUtil;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -116,7 +116,7 @@ public class AnalysisPdfUtil {
                 //当证书为大陆云盾证书（不存在时间戳）并且签章时间不在签章证书的有效期内
                 if (reportSignEntity.isMcscaCert() && !reportSignEntity.isSignDateVerifyBySignCert()) {
                     // 签署时间 是否在 证书生效时间(容错2min)和证书结束时间之内
-                    if (verifySignDateBetween(DateUtil.format(DateUtil.offset(DateUtil.parse(signCertStartData), DateField.MINUTE, -2), DateFormatUtil.FORMAT_yyyy_MM_dd_HH_mmss_cn), CertUtil.parseCert(signCertByte, CertUtil.END_DATE), signatureInfo.getSignDate())) {
+                    if (verifySignDateBetween(DateUtil.format(DateUtil.offset(DateUtil.parse(signCertStartData), DateField.MINUTE, -2), DatePattern.PURE_DATETIME_MS_PATTERN), CertUtil.parseCert(signCertByte, CertUtil.END_DATE), signatureInfo.getSignDate())) {
                         //在容错2min内报告中签署时间的值取证书生效时间值
                         reportSignEntity.setSignDate(signCertStartData);
                         reportSignEntity.setSignDateVerifyBySignCert(true);
@@ -132,7 +132,7 @@ public class AnalysisPdfUtil {
                 //获取时间戳时间 --- pki-bases包还未解析时间戳时间
                 AcroFields acroFields = new PdfReader(multipartFile, null).getAcroFields();
                 PdfPKCS7 pkcs7 = acroFields.verifySignature(signatureInfo.getSignatureName());
-                String tsSignDate = new SimpleDateFormat(DateFormatUtil.FORMAT_yyyy_MM_dd_HH_mmss_cn).format(pkcs7.getTimeStampToken().getTimeStampInfo().getGenTime());
+                String tsSignDate = new SimpleDateFormat(DatePattern.PURE_DATETIME_MS_PATTERN).format(pkcs7.getTimeStampToken().getTimeStampInfo().getGenTime());
                 reportSignEntity.setTsSignDate(tsSignDate);
                 reportSignEntity.setSignDateVerifyByTsCert(verifySignDateBetween(CertUtil.parseCert(timeStampCert, CertUtil.START_DATE), CertUtil.parseCert(timeStampCert, CertUtil.END_DATE), tsSignDate));
                 reportSignEntity.setMcscaTs("MCSCA".equalsIgnoreCase(signatureInfo.getTimeStamper()));
@@ -141,7 +141,7 @@ public class AnalysisPdfUtil {
                     //大陆云盾的证书、并且有使用大陆云盾时间戳进行签署的情况下，报告中签署时间的值取时间戳的值
                     reportSignEntity.setSignDate(tsSignDate);
                     // 签署时间(时间戳时间) 是否在 证书生效时间(容错1s)和证书结束时间之内
-                    reportSignEntity.setSignDateVerifyBySignCert(verifySignDateBetween(DateUtil.format(DateUtil.offset(DateUtil.parse(signCertStartData), DateField.SECOND, -1), DateFormatUtil.FORMAT_yyyy_MM_dd_HH_mmss_cn), CertUtil.parseCert(signCertByte, CertUtil.END_DATE), tsSignDate));
+                    reportSignEntity.setSignDateVerifyBySignCert(verifySignDateBetween(DateUtil.format(DateUtil.offset(DateUtil.parse(signCertStartData), DateField.SECOND, -1), DatePattern.PURE_DATETIME_MS_PATTERN), CertUtil.parseCert(signCertByte, CertUtil.END_DATE), tsSignDate));
                 }
             }
 
@@ -255,9 +255,9 @@ public class AnalysisPdfUtil {
      * @throws Exception 异常
      */
     private static boolean verifySignDateBetween(String startDate, String endDate, String current) throws Exception {
-        Date currentDateTime = DateFormatUtil.stringToDate(current, DateFormatUtil.FORMAT_yyyy_MM_dd_HH_mmss_cn);
-        Date startDateTime = DateFormatUtil.stringToDate(startDate, DateFormatUtil.FORMAT_yyyy_MM_dd_HH_mmss_cn);
-        Date endDateTime = DateFormatUtil.stringToDate(endDate, DateFormatUtil.FORMAT_yyyy_MM_dd_HH_mmss_cn);
+        Date currentDateTime = DateUtil.parse(current);
+        Date startDateTime = DateUtil.parse(startDate);
+        Date endDateTime = DateUtil.parse(endDate);
 
         assert currentDateTime != null;
         assert startDateTime != null;

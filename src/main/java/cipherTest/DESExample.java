@@ -1,19 +1,17 @@
 package cipherTest;
 
-import org.bouncycastle.util.encoders.Hex;
+import org.bouncycastle.util.encoders.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.Base64;
 
 public class DESExample {
 
-    public static void main(String[] args)  throws Exception{
+    public static void main(String[] args) throws Exception {
         // 生成密钥
         Key secretKey = generateKey();
+        System.out.println("密钥" + secretKey.getAlgorithm() + Base64.toBase64String(secretKey.getEncoded()));
 
         // 创建加密器和解密器
         Cipher cipher = Cipher.getInstance("DES");

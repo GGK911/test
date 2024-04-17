@@ -9,7 +9,6 @@ import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.FontSelector;
-import com.itextpdf.text.pdf.GrayColor;
 
 import javax.imageio.ImageIO;
 import java.awt.AlphaComposite;
@@ -46,7 +45,7 @@ public class CreateSealUtil {
     private final static Color COLOR = Color.RED;
 
     // 字体
-    private final static Map<BaseFont, String> SPARE_FONT = new HashMap<>();
+    private final static Map<com.itextpdf.text.Font, String> SPARE_FONT = new HashMap<>();
 
     static {
         GraphicsEnvironment genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -58,9 +57,12 @@ public class CreateSealUtil {
             e.printStackTrace();
         }
         genv.registerFont(font);
-        BaseFont baseFont = FontFactory.getFont("src/main/resources/font/SIMSUN.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK).getBaseFont();
+        com.itextpdf.text.Font font1 = FontFactory.getFont("src/main/resources/font/SIMSUN.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK);
+        if (font1 == null) {
+            throw new RuntimeException("com.itextpdf.text.Font is null");
+        }
         if (font != null) {
-            SPARE_FONT.put(baseFont, font.getName());
+            SPARE_FONT.put(font1, font.getPSName());
         }
 
         Font spareFont1 = null;
@@ -70,9 +72,9 @@ public class CreateSealUtil {
             e.printStackTrace();
         }
         genv.registerFont(spareFont1);
-        BaseFont baseFont1 = FontFactory.getFont("src/main/resources/font/JinbiaoSong.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK).getBaseFont();
+        com.itextpdf.text.Font JinbiaoSong = FontFactory.getFont("src/main/resources/font/JinbiaoSong.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK);
         if (spareFont1 != null) {
-            SPARE_FONT.put(baseFont1, spareFont1.getName());
+            SPARE_FONT.put(JinbiaoSong, spareFont1.getPSName());
         }
 
         Font spareFont2 = null;
@@ -82,9 +84,9 @@ public class CreateSealUtil {
             e.printStackTrace();
         }
         genv.registerFont(spareFont2);
-        BaseFont baseFont2 = FontFactory.getFont("src/main/resources/font/simsunb.ttf", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK).getBaseFont();
+        com.itextpdf.text.Font simsunb = FontFactory.getFont("src/main/resources/font/simsunb.ttf", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK);
         if (spareFont2 != null) {
-            SPARE_FONT.put(baseFont2, spareFont2.getName());
+            SPARE_FONT.put(simsunb, spareFont2.getPSName());
         }
 
     }
@@ -93,11 +95,13 @@ public class CreateSealUtil {
         // byte[] seal = createSquareSeal("国");
         // byte[] seal = createSquareSeal("陈佳");
         // byte[] seal = createSquareSeal("张淋然");
-        byte[] seal = createSquareSeal("添加测试");
+        // byte[] seal = createSquareSeal("添加测试");
         // byte[] seal = createSquareSeal("国国国国国");
         // byte[] seal = createSquareSeal("史蒂夫罗杰斯");
         //
-        // byte[] seal = createCircleSeal("四川华西妇幼细胞生物技术有限公司");
+        // byte[] seal = createCircleSeal("\uD870\uDF86\uD84D\uDCC3\uD852\uDE4A\uE27E㵥\uE4A1四川华西妇幼细胞生物技术有限公司");
+        // byte[] seal = createCircleSeal("图章字体测试");
+        byte[] seal = createCircleSeal("一二三四五六七八九零一二三四五六七八九零一二三四五六七八九零一二三四五六七八九零一二三四五六七");
         FileUtil.writeBytes(seal, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\sealTest\\test2.png");
     }
 
@@ -170,10 +174,12 @@ public class CreateSealUtil {
      */
     public static byte[] createCircleSeal(String name) {
         int pointCount = name.codePointCount(0, name.length());
-        if (pointCount >= 24) {
+        if (pointCount >= 48) {
             System.out.println("字数过长，推荐自定义图章");
             throw new RuntimeException("字数过长，推荐自定义图章");
         }
+        // 字体长度匹配合适大小
+        int fitFontSize = getFitFontSize(name.codePointCount(0, name.length()));
         // 画布 300X300
         BufferedImage bufferedImage = new BufferedImage(IMAGE_SIZE, IMAGE_SIZE, BufferedImage.TYPE_4BYTE_ABGR);
         // 画笔
@@ -202,7 +208,7 @@ public class CreateSealUtil {
         int topFix = 15;
         double circleRadius = IMAGE_SIZE / 2F;
         // 字体 宋体 大小 0.088
-        Font font = new Font("宋体", Font.PLAIN, (int) Math.ceil(IMAGE_SIZE * 0.088));
+        Font font = new Font("宋体", Font.PLAIN, fitFontSize);
         FontRenderContext fontRenderContext = g2d.getFontRenderContext();
         Rectangle2D stringBounds = font.getStringBounds(name, fontRenderContext);
         double width = stringBounds.getWidth();
@@ -236,8 +242,9 @@ public class CreateSealUtil {
         double gradient = 0.2;
         // 字体间是否靠近度    数值越大越靠近
         double distance = 0.9;
+
         // 为每个字找到合适字体
-        Map<String, Font> fitFont = getFitFont(name, (int) Math.ceil(IMAGE_SIZE * 0.088), Font.PLAIN);
+        Map<String, Font> fitFont = getFitFont(name, fitFontSize, Font.PLAIN);
         for (int i = 0; i < pointCount; i++) {
             double aa = firstAngle - i * radianInterval;
             double ax = radius * Math.sin(Math.PI / 2 - aa);
@@ -276,8 +283,8 @@ public class CreateSealUtil {
      */
     public static Map<String, Font> getFitFont(String text, int fontSize, int fontStyle) {
         FontSelector fs = new FontSelector();
-        for (Map.Entry<BaseFont, String> fontEntry : SPARE_FONT.entrySet()) {
-            fs.addFont(new com.itextpdf.text.Font(fontEntry.getKey(), 12, 0, GrayColor.GRAYBLACK));
+        for (Map.Entry<com.itextpdf.text.Font, String> fontEntry : SPARE_FONT.entrySet()) {
+            fs.addFont(fontEntry.getKey());
         }
         Phrase process = fs.process(text);
         List<Chunk> chunks = process.getChunks();
@@ -285,13 +292,46 @@ public class CreateSealUtil {
         for (Chunk chunk : chunks) {
             String content = chunk.getContent();
             for (int i = 0; i < content.codePointCount(0, content.length()); i++) {
-                String fontName = SPARE_FONT.get(chunk.getFont().getBaseFont());
+                String fontName = SPARE_FONT.get(chunk.getFont());
                 stringFontMap.put(StrUtil.subString(content, i, i + 1), new Font(fontName, fontStyle, fontSize));
             }
         }
         return stringFontMap;
     }
 
+    /**
+     * 字体长度匹配字体大小
+     *
+     * @param textLength 字体实际长度
+     * @return 适合大小
+     */
+    public static int getFitFontSize(int textLength) {
+        int fontSize;
+        if (textLength <= 23) {
+            fontSize = 26;
+        } else if (textLength <= 27) {
+            fontSize = 25;
+        } else if (textLength <= 28) {
+            fontSize = 24;
+        } else if (textLength <= 30) {
+            fontSize = 23;
+        } else if (textLength <= 32) {
+            fontSize = 22;
+        } else if (textLength <= 35) {
+            fontSize = 21;
+        } else if (textLength <= 38) {
+            fontSize = 20;
+        } else if (textLength <= 41) {
+            fontSize = 19;
+        } else if (textLength <= 44) {
+            fontSize = 18;
+        } else if (textLength <= 47) {
+            fontSize = 17;
+        } else {
+            fontSize = 5;
+        }
+        return fontSize;
+    }
 
     /**
      * 垂直二字
@@ -300,6 +340,7 @@ public class CreateSealUtil {
      * +-----+
      * |  A  |
      * +-----+
+     *
      * @param top    二字上，单字图像
      * @param bottom 二字下，单字图像
      * @return 图像
@@ -325,6 +366,7 @@ public class CreateSealUtil {
      * +-----+-----+
      * |  A  |  A  |
      * +-----+-----+
+     *
      * @param left  左字
      * @param right 右字
      * @return 图像
@@ -353,6 +395,7 @@ public class CreateSealUtil {
      * +-----+
      * |  A  |
      * +-----+
+     *
      * @param top    三字上，单字图像
      * @param middle 三字中，单字图像
      * @param bottom 三字下，单字图像
@@ -437,6 +480,7 @@ public class CreateSealUtil {
      * +-----+-----+
      * |  A  |  A  |
      * +-----+-----+
+     *
      * @param leftTop     左上
      * @param leftBottom  左下
      * @param rightTop    右上
@@ -563,6 +607,7 @@ public class CreateSealUtil {
      * +-----+  A  +
      * |  A  |     |
      * +-----+-----+
+     *
      * @param topThree    三字上
      * @param middleThree 三字中
      * @param bottomThree 三字下

@@ -1,8 +1,9 @@
 package pdfTest.verifyReportTest;
 
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.convert.Convert;
 import cn.hutool.core.convert.NumberChineseFormatter;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.itextpdf.text.Document;
@@ -19,8 +20,7 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
-import pdfTest.mcscaVeirfy.ByteUtil;
-import pdfTest.mcscaVeirfy.DateFormatUtil;
+import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -121,7 +121,7 @@ public class AdEPactReportUtil {
         table.addCell(createCell("报告申请机构： ", coverTextFont, Element.ALIGN_RIGHT, 6.0f, 6.0f));
         table.addCell(createCell(reportEntity.getOrgName(), coverTextFont, Element.ALIGN_LEFT, 6.0f, 6.0f));
         table.addCell(createCell("报告出具时间： ", coverTextFont, Element.ALIGN_RIGHT, 6.0f, 6.0f));
-        table.addCell(createCell(DateFormatUtil.stringDateFormat(DateFormatUtil.selectUTSRetrunString(), DateFormatUtil.FORMAT_yyyyMMddHHmmssSSS, DateFormatUtil.FORMATyyyyMMdd_CHN), coverTextFont, Element.ALIGN_LEFT, 6.0f, 6.0f));
+        table.addCell(createCell(DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_MS_PATTERN), coverTextFont, Element.ALIGN_LEFT, 6.0f, 6.0f));
         // thk's todo 2024/3/19 16:08 高度是否调整?
         table.addCell(createCell("报告验证编号： ", coverTextFont, Element.ALIGN_RIGHT, 6.0f, 6.0f));
         table.addCell(createCell(reportEntity.getEsvIndexId(), coverTextFont, Element.ALIGN_LEFT, 6.0f, 6.0f));
@@ -293,7 +293,7 @@ public class AdEPactReportUtil {
         orgName.setSpacingAfter(5f);
         document.add(orgName);
 
-        Paragraph time = new Paragraph(DateFormatUtil.stringDateFormat(DateFormatUtil.selectUTSRetrunString(), DateFormatUtil.FORMAT_yyyyMMddHHmmssSSS, DateFormatUtil.FORMATyyyyMMdd_CHN), textFontNormal);
+        Paragraph time = new Paragraph(DateUtil.format(DateUtil.date(), DatePattern.PURE_DATETIME_MS_PATTERN), textFontNormal);
         time.setAlignment(Element.ALIGN_RIGHT);
         time.setIndentationRight(12);
         time.setSpacingBefore(5f);
@@ -310,7 +310,7 @@ public class AdEPactReportUtil {
 
         String text1 = "1.电子认证服务使用密码许可证";
         addTitle(document, text1, textFontNormal);
-        Image image1 = Image.getInstance(ByteUtil.toByteArray(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResourceAsStream("static/images/pleas.jpg"))));
+        Image image1 = Image.getInstance(IOUtils.toByteArray(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResourceAsStream("static/images/pleas.jpg"))));
         image1.setAlignment(Image.ALIGN_CENTER);
         //依照比例缩放
         image1.scalePercent(50);
@@ -318,7 +318,7 @@ public class AdEPactReportUtil {
 
         String text2 = "\n" + "2.电子认证服务许可";
         addTitle(document, text2, textFontNormal);
-        Image image2 = Image.getInstance(ByteUtil.toByteArray(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResourceAsStream("static/images/easl.jpg"))));
+        Image image2 = Image.getInstance(IOUtils.toByteArray(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResourceAsStream("static/images/easl.jpg"))));
         image2.setAlignment(Image.ALIGN_CENTER);
         //依照比例缩放
         image2.scalePercent(53);

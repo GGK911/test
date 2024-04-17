@@ -36,10 +36,12 @@ public class dateTest1 {
         Date currentDate = new Date();
 
         // 创建 SimpleDateFormat 对象，指定日期格式和时区
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss z");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss'Z'Z");
+        // sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
         // 设置时区为 GMT
-        sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+        sdf.setTimeZone(TimeZone.getDefault());
+        // sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
 
         // 格式化 Date 对象
         String formattedDate = sdf.format(currentDate);

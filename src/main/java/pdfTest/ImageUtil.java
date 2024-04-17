@@ -1,10 +1,16 @@
 package pdfTest;
 
+import com.luciad.imageio.webp.WebPReadParam;
+import com.twelvemonkeys.imageio.stream.ByteArrayImageInputStream;
 import net.coobird.thumbnailator.Thumbnails;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * @author TangHaoKai
@@ -67,6 +73,35 @@ public class ImageUtil {
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException("缩放图片后输出流异常");
+        }
+    }
+
+    /**
+     * 图片webp文件转png文件
+     *
+     * @param webpFile     源webp文件
+     * @param outputStream 输出流
+     */
+    public static void webpToPng(byte[] webpFile, OutputStream outputStream) {
+        // Obtain a WebP ImageReader instance
+        ImageReader reader = ImageIO.getImageReadersByMIMEType("image/webp").next();
+
+        // Configure decoding parameters
+        WebPReadParam readParam = new WebPReadParam();
+        readParam.setBypassFiltering(true);
+
+        // Configure the input on the ImageReader
+        reader.setInput(new ByteArrayImageInputStream(webpFile));
+
+        try {
+            // Decode the image
+            BufferedImage image = reader.read(0, readParam);
+
+            //the `png` can use `jpg`
+            ImageIO.write(image, "png", outputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("解析图片失败请检查图片格式");
         }
     }
 }

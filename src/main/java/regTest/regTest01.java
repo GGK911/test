@@ -42,4 +42,16 @@ public class regTest01 {
         Matcher matcher = pattern.matcher(input);
         return matcher.matches();
     }
+
+    @Test
+    @SneakyThrows
+    public void regTest2() {
+        String input4 = "";
+
+        String reg = "[a-zA-Z0-9]+";
+        Pattern pattern = Pattern.compile(reg);
+        System.out.println("Input: " + input4);
+        System.out.println("Matched: " + matchPattern(pattern, input4));
+
+    }
 }
