@@ -19,6 +19,7 @@ import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
+import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
@@ -31,6 +32,7 @@ import org.bouncycastle.jce.X509KeyUsage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
+import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.encoders.Base64;
@@ -39,6 +41,7 @@ import org.bouncycastle.util.encoders.Hex;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.io.ByteArrayInputStream;
+import java.io.StringReader;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
@@ -334,7 +337,7 @@ public class sm2_demo {
         // outputKeyStore.store(out, passwd);
         // out.close();
 
-        System.out.println("//*************************************************工具密钥对生成**********************************************************//");
+        System.out.println("//*************************************************core工具密钥对生成**********************************************************//");
 
         SecuEngine secuEngine = new SecuEngine();
         String pri22 = secuEngine.GenKey(2, 256);
@@ -342,6 +345,9 @@ public class sm2_demo {
         //初始化sm2加密
         BCECPrivateKey privateKey22 = (BCECPrivateKey) kf.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(pri22)));
         System.out.println("privateKey22>> " + Base64.toBase64String(privateKey22.getEncoded()));
+
+        System.out.println("//*************************************************私钥生成公钥**********************************************************//");
+
         ECPoint publicPoint = privateKey22.getParameters().getG().multiply(privateKey22.getD());
         // 使用SM2算法创建EC公钥规范
         // ECPublicKeyParameters publicKeyParameters = new ECPublicKeyParameters(publicPoint, ECUtil.getDomainParameters(BouncyCastleProvider.CONFIGURATION, privateKey22.getParameters()));
@@ -353,9 +359,40 @@ public class sm2_demo {
         System.arraycopy(y, 0, Q, 32, y.length);
         System.out.println("publicKey22>> " + Base64.toBase64String(Q));
 
+        System.out.println("//*************************************************证书反序列化**********************************************************//");
+
         String test01 = "MIICxDCCAmigAwIBAgIQFsXYtLT0AtkQ8Vhf0nQ5PDAMBggqgRzPVQGDdQUAMC0xCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVNQ1NDQTEOMAwGA1UEAwwFTUNTQ0EwHhcNMjQwNDE3MDgyNjU2WhcNMjUwNDE3MDgyNjU2WjB3MQswCQYDVQQGEwJDTjENMAsGA1UECgwEdGVzdDEQMA4GA1UECwwHbG9jYWxSQTEVMBMGA1UEBQwMdGVzdDg4OTQ3ODgyMTAwLgYDVQQDDCcxNzY1MjI1MjIzMDA0NzAwNjcyQHRlc3Q5MTIyNTYwNUAwMUAwMDEwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAATuSL3yBH4qoqbNjPTi8IZVPHlbVvm1fuHJUAKpyoyj0XuZGo/gwpOvC7EjnWp6XY2R7git4hJMG5Tv/FihdJ4Ro4IBHDCCARgwHwYDVR0jBBgwFoAU8SIKZ5iN9eOyqsMXa8BCH75LvXYwHQYDVR0OBBYEFEld9e+6/DxyouXRNOY9vC5QAQ2KMAwGA1UdEwQFMAMBAQAwCwYDVR0PBAQDAgTwMIG6BgNVHR8EgbIwga8wLqAsoCqGKGh0dHA6Ly93d3cubWNzY2EuY29tLmNuL3NtMi9jcmwvY3JsMC5jcmwwfaB7oHmGd2xkYXA6Ly93d3cubWNzY2EuY29tLmNuOjM4OS9DTj1jcmwwLE9VPUNSTCxPPU1DU0NBLEM9Q04/Y2VydGlmaWNhdGVSZXZvY2F0aW9uTGlzdD9iYXNlP29iamVjdGNsYXNzPWNSTERpc3RyaWJ1dGlvblBvaW50MAwGCCqBHM9VAYN1BQADSAAwRQIhAOi6xaeBj09b4Ee/3p1XP/s6zgE60kYCPvzCIgHHvFYMAiAkM5Tax4D1o+h9ExOwuUPhpWUKcTrlQn9nfXu9aqU14g==";
         CertificateFactory factory = CertificateFactory.getInstance("X.509", BC);
         Certificate certificate1 = factory.generateCertificate(new ByteArrayInputStream(Base64.decode(test01)));
         System.out.println(certificate1);
+
+        System.out.println("//*************************************************PEM-PARSE**********************************************************//");
+
+        String PEMBase64 = "-----BEGIN CERTIFICATE-----\n" +
+                "MIIDdTCCAl2gAwIBAgIBAjANBgkqhkiG9w0BAQsFADBAMQswCQYDVQQGEwJDTjEP\n" +
+                "MA0GA1UEChMGR0dLOTExMQ8wDQYDVQQLEwZHR0s5MTExDzANBgNVBAMTBkdHSzkx\n" +
+                "MTAeFw0yNDA0MTIwNDAwMjlaFw0yOTA0MTEwNDAwMjlaMGQxCzAJBgNVBAYTAkNO\n" +
+                "MQ4wDAYDVQQKDAVDaGluYTENMAsGA1UECwwERExZRDESMBAGA1UEAwwJVGltZVN0\n" +
+                "YW1wMSIwIAYJKoZIhvcNAQkBFhMxMzk4MzA1MzQ1NUAxNjMuY29tMIIBIjANBgkq\n" +
+                "hkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqzsrjWJYu3evWWrwHYpIGqD6U4Tgf+sl\n" +
+                "lJ+Iq5SLl3DYm7z6LUNzFD5capnXzYmx20C/jg5TRY+VDNrGCupne4vYAqn58ecC\n" +
+                "gCYWfkvXbQEjLrShvoXyLHfTHvmnanIchbiJscbg9DpDmWM3SqT5zy1CZJLfQxSh\n" +
+                "2f6lIn02XnTJF5jKrZ9TDooYLCUDWDVYbd/X2SNpyybVsAPTw24Eb+hrrO9t5SXA\n" +
+                "bN85ycZRdyho/RPX9OwqLhkba5hlUxRmpW9tvxqrA3+LsnOcduwMtHyIU//cFpl9\n" +
+                "GydbwbPDp4KVSYI3CV70ZCH59CGSRZKWFz40ucY10LHNxssUdbnN+wIDAQABo1Yw\n" +
+                "VDAdBgNVHQ4EFgQU4gh3nyNkTlGuCYd3r73LILYB7KEwHwYDVR0jBBgwFoAU+Eop\n" +
+                "EhChxDzBCm2yL4V3UHB9dPQwEgYDVR0TAQH/BAgwBgEB/wIBADANBgkqhkiG9w0B\n" +
+                "AQsFAAOCAQEAKQ1TeBgsmWPW0VkQL3J1499SJdAN4kaav88qHLeK6FPZ89kWZ591\n" +
+                "pfJh9J67uU/OzF9U2KBeeNbNXluUnX8GY+QZz8PUzFKoh3gpW9FCpDl7lAbuJUtC\n" +
+                "aIOg3iTlZ+uhO7pOQhWdVugUCBtC5OzP5LX6spnfhmLheu6bXyq5bvyuLty51qUC\n" +
+                "lJZ6MWEpKxbn0te8KFs+cMKwaliyydoYo7OGd8BJjLIPlIfhy4sipY1mFEb8SNSW\n" +
+                "AxtBCzIvpwxCnUeeSrk2+frtacLm8vXi/wP/Y74fs6ILhNfr8Xp1aQix2c7I8st0\n" +
+                "uC1t2ZEfnNs+ZXcsAUUuBejnE+WnVFNuUg==\n" +
+                "-----END CERTIFICATE-----\n";
+        PEMParser pemParser = new PEMParser(new StringReader(PEMBase64));
+        X509CertificateHolder pemToObj = (X509CertificateHolder) pemParser.readObject();
+        System.out.println(pemToObj.getSubject().toString());
+
+
     }
 }

@@ -44,17 +44,19 @@ public class test {
         // graphics.setFont(new Font("宋体", Font.BOLD, 120));
         // 这里必须是注册字体，直接createFont不行，找不到字体
         GraphicsEnvironment genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        genv.registerFont(Font.createFont(Font.TRUETYPE_FONT, ResourceUtil.getStream("font/JinbiaoSong.TTF")));
-        graphics.setFont(new Font("金标宋体", Font.PLAIN, 120));
+        genv.registerFont(Font.createFont(Font.TRUETYPE_FONT, ResourceUtil.getStream("font/SmileySans-Oblique.ttf")));
+        graphics.setFont(new Font("得意黑 斜体", Font.PLAIN, 120));
+        // genv.registerFont(Font.createFont(Font.TRUETYPE_FONT, ResourceUtil.getStream("font/JinbiaoSong.TTF")));
+        // graphics.setFont(new Font("金标宋体", Font.PLAIN, 120));
         // 填充背景
         // graphics.fillRect(0, 0, 300, 150);
         // 换颜色
         // graphics.setPaint(Color.RED);
         // graphics.setPaint(Color.BLACK);
 
-        graphics.drawString("㵥", 10, 120);
+        graphics.drawString("大", 10, 120);
 
-        graphics.drawString("\uE4A1", 165, 120);
+        graphics.drawString("小", 165, 120);
 
         BufferedImage bufferedImage1 = new BufferedImage(300, 300, bufferedImage.getType());
         Graphics2D graphics1 = bufferedImage1.createGraphics();
@@ -76,4 +78,7 @@ public class test {
         }
         FileUtil.writeBytes(outStream.toByteArray(), "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\sealTest\\test.png");
     }
+
+
+
 }

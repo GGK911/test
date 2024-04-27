@@ -1,10 +1,10 @@
 package certTest;
 
 import certTest.saxon.rsa.RSAUtils;
-import cn.hutool.core.io.FileUtil;
 import lombok.SneakyThrows;
 import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
 import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
+import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -16,7 +16,7 @@ import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
-import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
@@ -38,7 +38,8 @@ public class digest_demo {
         String filePath = "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\cutRangeTest2\\range1BeforeAndAfter.pdf";
         filePath = "C:\\Users\\ggk911\\Desktop\\测试证书签署的文件供验证系统测试.pdf";
 
-        bytes = FileUtil.readBytes(filePath);
+        // bytes = FileUtil.readBytes(filePath);
+        bytes = "唐好凯".getBytes(StandardCharsets.UTF_8);
         calculatorProvider = new BcDigestCalculatorProvider();
     }
 
@@ -96,6 +97,13 @@ public class digest_demo {
     @SneakyThrows
     public void md5Test() {
         DigestCalculator digestCalculator = calculatorProvider.get(new AlgorithmIdentifier(PKCSObjectIdentifiers.md5));
+        digest(digestCalculator);
+    }
+
+    @Test
+    @SneakyThrows
+    public void sha1() {
+        DigestCalculator digestCalculator = calculatorProvider.get(new AlgorithmIdentifier(OIWObjectIdentifiers.idSHA1));
         digest(digestCalculator);
     }
 

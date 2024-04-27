@@ -5,10 +5,11 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.resource.ResourceUtil;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
-import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.FontSelector;
+import org.apache.commons.io.IOUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.AlphaComposite;
@@ -57,12 +58,15 @@ public class CreateSealUtil {
             e.printStackTrace();
         }
         genv.registerFont(font);
-        com.itextpdf.text.Font font1 = FontFactory.getFont("src/main/resources/font/SIMSUN.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK);
-        if (font1 == null) {
-            throw new RuntimeException("com.itextpdf.text.Font is null");
-        }
-        if (font != null) {
-            SPARE_FONT.put(font1, font.getPSName());
+        try {
+            byte[] simsunBytes = IOUtils.toByteArray(ResourceUtil.getStream("font/SIMSUN.TTF"));
+            BaseFont simsunBaseFont = BaseFont.createFont("SIMSUN.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, simsunBytes, null);
+            com.itextpdf.text.Font simsunFont = new com.itextpdf.text.Font(simsunBaseFont, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK);
+            if (font != null) {
+                SPARE_FONT.put(simsunFont, font.getName());
+            }
+        } catch (IOException | com.itextpdf.text.DocumentException e) {
+            e.printStackTrace();
         }
 
         Font spareFont1 = null;
@@ -72,9 +76,15 @@ public class CreateSealUtil {
             e.printStackTrace();
         }
         genv.registerFont(spareFont1);
-        com.itextpdf.text.Font JinbiaoSong = FontFactory.getFont("src/main/resources/font/JinbiaoSong.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK);
-        if (spareFont1 != null) {
-            SPARE_FONT.put(JinbiaoSong, spareFont1.getPSName());
+        try {
+            byte[] jbBytes = IOUtils.toByteArray(ResourceUtil.getStream("font/JinbiaoSong.TTF"));
+            BaseFont jbBaseFont = BaseFont.createFont("JinbiaoSong.TTF", BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, jbBytes, null);
+            com.itextpdf.text.Font jbFont = new com.itextpdf.text.Font(jbBaseFont, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK);
+            if (spareFont1 != null) {
+                SPARE_FONT.put(jbFont, spareFont1.getName());
+            }
+        } catch (IOException | DocumentException e) {
+            e.printStackTrace();
         }
 
         Font spareFont2 = null;
@@ -84,16 +94,42 @@ public class CreateSealUtil {
             e.printStackTrace();
         }
         genv.registerFont(spareFont2);
-        com.itextpdf.text.Font simsunb = FontFactory.getFont("src/main/resources/font/simsunb.ttf", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK);
-        if (spareFont2 != null) {
-            SPARE_FONT.put(simsunb, spareFont2.getPSName());
+        try {
+            byte[] sbBytes = IOUtils.toByteArray(ResourceUtil.getStream("font/simsunb.ttf"));
+            BaseFont sbBaseFont = BaseFont.createFont("simsunb.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, sbBytes, null);
+            com.itextpdf.text.Font sbFont = new com.itextpdf.text.Font(sbBaseFont, 12f, com.itextpdf.text.Font.NORMAL, BaseColor.BLACK);
+            if (spareFont2 != null) {
+                SPARE_FONT.put(sbFont, spareFont2.getName());
+            }
+        } catch (IOException | DocumentException e) {
+            e.printStackTrace();
         }
 
+        // 得意黑
+        // Font spareFont3 = null;
+        // try {
+        //     spareFont3 = Font.createFont(Font.TRUETYPE_FONT, ResourceUtil.getStream("font/SmileySans-Oblique.ttf"));
+        // } catch (FontFormatException | IOException e) {
+        //     e.printStackTrace();
+        // }
+        // try {
+        //     genv.registerFont(spareFont3);
+        //     byte[] smileBytes = IOUtils.toByteArray(ResourceUtil.getStream("font/SmileySans-Oblique.ttf"));
+        //     BaseFont baseFont = BaseFont.createFont("SmileySans-Oblique.ttf", BaseFont.IDENTITY_H, cn.com.mcsca.itextpdf.text.pdf.BaseFont.EMBEDDED, true, smileBytes, null);
+        //     com.itextpdf.text.Font font = new com.itextpdf.text.Font(baseFont, 12f, com.itextpdf.text.Font.ITALIC, BaseColor.BLACK);
+        //     if (spareFont3 != null) {
+        //         SPARE_FONT.put(font, spareFont3.getName());
+        //     }
+        // } catch (IOException | DocumentException e) {
+        //     e.printStackTrace();
+        // }
     }
 
     public static void main(String[] args) {
+        // byte[] seal = createSquareSeal("A");
         // byte[] seal = createSquareSeal("国");
         // byte[] seal = createSquareSeal("陈佳");
+        // byte[] seal = createSquareSeal("得意");
         // byte[] seal = createSquareSeal("张淋然");
         // byte[] seal = createSquareSeal("添加测试");
         // byte[] seal = createSquareSeal("国国国国国");
@@ -204,8 +240,9 @@ public class CreateSealUtil {
         g2d.drawString("★", IMAGE_SIZE / 2F - size / 2F, (float) (IMAGE_SIZE / 2F - size / 2F + size - size * 0.16F));
 
         // 画字
-        // 距离圆圈边界值
-        int topFix = 15;
+        // 距离圆圈边界值 8 近点 / 15 平衡
+        int topFix = 8;
+        // int topFix = 15;
         double circleRadius = IMAGE_SIZE / 2F;
         // 字体 宋体 大小 0.088
         Font font = new Font("宋体", Font.PLAIN, fitFontSize);
