@@ -32,7 +32,7 @@ public class test {
     @Test
     @SneakyThrows
     public void decodeTest() {
-        String data = "唐好凯";
+        String data = "ccit";
         String toBase64String = Base64.toBase64String(data.getBytes(StandardCharsets.UTF_8));
         System.out.println(toBase64String);
         System.out.println(new String(Base64.decode(toBase64String)));
@@ -42,6 +42,5 @@ public class test {
         byte[] encode = Base64.encode(data.getBytes(StandardCharsets.UTF_8));
         System.out.println(new String(encode));
         System.out.println(new String(Base64.decode(encode)));
-
     }
 }

@@ -112,4 +112,19 @@ public class jsonTest01 {
         System.out.println(test.toString());
     }
 
+    @Test
+    @SneakyThrows
+    public void jsonChangeTest() {
+        com.alibaba.fastjson.JSONObject jsonObject = new com.alibaba.fastjson.JSONObject();
+        jsonObject.put("123", "321");
+        add(jsonObject);
+        System.out.println(jsonObject.toString());
+
+    }
+
+    public com.alibaba.fastjson.JSONObject add(com.alibaba.fastjson.JSONObject jsonObject) {
+        jsonObject.put("456", "654");
+        return jsonObject;
+    }
+
 }

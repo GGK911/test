@@ -40,7 +40,8 @@ public class PdfCustomEvent2 extends PdfPageEventHelper {
         PdfContentByte cb = writer.getDirectContent();
         ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT, new Phrase("ESV123321123321"), document.right(), document.top() + 10, 0);
         ColumnText.showTextAligned(cb, Element.ALIGN_CENTER, footer, (document.right() - document.rightMargin()) - len, document.bottom(), 0);
-        cb.addTemplate(pdfTemplate, document.right() - document.rightMargin(), document.bottom());
+        // cb.addTemplate(pdfTemplate, document.right() - document.rightMargin(), document.bottom());
+        cb.addTemplate(pdfTemplate, document.right() - document.rightMargin(), document.bottom() - 2);
         String str = "零一二三四五六七八九十零一二三四五六七八九十零一二三四五六七八九十零一二三四五六七八九十零一二三四五六七八九十零一二三四五六七八九十零一二三四五六七八九十零一二三四五六七八九十";
         // String str = "金诚金诚金诚金诚金诚金诚金诚金诚金诚金诚金诚金诚金诚金诚金诚金诚金诚金诚诚";
         int trueLength = str.codePointCount(0, str.length());
@@ -71,15 +72,19 @@ public class PdfCustomEvent2 extends PdfPageEventHelper {
 
     @Override
     public void onCloseDocument(PdfWriter writer, Document document) {
-        //最后一步了，就是关闭文档的时候，将模板替换成实际的 Y 值,至此，page x of y 制作完毕，完美兼容各种文档size。
-        pdfTemplate.beginText();
-        //生成的模版的字体、颜色
-        pdfTemplate.setFontAndSize(baseFont, 10);
-        pdfTemplate.setColorFill(BaseColor.GRAY);
         String foot2 = " " + (writer.getPageNumber()) + " 页";
-        //模版显示的内容
-        pdfTemplate.showText(foot2);
-        pdfTemplate.endText();
-        pdfTemplate.closePath();
+        // method:1 有问题，字体显示不全
+        // //最后一步了，就是关闭文档的时候，将模板替换成实际的 Y 值,至此，page x of y 制作完毕，完美兼容各种文档size。
+        // pdfTemplate.beginText();
+        // //生成的模版的字体、颜色
+        // pdfTemplate.setFontAndSize(baseFont, 10);
+        // pdfTemplate.setColorFill(BaseColor.GRAY);
+        // //模版显示的内容
+        // pdfTemplate.showText(foot2);
+        // pdfTemplate.endText();
+        // pdfTemplate.closePath();
+
+        // method:2
+        ColumnText.showTextAligned(pdfTemplate, Element.ALIGN_LEFT, new Phrase(foot2, new Font(baseFont, 10, Font.NORMAL, BaseColor.GRAY)), 2, 2, 0);
     }
 }

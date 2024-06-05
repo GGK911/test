@@ -137,7 +137,7 @@ public class CreateSealUtil {
         //
         // byte[] seal = createCircleSeal("\uD870\uDF86\uD84D\uDCC3\uD852\uDE4A\uE27E㵥\uE4A1四川华西妇幼细胞生物技术有限公司");
         // byte[] seal = createCircleSeal("图章字体测试");
-        byte[] seal = createCircleSeal("一二三四五六七八九零一二三四五六七八九零一二三四五六七八九零一二三四五六七八九零一二三四五六七");
+        byte[] seal = createCircleSeal("大陆云盾电子认证服务有限公司");
         FileUtil.writeBytes(seal, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\sealTest\\test2.png");
     }
 

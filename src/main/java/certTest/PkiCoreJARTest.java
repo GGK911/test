@@ -1,9 +1,13 @@
 package certTest;
 
 import certTest.createCert.PemUtil;
-import cn.com.mcsca.pki.core.util.CertUtil;
+import cn.com.mcsca.pki.core.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import cn.com.mcsca.pki.core.bouncycastle.cert.jcajce.JcaX509ContentVerifierProviderBuilder;
+import cn.com.mcsca.pki.core.bouncycastle.pkcs.PKCS10CertificationRequest;
+import cn.com.mcsca.pki.core.util.CertRequestUtil;
 import cn.com.mcsca.pki.core.util.SignatureUtil;
 import cn.com.mcsca.pki.core.x509.X509Certificate;
+import com.alibaba.fastjson.JSONObject;
 import lombok.SneakyThrows;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
@@ -55,5 +59,34 @@ public class PkiCoreJARTest {
         System.out.println(new String(signAttach));
     }
 
+    @Test
+    @SneakyThrows
+    public void signVerify() {
+        String P10 = "MIIBGTCBxQIBATBlMRIwEAYDVQQDDAnlp5rnq5HngpwxDzANBgNVBAsMBui3r+i+vjEPMA0GA1UECgwG5rWL6K+VMQ8wDQYDVQQHDAbph43luoYxDzANBgNVBAgMBumHjeW6hjELMAkGA1UEBgwCQ04wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAAQ41IlFMddxJ17/dXi6P31w/kRCWNwdcOkEBVPTdZRupkQw9XX2grvvDjFMTRfFU84RsY0f0w/o7EwkkuKp/NVEMAwGCCqBHM9VAYN1BQADQQBwfGXFsT551OsOxOW7zkbOakm+ORPboejJk/y2RItkFQFEdtXGyBfSAVnfgQr+woCYWKhgXzfPMG/UZeprMdV1";
+
+        PKCS10CertificationRequest request = new PKCS10CertificationRequest(Base64.decode(P10));
+        SubjectPublicKeyInfo publicKeyInfo = request.getSubjectPublicKeyInfo();
+        boolean signatureValid = request.isSignatureValid((new JcaX509ContentVerifierProviderBuilder()).setProvider(new cn.com.mcsca.pki.core.bouncycastle.jce.provider.BouncyCastleProvider()).build(publicKeyInfo));
+        System.out.println(signatureValid);
+    }
+
+    @Test
+    @SneakyThrows
+    public void verifyP10() {
+        String P10 = "MIIBGTCBxQIBATBlMRIwEAYDVQQDDAnlp5rnq5HngpwxDzANBgNVBAsMBui3r+i+vjEPMA0GA1UECgwG5rWL6K+VMQ8wDQYDVQQHDAbph43luoYxDzANBgNVBAgMBumHjeW6hjELMAkGA1UEBgwCQ04wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAAQ41IlFMddxJ17/dXi6P31w/kRCWNwdcOkEBVPTdZRupkQw9XX2grvvDjFMTRfFU84RsY0f0w/o7EwkkuKp/NVEMAwGCCqBHM9VAYN1BQADQQBwfGXFsT551OsOxOW7zkbOakm+ORPboejJk/y2RItkFQFEdtXGyBfSAVnfgQr+woCYWKhgXzfPMG/UZeprMdV1";
+        System.out.println(CertRequestUtil.verifyP10(P10));
+    }
+
+    @Test
+    @SneakyThrows
+    public void doSign() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("test", "1234");
+        System.out.println(jsonObject.toJSONString());
+        String sign = SignatureUtil.doSign("MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQghclRtEAEW7H1y4G+1DGqFATtjb8RkU6tM+wW57G9rRugCgYIKoEcz1UBgi2hRANCAATJjsgrOBf9y4XAQuLldhbbBWuq+9i9e6Hk7DZTfOH0s1WmIOJXtCdU02QlWfmNO0VL2iZaART1g24f4+xDJTdE", jsonObject);
+        System.out.println(sign);
+        sign = "MEYCIQCpAxdyBhu4AAepRnm8Vtgcmg7kp/2q0y0uehVeZEtuJwIhAOMdhnNtCLQSkjXZH9hYtahqb7N5MrVUmxPQCaqNWWjR";
+        System.out.println(SignatureUtil.verifySignByPublicKey("C98EC82B3817FDCB85C042E2E57616DB056BAAFBD8BD7BA1E4EC36537CE1F4B355A620E257B42754D3642559F98D3B454BDA265A0114F5836E1FE3EC43253744", jsonObject, sign));
+    }
 
 }

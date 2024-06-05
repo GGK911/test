@@ -3,6 +3,7 @@ package certTest;
 import certTest.saxon.CertUtils;
 import certTest.saxon.sm2.Sm2Utils;
 import cn.com.mcsca.extend.SecuEngine;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.crypto.BCUtil;
 import cn.hutool.crypto.SecureUtil;
@@ -19,24 +20,40 @@ import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.crypto.digests.SM3Digest;
 import org.bouncycastle.crypto.engines.SM2Engine;
+import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
+import org.bouncycastle.crypto.params.ParametersWithID;
+import org.bouncycastle.crypto.params.ParametersWithRandom;
+import org.bouncycastle.crypto.signers.PlainDSAEncoding;
+import org.bouncycastle.crypto.signers.SM2Signer;
+import org.bouncycastle.crypto.util.PrivateKeyFactory;
+import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
+import org.bouncycastle.jce.ECKeyUtil;
+import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.X509KeyUsage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
+import org.bouncycastle.jce.spec.ECParameterSpec;
+import org.bouncycastle.jce.spec.ECPrivateKeySpec;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
+import org.junit.jupiter.api.Test;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -54,6 +71,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.Security;
 import java.security.Signature;
 import java.security.cert.Certificate;
@@ -109,11 +127,11 @@ public class sm2_demo {
         // 获取密钥对
         keyPair = kpg.generateKeyPair();
         publicKey = keyPair.getPublic();
-        System.out.println(publicKey.toString());
-        System.out.println(Base64.toBase64String(publicKey.getEncoded()));
+        // System.out.println(publicKey.toString());
+        // System.out.println(Base64.toBase64String(publicKey.getEncoded()));
         privateKey = keyPair.getPrivate();
-        System.out.println(privateKey.toString());
-        System.out.println(Base64.toBase64String(privateKey.getEncoded()));
+        // System.out.println(privateKey.toString());
+        // System.out.println(Base64.toBase64String(privateKey.getEncoded()));
 
     }
 
@@ -393,6 +411,255 @@ public class sm2_demo {
         X509CertificateHolder pemToObj = (X509CertificateHolder) pemParser.readObject();
         System.out.println(pemToObj.getSubject().toString());
 
+        System.out.println("//*************************************************PARSE-PRIVATE-FROM-d**********************************************************//");
+
+        String dHex = "9bc80070025bfbb69af775e2cb6aa656ab2d71493392ae4df2ec949404105b6c";
+        dHex = Hex.toHexString(Base64.decode("YVg6ANDQdeZK/+tA+7DdaJgiac7wJTAGrS3UytvgweU="));
+        dHex = Hex.toHexString(Base64.decode("EKcqeNufxodDNOl6Nv5RbSw5GrKe+KwXlpkeHgITZlU="));
+        dHex = Hex.toHexString(Base64.decode("teSBMBQiWjE0xHI8xAB4wxFsFxSzR0R1RsKhg5M/PbY="));
+        dHex = "85C951B440045BB1F5CB81BED431AA1404ED8DBF11914EAD33EC16E7B1BDAD1B";
+        ECNamedCurveParameterSpec sm2Spec = ECNamedCurveTable.getParameterSpec("sm2p256v1");
+        ECParameterSpec ecSpec = new ECParameterSpec(
+                sm2Spec.getCurve(),
+                sm2Spec.getG(),
+                sm2Spec.getN(),
+                sm2Spec.getH());
+        KeyFactory fact = KeyFactory.getInstance("ECDSA", BC);
+        BigInteger d1 = new BigInteger(1, Hex.decode(dHex));
+        PrivateKey priFromD = fact.generatePrivate(new ECPrivateKeySpec(d1, ecSpec));
+        System.out.println("priFromD>> " + Base64.toBase64String(priFromD.getEncoded()));
+
+        System.out.println("//*************************************************PARSE-PRIVATE-FROM-d-2**********************************************************//");
+
+        BigInteger d2 = new BigInteger(1, Hex.decode(dHex));
+        ECPrivateKeySpec ecPrivateKeySpec = new ECPrivateKeySpec(d2, ecSpec);
+        BCECPrivateKey ecPriFromD = new BCECPrivateKey("EC", ecPrivateKeySpec, BouncyCastleProvider.CONFIGURATION);
+        System.out.println("ecPriFromD>> " + Base64.toBase64String(ecPriFromD.getEncoded()));
+
+        System.out.println("//*************************************************GEN-PUBLIC-FROM-d**********************************************************//");
+
+        // Q = G * d
+        ECPoint pointQ = ecSpec.getG().multiply(d2).normalize();
+        ECParameterSpec parameters = ecPriFromD.getParameters();
+        ECPublicKeySpec ecPublicKeySpec = new ECPublicKeySpec(parameters.getCurve().createPoint(pointQ.getXCoord().toBigInteger(), pointQ.getYCoord().toBigInteger()), parameters);
+        BCECPublicKey bcecPublicKey = new BCECPublicKey("EC", ecPublicKeySpec, BouncyCastleProvider.CONFIGURATION);
+        System.out.println("bcecPublicKey>> " + Base64.toBase64String(bcecPublicKey.getEncoded()));
+        System.out.println("bcecPublicKeyQ>> " + Hex.toHexString(bcecPublicKey.getQ().getXCoord().toBigInteger().toByteArray()) + Hex.toHexString(bcecPublicKey.getQ().getYCoord().toBigInteger().toByteArray()));
+        System.out.println("//*************************************************GEN-PUBLIC-FROM-Q**********************************************************//");
+
+        // Q
+        String xy = "RkoqC/RZjmedSuMUmlQ/y4TTmeYTHHyT1okM0KW67wkn/ys/VmXRnuFIzy6thS98Xk4m/+JgCVa/NDnUz8J5hQ==";
+        // xy = "D4qaPtOzxfoMhPH6K2CUofwrtnXTWHMob2RzWWRnM7/XZBMUUDC1ZvkjtIuZ4gxwZRwoFguVc/JWvuxP93cw1A==";
+        // 64
+        byte[] xyBytes = Base64.decode(xy);
+        byte[] xBytes = new byte[32];
+        System.arraycopy(xyBytes, 0, xBytes, 0, xBytes.length);
+        byte[] yBytes = new byte[32];
+        System.arraycopy(xyBytes, xBytes.length, yBytes, 0, yBytes.length);
+        BigInteger bigIntegerX = new BigInteger(1, xBytes);
+        BigInteger bigIntegerY = new BigInteger(1, yBytes);
+
+        ECPublicKeySpec ecPublicKeySpec2 = new ECPublicKeySpec(ecSpec.getCurve().createPoint(bigIntegerX, bigIntegerY), ecSpec);
+        BCECPublicKey bcecPublicKey2 = new BCECPublicKey("EC", ecPublicKeySpec2, BouncyCastleProvider.CONFIGURATION);
+        System.out.println("bcecPublicKey2>> " + Base64.toBase64String(bcecPublicKey2.getEncoded()));
+
+        System.out.println("//*************************************************CURVE-PARAM-PEM-TO-NAME-PEM**********************************************************//");
+
+        PrivateKey curveParamPriKey = ECKeyUtil.privateToExplicitParameters(privateKey22, BC);
+        System.out.println("curveParamPriKey>> " + Base64.toBase64String(curveParamPriKey.getEncoded()));
+
 
     }
+
+    @Test
+    @SneakyThrows
+    public void sm2Encrypt() {
+        String str = "62>076=<8>2?4=:9";
+        str = "73=429>21=847:48";
+        byte[] bytes = str.getBytes(StandardCharsets.UTF_8);
+        String servicePub = "MIIBMzCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBA0IABEZKKgv0WY5nnUrjFJpUP8uE05nmExx8k9aJDNCluu8JJ/8rP1Zl0Z7hSM8urYUvfF5OJv/iYAlWvzQ51M/CeYU=";
+        servicePub = "MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAERkoqC/RZjmedSuMUmlQ/y4TTmeYTHHyT1okM0KW67wkn/ys/VmXRnuFIzy6thS98Xk4m/+JgCVa/NDnUz8J5hQ==";
+        // servicePub = "MIIBMzCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBA0IABA+Kmj7Ts8X6DITx+itglKH8K7Z101hzKG9kc1lkZzO/12QTFFAwtWb5I7SLmeIMcGUcKBYLlXPyVr7sT/d3MNQ=";
+        KeyFactory keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
+        BCECPublicKey publicKey = (BCECPublicKey) keyFactory.generatePublic(new X509EncodedKeySpec(Base64.decode(servicePub)));
+        PublicKey publicKey1 = ECKeyUtil.publicToExplicitParameters(publicKey, BC);
+        System.out.println(Base64.toBase64String(publicKey1.getEncoded()));
+
+        SM2Engine sm2Engine = new SM2Engine(SM2Engine.Mode.C1C3C2);
+        ECPublicKeyParameters key = (ECPublicKeyParameters) PublicKeyFactory.createKey(publicKey.getEncoded());
+        ParametersWithRandom parameters = new ParametersWithRandom(key, new SecureRandom());
+        sm2Engine.init(true, parameters);
+        byte[] encrypt = sm2Engine.processBlock(bytes, 0, bytes.length);
+        System.out.println(Base64.toBase64String(encrypt));
+    }
+
+    @Test
+    @SneakyThrows
+    public void sm2Decrypt() {
+        // YVg6ANDQdeZK/+tA+7DdaJgiac7wJTAGrS3UytvgweU=
+        // 系统私钥
+        String pri = "MIICBQIBADCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBBIIBDzCCAQsCAQEEIGFYOgDQ0HXmSv/rQPuw3WiYImnO8CUwBq0t1Mrb4MHloIHjMIHgAgEBMCwGByqGSM49AQECIQD////+/////////////////////wAAAAD//////////zBEBCD////+/////////////////////wAAAAD//////////AQgKOn6np2fXjRNWp5Lz2UJp/OXifUVq4+S3by9QU2UDpMEQQQyxK4sHxmBGV+ZBEZqOcmUj+MLv/JmC+FxWkWJM0x0x7w3NqL09necWb3O42tpIVPQqYd8xipHQALfMuUhOfCgAiEA/////v///////////////3ID32shxgUrU7v0CTnVQSMCAQE=";
+        // pri = Base64.toBase64String(Hex.decode("308192020100301306072A8648CE3D020106082A811CCF5501822D04783076020101042061583A00D0D075E64AFFEB40FBB0DD68982269CEF0253006AD2DD4CADBE0C1E5A00A06082A811CCF5501822DA143034100464A2A0BF4598E679D4AE3149A543FCB84D399E6131C7C93D6890CD0A5BAEF0927FF2B3F5665D19EE148CF2EAD852F7C5E4E26FFE2600956BF3439D4CFC27985"));
+        // pri = "MIICBQIBADCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBBIIBDzCCAQsCAQEEIBCnKnjbn8aHQzTpejb+UW0sORqynvisF5aZHh4CE2ZVoIHjMIHgAgEBMCwGByqGSM49AQECIQD////+/////////////////////wAAAAD//////////zBEBCD////+/////////////////////wAAAAD//////////AQgKOn6np2fXjRNWp5Lz2UJp/OXifUVq4+S3by9QU2UDpMEQQQyxK4sHxmBGV+ZBEZqOcmUj+MLv/JmC+FxWkWJM0x0x7w3NqL09necWb3O42tpIVPQqYd8xipHQALfMuUhOfCgAiEA/////v///////////////3ID32shxgUrU7v0CTnVQSMCAQE=";
+        // 被加密的通讯密钥
+        String encStr = "vhobk9SUAmAZwI0UG1D5g4sEP0va93mHrXNJaOnBH1yVM2V6g+7oqz+TEM6UAuHASNmcpd5QWFoTH1NjMe+SmKZqrs4UKWz7Eo4dWf2yQJMzjKPn1wpPb8Cy94Ui5o8GwUSdsITFmy5dyWzLYYBpBg==";
+
+        byte[] encBytes = Base64.decode(encStr);
+        KeyFactory keyFact = KeyFactory.getInstance("EC", BC);
+        BCECPrivateKey privateKey1 = (BCECPrivateKey) keyFact.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(pri)));
+        System.out.println("D>> " + Base64.toBase64String(privateKey1.getD().toByteArray()));
+
+        // SM2Engine engine = new SM2Engine(SM2Engine.Mode.C1C2C3);
+        SM2Engine engine = new SM2Engine(SM2Engine.Mode.C1C3C2);
+        ECPrivateKeyParameters privateKey = (ECPrivateKeyParameters) PrivateKeyFactory.createKey(privateKey1.getEncoded());
+        engine.init(false, privateKey);
+        byte[] decryptBytes = engine.processBlock(encBytes, 0, encBytes.length);
+        System.out.println(new String(decryptBytes));
+    }
+
+    @Test
+    @SneakyThrows
+    public void sm2Sign() {
+        byte[] message = "1234567890".getBytes(StandardCharsets.UTF_8);
+        System.out.println("messageHEX>> " + Hex.toHexString(message));
+        KeyFactory keyFact = KeyFactory.getInstance("EC", BC);
+        BCECPrivateKey privateKey = (BCECPrivateKey) keyFact.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode("MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgqgI2IialdZyj7WFCXvQVrQN2a/1HoJpdeYAds+4H3jqgCgYIKoEcz1UBgi2hRANCAARgZ7l5mO7kSBLcPdPCwGOuexL5LHx8dvnZp9k7aLEfW6pjJRuHwmTNg3pldJd+/6V2RBBG9A+E0Cc7IxRWwJOj")));
+        privateKey = parsePrivateFromD();
+
+        ECParameterSpec parameterSpec = privateKey.getParameters();
+        ECDomainParameters domainParameters = new ECDomainParameters(parameterSpec.getCurve(), parameterSpec.getG(), parameterSpec.getN(), parameterSpec.getH());
+
+        ECPrivateKeyParameters ecPrivateKeyParameters = new ECPrivateKeyParameters(privateKey.getD(), domainParameters);
+        ParametersWithID parametersWithIDPri = new ParametersWithID(ecPrivateKeyParameters, Hex.decodeStrict("31323334353637383132333435363738"));
+
+        SM2Signer signer = new SM2Signer();
+        signer.init(true, ecPrivateKeyParameters);
+        signer.update(message, 0, message.length);
+        byte[] signBytes = signer.generateSignature();
+        System.out.println(Base64.toBase64String(signBytes));
+        // HEX
+        System.out.println(Hex.toHexString(signBytes));
+    }
+
+    @Test
+    @SneakyThrows
+    public void sm2VerifySign() {
+        // 从P10拿公钥
+        KeyFactory keyFact = KeyFactory.getInstance("EC", BC);
+        // 协同SM2一代
+        String P10 = "MIIBGTCBxQIBATBlMRIwEAYDVQQDDAnlp5rnq5HngpwxDzANBgNVBAsMBui3r+i+vjEPMA0GA1UECgwG5rWL6K+VMQ8wDQYDVQQHDAbph43luoYxDzANBgNVBAgMBumHjeW6hjELMAkGA1UEBgwCQ04wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAASZKEMsO06VxxvX6XsMegzBRuOWtEC6/VGnyV8hYcwDbXyO1is5miU3EADoyGKNacIMwe33eahDZOzSQn0fsp22MAwGCCqBHM9VAYN1BQADQQAENuwDT4Q6TDgYWjPPGy2yY/yGlOK2b5KoGPLqOgiW2/B0sO3OGYMQd0ceSDpyTcf4bMJoHD4R1ucYFth8EtyW";
+        // 自己生成1
+        // P10 = "MIIBQjCB6QIBADCBhjEPMA0GA1UECAwG6YeN5bqGMQ8wDQYDVQQHDAbph43luoYxIjAgBgkqhkiG9w0BCQEWEzEzOTgzMDUzNDU1QDE2My5jb20xCzAJBgNVBAYTAkNOMQ8wDQYDVQQKEwZHR0s5MTExDzANBgNVBAsTBkdHSzkxMTEPMA0GA1UEAxMGR0dLOTExMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAE9jdVHgMaJmGbdmHpAjjZX9w5LQaZc4sQwCdAeImpPquatiLRuOIg/49lSGdUk9urydKLlLzcDWO0lXJqSNVauaAAMAoGCCqBHM9VAYN1A0gAMEUCIE7q8pezVi8gRbx4oaisHkio3pJlfcnywKfIg6qxVQLQAiEA0vUXx0pbS3Eu2Bz0f/QIYG44p0efZn/x/2uWTmj3IAA=";
+        PKCS10CertificationRequest pkcs10CertificationRequest = new PKCS10CertificationRequest(Base64.decode(P10));
+        SubjectPublicKeyInfo subjectPublicKeyInfo = pkcs10CertificationRequest.getSubjectPublicKeyInfo();
+        BCECPublicKey p10Pub = (BCECPublicKey) keyFact.generatePublic(new X509EncodedKeySpec(subjectPublicKeyInfo.getEncoded()));
+
+        // 从公钥证书拿公钥
+        String publicKey = "MIICsDCCAlSgAwIBAgIQciD6XjB1pGJy3EE+3ybECjAMBggqgRzPVQGDdQUAMC0xCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVNQ1NDQTEOMAwGA1UEAwwFTUNTQ0EwHhcNMjQwNTMwMTEzNjE3WhcNMjQwNTMxMTEzNjE3WjBxMQswCQYDVQQGEwJDTjEOMAwGA1UECgwFTUNTQ0ExEDAOBgNVBAsMB2xvY2FsUkExGzAZBgNVBAUMEjM3MTcyNDIwMDIwNjA1MjIxMDEjMCEGA1UEAwwaVHBlclNNMngyQOWUkOWlveWHr0AwMUAxNDAwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAATJjsgrOBf9y4XAQuLldhbbBWuq+9i9e6Hk7DZTfOH0s1WmIOJXtCdU02QlWfmNO0VL2iZaART1g24f4+xDJTdEo4IBDjCCAQowCwYDVR0PBAQDAgbAMIG6BgNVHR8EgbIwga8wLqAsoCqGKGh0dHA6Ly93d3cubWNzY2EuY29tLmNuL3NtMi9jcmwvY3JsMC5jcmwwfaB7oHmGd2xkYXA6Ly93d3cubWNzY2EuY29tLmNuOjM4OS9DTj1jcmwwLE9VPUNSTCxPPU1DU0NBLEM9Q04/Y2VydGlmaWNhdGVSZXZvY2F0aW9uTGlzdD9iYXNlP29iamVjdGNsYXNzPWNSTERpc3RyaWJ1dGlvblBvaW50MB0GA1UdDgQWBBSwIzYnQXd/qY73XxgSb7/aNl0ivzAfBgNVHSMEGDAWgBTxIgpnmI3147KqwxdrwEIfvku9djAMBggqgRzPVQGDdQUAA0gAMEUCIAGM4+OBhoR65K/hM7mbbPaJzhJpWIj6Jk77uTpSe1BeAiEA938AqQKXof4hMQA34UYM6I468WJENwD8mnnmuqfLv1M=";
+        CertificateFactory certFact = CertificateFactory.getInstance("X.509", new BouncyCastleProvider());
+        X509Certificate certificate = (X509Certificate) certFact.generateCertificate(new ByteArrayInputStream(Base64.decode(publicKey)));
+        p10Pub = (BCECPublicKey) certificate.getPublicKey();
+
+        ECParameterSpec parameterSpec = p10Pub.getParameters();
+        ECDomainParameters domainParameters = new ECDomainParameters(parameterSpec.getCurve(), parameterSpec.getG(), parameterSpec.getN(), parameterSpec.getH());
+        ECPublicKeyParameters publicKeyParameters = new ECPublicKeyParameters(p10Pub.getQ(), domainParameters);
+        ParametersWithID parametersWithIDPub = new ParametersWithID(publicKeyParameters, "1234567812345678".getBytes(StandardCharsets.UTF_8));
+
+        // 协同SM2一代
+        byte[] message = Hex.decode("3081C502010130653112301006035504030C09E5A79AE7AB91E7829C310F300D060355040B0C06E8B7AFE8BEBE310F300D060355040A0C06E6B58BE8AF95310F300D06035504070C06E9878DE5BA86310F300D06035504080C06E9878DE5BA86310B300906035504060C02434E3059301306072A8648CE3D020106082A811CCF5501822D034200049928432C3B4E95C71BD7E97B0C7A0CC146E396B440BAFD51A7C95F2161CC036D7C8ED62B399A25371000E8C8628D69C20CC1EDF779A84364ECD2427D1FB29DB6");
+        byte[] signBytes = Hex.decode("0436EC034F843A4C38185A33CF1B2DB263FC8694E2B66F92A818F2EA3A0896DB" + "F074B0EDCE19831077471E483A724DC7F86CC2681C3E11D6E71816D87C12DC96");
+        // 文件
+        message = FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\IMG_0558.JPG");
+        // System.out.println("文件>> " + Hex.toHexString(message));
+        message = Hex.decode("c72bcf78390dbfff4248a854a7fab7cded77af6329bac5ed9057c9815bc16c99");
+        signBytes = Hex.decode("53576F3CC9162783323D4C196B53FD6993A9B57F5349849AA2A21F882FCEF80A3478BEC49F6082B85BB98957A88D0D3AB4F2D17930045E57EE459F8B3D6AC228");
+
+        message = Hex.decode("31323334353637383132333435363738");
+        signBytes = Hex.decode("5727183483A1269E374259CEFF8372F6A7D32D22A13020A8B77BFF2C6A6322634334B5CEDED98D8C0F02654ACB0ACB96B768FA1BE4A1E9C641DCA4789B51B6EC");
+
+        // byte[] signBytes = Hex.decode("30450220" + "0436EC034F843A4C38185A33CF1B2DB263FC8694E2B66F92A818F2EA3A0896DB" + "022100" + "F074B0EDCE19831077471E483A724DC7F86CC2681C3E11D6E71816D87C12DC96");
+        // 自己生成1
+        // message = Hex.decode("3081E9020100308186310F300D06035504080C06E9878DE5BA86310F300D06035504070C06E9878DE5BA863122302006092A864886F70D01090116133133393833303533343535403136332E636F6D310B300906035504061302434E310F300D060355040A130647474B393131310F300D060355040B130647474B393131310F300D0603550403130647474B3931313059301306072A8648CE3D020106082A811CCF5501822D03420004F637551E031A26619B7661E90238D95FDC392D0699738B10C027407889A93EAB9AB622D1B8E220FF8F6548675493DBABC9D28B94BCDC0D63B495726A48D55AB9A000");
+        // signBytes = Hex.decode("30450220"+"4EEAF297B3562F2045BC78A1A8AC1E48A8DE92657DC9F2C0A7C883AAB15502D0"+"022100"+ "D2F517C74A5B4B712ED81CF47FF408606E38A7479F667FF1FF6B964E68F72000");
+
+        SM2Signer signer = new SM2Signer(PlainDSAEncoding.INSTANCE, new SM3Digest());
+        // SM2Signer signer = new SM2Signer(StandardDSAEncoding.INSTANCE, new SM3Digest());
+        signer.init(false, parametersWithIDPub);
+        signer.update(message, 0, message.length);
+        boolean verifySignature = signer.verifySignature(signBytes);
+        System.out.println(verifySignature);
+
+    }
+
+    @Test
+    @SneakyThrows
+    public void baseToHex() {
+        String base64 = "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQg/re2HViGP2uA7jkANG+Fe8pBPPhjpv6/bTuQRalnDIugCgYIKoEcz1UBgi2hRANCAAS2f9eYIYqgQqYvv/8zZFFVmd/8/+ci3HqsEC96sI80icd+8+sVW1bunQXuxExnD3AMJQ4Ob+pmp/LP8DoAHOqE";
+        String base642 = "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgDwenN/XniWphCUU0Is+7YxDN13/gl+l9mzGFNNzuKUagCgYIKoEcz1UBgi2hRANCAARwWwodcIUeWkeYYvAQTRC9d58zg3MkaFF4yYfu29YLAbrma8CvgRl2uBH5Y8OiHZF7zRP/2tQxaaGrRqfwDLy5";
+        System.out.println(Hex.toHexString(Base64.decode(base64)).toUpperCase());
+        System.out.println(Hex.toHexString(Base64.decode(base642)).toUpperCase());
+    }
+
+    @Test
+    @SneakyThrows
+    public void hexToBase64() {
+        String hex = "3c3b645f6b94385780ac322859a4318fb371565ec77731701d2af34a1afbbf2b21e16a868cd414e0549aa46e8aee0a470af1b72b28f988a13e1fa3dc621a23e0";
+        System.out.println(Base64.toBase64String(Hex.decode(hex)));
+    }
+
+    @Test
+    @SneakyThrows
+    public void hexDecode() {
+        String hexStr = "68747470733a2f2f636f6e73742e6e65742e636e2f";
+        System.out.println(new String(Hex.decode(hexStr)));
+    }
+
+    @Test
+    @SneakyThrows
+    public void getDFromPrivate() {
+        String privateStr = "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQghclRtEAEW7H1y4G+1DGqFATtjb8RkU6tM+wW57G9rRugCgYIKoEcz1UBgi2hRANCAATJjsgrOBf9y4XAQuLldhbbBWuq+9i9e6Hk7DZTfOH0s1WmIOJXtCdU02QlWfmNO0VL2iZaART1g24f4+xDJTdE";
+        BCECPrivateKey privateKey = (BCECPrivateKey) KeyFactory.getInstance("EC").generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(privateStr)));
+        System.out.println(privateKey.getD().toString(16));
+        System.out.println(Hex.toHexString(privateKey.getD().toByteArray()).toUpperCase());
+    }
+
+    @Test
+    @SneakyThrows
+    public void getQFromPublicCert() {
+        String publicCert = "MIICsDCCAlSgAwIBAgIQJQtBeN42MSUY0pPSp9+0BjAMBggqgRzPVQGDdQUAMC0xCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVNQ1NDQTEOMAwGA1UEAwwFTUNTQ0EwHhcNMjQwNTMwMDIwNjU1WhcNMjQwNTMxMDIwNjU1WjBxMQswCQYDVQQGEwJDTjEOMAwGA1UECgwFTUNTQ0ExEDAOBgNVBAsMB2xvY2FsUkExGzAZBgNVBAUMEjM3MTcyNDIwMDIwNjA1MjIxMDEjMCEGA1UEAwwaVHBlclNNMngyQOWUkOWlveWHr0AwMUAxMzkwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAARwWwodcIUeWkeYYvAQTRC9d58zg3MkaFF4yYfu29YLAbrma8CvgRl2uBH5Y8OiHZF7zRP/2tQxaaGrRqfwDLy5o4IBDjCCAQowCwYDVR0PBAQDAgbAMIG6BgNVHR8EgbIwga8wLqAsoCqGKGh0dHA6Ly93d3cubWNzY2EuY29tLmNuL3NtMi9jcmwvY3JsMC5jcmwwfaB7oHmGd2xkYXA6Ly93d3cubWNzY2EuY29tLmNuOjM4OS9DTj1jcmwwLE9VPUNSTCxPPU1DU0NBLEM9Q04/Y2VydGlmaWNhdGVSZXZvY2F0aW9uTGlzdD9iYXNlP29iamVjdGNsYXNzPWNSTERpc3RyaWJ1dGlvblBvaW50MB0GA1UdDgQWBBR22nFoCGKlsqf3RDsOLat/t2o51DAfBgNVHSMEGDAWgBTxIgpnmI3147KqwxdrwEIfvku9djAMBggqgRzPVQGDdQUAA0gAMEUCIApANPUV4WfHorRT4ol+b9toSsQhZ5okraYUZNopezJbAiEAzZ5j0Jqbz5YFnLAwpt93u4KjM7Q6Z+KmkDStAPKvkL4=";
+        CertificateFactory certFact = CertificateFactory.getInstance("X.509", BC);
+        X509Certificate certificate = (X509Certificate) certFact.generateCertificate(new ByteArrayInputStream(Base64.decode(publicCert)));
+        BCECPublicKey publicKey = (BCECPublicKey) certificate.getPublicKey();
+        System.out.println(publicKey.getQ().toString());
+        System.out.println(Hex.toHexString(publicKey.getQ().getXCoord().toBigInteger().toByteArray()).toUpperCase());
+        System.out.println(Hex.toHexString(publicKey.getQ().getYCoord().toBigInteger().toByteArray()).toUpperCase());
+    }
+
+    @Test
+    @SneakyThrows
+    public void getQFromPublicKey() {
+        String publicKey = "MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEyY7IKzgX/cuFwELi5XYW2wVrqvvYvXuh5Ow2U3zh9LNVpiDiV7QnVNNkJVn5jTtFS9omWgEU9YNuH+PsQyU3RA==";
+        BCECPublicKey publicKey1 = (BCECPublicKey) KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(Base64.decode(publicKey)));
+        System.out.println(publicKey1.getQ().toString());
+        System.out.println(Hex.toHexString(publicKey1.getQ().getXCoord().toBigInteger().toByteArray()).toUpperCase());
+        System.out.println(Hex.toHexString(publicKey1.getQ().getYCoord().toBigInteger().toByteArray()).toUpperCase());
+    }
+
+    @Test
+    @SneakyThrows
+    public BCECPrivateKey parsePrivateFromD() {
+        String dHex = "85C951B440045BB1F5CB81BED431AA1404ED8DBF11914EAD33EC16E7B1BDAD1B";
+        ECNamedCurveParameterSpec sm2Spec = ECNamedCurveTable.getParameterSpec("sm2p256v1");
+        ECParameterSpec ecSpec = new ECParameterSpec(
+                sm2Spec.getCurve(),
+                sm2Spec.getG(),
+                sm2Spec.getN(),
+                sm2Spec.getH());
+        BigInteger d2 = new BigInteger(1, Hex.decode(dHex));
+        ECPrivateKeySpec ecPrivateKeySpec = new ECPrivateKeySpec(d2, ecSpec);
+        BCECPrivateKey ecPriFromD = new BCECPrivateKey("EC", ecPrivateKeySpec, BouncyCastleProvider.CONFIGURATION);
+        System.out.println("ecPriFromD>> " + Base64.toBase64String(ecPriFromD.getEncoded()));
+        return ecPriFromD;
+    }
+
 }

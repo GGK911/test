@@ -1,6 +1,7 @@
 package certTest;
 
 import certTest.saxon.rsa.RSAUtils;
+import cn.hutool.core.io.FileUtil;
 import lombok.SneakyThrows;
 import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
 import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
@@ -36,10 +37,10 @@ public class digest_demo {
 
     static {
         String filePath = "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\cutRangeTest2\\range1BeforeAndAfter.pdf";
-        filePath = "C:\\Users\\ggk911\\Desktop\\测试证书签署的文件供验证系统测试.pdf";
+        filePath = "C:\\Users\\ggk911\\Desktop\\IMG_0558.JPG";
 
         // bytes = FileUtil.readBytes(filePath);
-        bytes = "唐好凯".getBytes(StandardCharsets.UTF_8);
+        bytes = "abc".getBytes(StandardCharsets.UTF_8);
         calculatorProvider = new BcDigestCalculatorProvider();
     }
 

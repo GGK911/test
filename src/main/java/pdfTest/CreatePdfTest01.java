@@ -11,6 +11,7 @@ import cn.com.mcsca.util.CertUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONUtil;
 import com.itextpdf.text.Anchor;
+import com.itextpdf.text.Annotation;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
@@ -49,10 +50,15 @@ import lombok.SneakyThrows;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Test;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.Provider;
 import java.security.Security;
@@ -61,7 +67,9 @@ import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author TangHaoKai
@@ -404,19 +412,27 @@ public class CreatePdfTest01 {
         orderedList.add(new ListItem(30f, "222222222222222", normalFont));
         orderedList.add(new ListItem(30f, "555555555555555", normalFont));
         orderedList.add(new ListItem(30f, "唐唐唐唐唐唐唐唐", normalFont));
+        // 下距100
         ListItem endItem = new ListItem(30f, "唐唐唐唐唐唐唐唐", normalJBFont);
         endItem.setSpacingAfter(100);
         orderedList.add(endItem);
 
+        // 嵌套一个list
+        com.itextpdf.text.List orderedList2 = new com.itextpdf.text.List(com.itextpdf.text.List.ORDERED);
+        orderedList2.setIndentationLeft(14f);
+        orderedList2.setPreSymbol("(");
+        orderedList2.setPostSymbol(")");
+        orderedList2.add(new ListItem(30f, "111111111111111", normalFont));
+        orderedList2.add(new ListItem(30f, "222222222222222", normalFont));
+        orderedList.add(orderedList2);
+
+        document.add(orderedList);
 
 
         for (int i = 0; i < 100; i++) {
             document.newPage();
             document.add(new Chunk("new Page"));
         }
-
-
-
 
 
         // 5. 关闭
@@ -559,12 +575,6 @@ public class CreatePdfTest01 {
         document.close();
         writer.close();
         out.close();
-    }
-
-    @Test
-    @SneakyThrows
-    public void test() {
-
     }
 
     /**
@@ -742,6 +752,137 @@ public class CreatePdfTest01 {
         bos.close();
         pdfReader.close();
         FileUtil.writeBytes(returnBytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\createAnnot.pdf");
+    }
+
+    @Test
+    @SneakyThrows
+    public void addImageTest() {
+        // 新建文件添加图片
+        String pdfFile = "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\addImageTest.pdf";
+        Document document = new Document(PageSize.A4);
+        FileOutputStream out = new FileOutputStream(pdfFile);
+        PdfWriter writer = PdfWriter.getInstance(document, out);
+        writer.setPdfVersion(PdfWriter.PDF_VERSION_1_4);
+        document.open();
+
+        Image image = Image.getInstance(FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\测试图片\\117.png"));
+        image.setAbsolutePosition(0, 0);
+        document.add(image);
+        image.setAbsolutePosition(120, 120);
+
+        document.close();
+        writer.close();
+        out.close();
+    }
+
+    @Test
+    @SneakyThrows
+    public void addImageTest2() {
+        // 现有文件添加图片
+        Path path = Paths.get("src/main/java/pdfTest", "合同测试模板.pdf");
+        byte[] pdfBytes = Files.readAllBytes(path);
+
+        PdfReader pdfReader = new PdfReader(pdfBytes);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        PdfStamper pdfStamper = new PdfStamper(pdfReader, bos);
+
+
+        int width = 200;
+        int heifht = 200;
+
+        Image image = Image.getInstance(FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\测试图片\\117.png"));
+        // image.scaleToFit(width, heifht);
+        image.setAbsolutePosition(100, 100);
+
+        Annotation annotation = new Annotation("sign", "123456789");
+        // image.setAnnotation(annotation);
+
+        PdfContentByte overContent = pdfStamper.getOverContent(1);
+        overContent.addImage(image);
+        image.setAbsolutePosition(200, 200);
+        overContent.addImage(image);
+
+
+        pdfStamper.close();
+        byte[] returnBytes = bos.toByteArray();
+        bos.close();
+        pdfReader.close();
+        FileUtil.writeBytes(returnBytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\addImageTest.pdf");
+    }
+
+    @Test
+    @SneakyThrows
+    public void addImageTest3() {
+        // 现有文件添加图片
+        Path path = Paths.get("src/main/java/pdfTest", "create.pdf");
+        byte[] pdfBytes = Files.readAllBytes(path);
+        byte[] picBytes = FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\测试图片\\117.png");
+        List<float[]> position = new ArrayList<>();
+        float[] po = {1, 100, 100, 200, 200};
+        float[] po2 = {2, 200, 200, 400, 400};
+        position.add(po);
+        position.add(po2);
+        byte[] bytes = PdfImageUtil.addImage(pdfBytes, picBytes, position);
+        FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\addImageTest.pdf");
+    }
+
+    @Test
+    @SneakyThrows
+    public void addImageTest4() {
+        // 现有文件添加图片
+        Path path = Paths.get("src/main/java/pdfTest", "create.pdf");
+        byte[] pdfBytes = Files.readAllBytes(path);
+        byte[] picBytes = FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\测试图片\\117.png");
+        byte[] picBytes2 = FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\测试图片\\THK.png");
+        List<float[]> position = new ArrayList<>();
+        List<float[]> position2 = new ArrayList<>();
+        float[] po = {1, 100, 100, 200, 200};
+        float[] po2 = {2, 200, 200, 400, 400};
+        position.add(po);
+        position2.add(po2);
+        Map<byte[], List<float[]>> mulSealMulPosition = new HashMap<>();
+        mulSealMulPosition.put(picBytes, position);
+        mulSealMulPosition.put(picBytes2, position2);
+        byte[] bytes = PdfImageUtil.addImage(pdfBytes, mulSealMulPosition);
+        FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\addImageTest.pdf");
+    }
+
+    @Test
+    @SneakyThrows
+    public void addImageTest5() {
+        // 现有文件添加图片
+        Path path = Paths.get("C:\\Users\\ggk911\\Desktop\\横+倒.pdf");
+        byte[] pdfBytes = Files.readAllBytes(path);
+        // FileUtil.writeString(Base64.toBase64String(pdfBytes), "C:\\Users\\ggk911\\Desktop\\横+倒.base64", StandardCharsets.UTF_8);
+        byte[] picBytes = FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\测试图片\\117.png");
+        // FileUtil.writeString(Base64.toBase64String(picBytes), "C:\\Users\\ggk911\\Desktop\\117.base64", StandardCharsets.UTF_8);
+        float[] po = {100, 200};
+        byte[] bytes = PdfImageUtil.addImage(pdfBytes, picBytes, po, "1-", "R");
+        FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\addImageTest.pdf");
+    }
+
+    @Test
+    @SneakyThrows
+    public void fileToFile() {
+        byte[] bytes = FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\response.base64");
+        FileUtil.writeBytes(Base64.decode(new String(bytes)), "C:\\Users\\ggk911\\Desktop\\response.pdf");
+    }
+
+    @Test
+    @SneakyThrows
+    public void KeyWordAddImage() {
+        Path path = Paths.get("C:\\Users\\ggk911\\Desktop\\横+倒.pdf");
+        byte[] pdfBytes = Files.readAllBytes(path);
+        byte[] picBytes = FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\测试图片\\56.png");
+        BufferedImage sealImage = ImageIO.read(new ByteArrayInputStream(picBytes));
+
+        List<float[]> keywordPositions = PdfKeyWordFinderUtil.findKeywordPositions(pdfBytes, "电子认证", sealImage.getWidth(), sealImage.getHeight());
+        List<float[]> indexs = new ArrayList<>();
+        indexs.add(keywordPositions.get(keywordPositions.size()-1));
+        indexs.add(keywordPositions.get(0));
+
+        byte[] bytes = PdfImageUtil.addImage(pdfBytes, picBytes, indexs);
+        FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\create\\addImageTest.pdf");
     }
 
 }

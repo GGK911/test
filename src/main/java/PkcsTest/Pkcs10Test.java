@@ -16,24 +16,27 @@ import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERPrintableString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERSet;
 import org.bouncycastle.asn1.cms.Attribute;
 import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
+import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.CertificationRequest;
 import org.bouncycastle.asn1.pkcs.CertificationRequestInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.cert.jcajce.JcaX509ContentVerifierProviderBuilder;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.digests.SM3Digest;
 import org.bouncycastle.crypto.engines.SM2Engine;
 import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
+import org.bouncycastle.crypto.params.ParametersWithID;
 import org.bouncycastle.crypto.params.ParametersWithRandom;
+import org.bouncycastle.crypto.signers.SM2Signer;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil;
@@ -136,8 +139,8 @@ public class Pkcs10Test {
         // CSR builder
         PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(subject, keyPair.getPublic());
         // 添加属性
-        DERPrintableString password = new DERPrintableString("secret123");
-        builder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, password);
+        // DERPrintableString password = new DERPrintableString("secret123");
+        // builder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, password);
         // 创建
         PKCS10CertificationRequest sm2Csr = builder.build(signer);
         System.out.println("CSR>> " + Base64.toBase64String(sm2Csr.getEncoded()));
@@ -149,7 +152,7 @@ public class Pkcs10Test {
     @Test
     @SneakyThrows
     public void createCsrTest02() {
-        Security.addProvider(new BouncyCastleProvider());
+        Security.addProvider(BC);
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", BC);
         // generator.initialize(1024);
         generator.initialize(2048);
@@ -825,38 +828,101 @@ public class Pkcs10Test {
         ASN1Set d1_pubkeyencs = (ASN1Set) asn1_encdata.getObjectAt(1);
         ASN1Sequence asn1_pubkeyenc = (ASN1Sequence) d1_pubkeyencs.getObjectAt(0);
         DEROctetString dertostr = (DEROctetString) asn1_pubkeyenc.getObjectAt(3);
-        ASN1Sequence dd = (ASN1Sequence) ASN1Sequence.fromByteArray(dertostr.getOctets());
+        ASN1Sequence encOIDSequence = ASN1Sequence.getInstance(asn1_pubkeyenc.getObjectAt(2));
+        // 非对称OID
+        ASN1ObjectIdentifier objectIdentifier = ASN1ObjectIdentifier.getInstance(encOIDSequence.getObjectAt(0));
+        byte[] xyEncDataHash;
+        byte[] sm4encdata;
+        // 非对称密文
+        byte[] encSm4Bytes = dertostr.getOctets();
+        // 区分方式一：通过OID
+        if (objectIdentifier.equals(PKCSObjectIdentifiers.rsaEncryption)) {
+            if (encSm4Bytes.length == 256) {
 
-        ASN1Integer x = (ASN1Integer) dd.getObjectAt(0);
-        byte[] xbyte = x.getPositiveValue().toByteArray();
-        ASN1Integer y = (ASN1Integer) dd.getObjectAt(1);
-        byte[] ybyte = y.getPositiveValue().toByteArray();
-        DEROctetString hash = (DEROctetString) dd.getObjectAt(2);
-        DEROctetString pubencdata = (DEROctetString) dd.getObjectAt(3);
+            }
+            xyEncDataHash = null;
+        } else if (objectIdentifier.on(new ASN1ObjectIdentifier("1.2.156.10197.1.301")) || objectIdentifier.equals(new ASN1ObjectIdentifier("1.2.156.10197.1.301"))) {
+            // SM2区分方式二：通过密文长度
+            // 113 这是不带asn1结构的sm2密文C1C3C2
+            if (encSm4Bytes.length == 113) {
+                byte[] xbyte = new byte[33];
+                System.arraycopy(encSm4Bytes, 0, xbyte, 0, xbyte.length);
+                byte[] ybyte = new byte[32];
+                System.arraycopy(encSm4Bytes, xbyte.length, ybyte, 0, ybyte.length);
+                byte[] hashBytes = new byte[32];
+                System.arraycopy(encSm4Bytes, xbyte.length + ybyte.length, hashBytes, 0, hashBytes.length);
+                byte[] encDateBytes = new byte[16];
+                System.arraycopy(encSm4Bytes, xbyte.length + ybyte.length + hashBytes.length, encDateBytes, 0, encDateBytes.length);
 
-        byte[] xy = new byte[65];
-        xy[0] = 4;
-        System.arraycopy(xbyte, xbyte.length == 32 ? 0 : 1, xy, 1, 32);
-        System.arraycopy(ybyte, ybyte.length == 32 ? 0 : 1, xy, 1 + 32, 32);
-        byte[] encDateBytes = new byte[16];
-        System.arraycopy(pubencdata.getOctets(), 0, encDateBytes, 0, 16);
-        byte[] hashBytes = new byte[32];
-        System.arraycopy(hash.getOctets(), 0, hashBytes, 0, 32);
-        byte[] xyEncDataHash = Arrays.concatenate(xy, encDateBytes, hashBytes);
+                byte[] xy = new byte[65];
+                xy[0] = 4;
+                System.arraycopy(xbyte, 1, xy, 1, 32);
+                System.arraycopy(ybyte, 0, xy, 1 + 32, 32);
 
+                xyEncDataHash = Arrays.concatenate(xy, encDateBytes, hashBytes);
+            } else {
+                // 这是带asn1结构的sm2密文
+                ASN1Sequence dd = (ASN1Sequence) ASN1Sequence.fromByteArray(encSm4Bytes);
+
+                ASN1Integer x = (ASN1Integer) dd.getObjectAt(0);
+                byte[] xbyte = x.getPositiveValue().toByteArray();
+                ASN1Integer y = (ASN1Integer) dd.getObjectAt(1);
+                byte[] ybyte = y.getPositiveValue().toByteArray();
+                DEROctetString hash = (DEROctetString) dd.getObjectAt(2);
+                DEROctetString pubencdata = (DEROctetString) dd.getObjectAt(3);
+
+                byte[] xy = new byte[65];
+                xy[0] = 4;
+                System.arraycopy(xbyte, xbyte.length == 32 ? 0 : 1, xy, 1, 32);
+                System.arraycopy(ybyte, ybyte.length == 32 ? 0 : 1, xy, 1 + 32, 32);
+                byte[] encDateBytes = new byte[16];
+                System.arraycopy(pubencdata.getOctets(), 0, encDateBytes, 0, 16);
+                byte[] hashBytes = new byte[32];
+                System.arraycopy(hash.getOctets(), 0, hashBytes, 0, 32);
+                xyEncDataHash = Arrays.concatenate(xy, encDateBytes, hashBytes);
+            }
+        } else {
+            throw new IllegalArgumentException("未知OID:" + objectIdentifier);
+        }
         // sm2解密得到对称密钥的key
         byte[] sm4key = sm2Engine.processBlock(xyEncDataHash, 0, xyEncDataHash.length);
+        System.out.println("sm4key HEX>> " + Hex.toHexString(sm4key));
+        System.out.println("sm4key Base64>> " + Base64.toBase64String(sm4key));
+
 
         ASN1Sequence encdata = (ASN1Sequence) asn1_encdata.getObjectAt(3);
-        ASN1TaggedObject sm4encdatadto = (ASN1TaggedObject) encdata.getObjectAt(2);
-        DEROctetString dstr_sm4encdata = (DEROctetString) sm4encdatadto.getBaseObject();
-        byte[] sm4encdata = dstr_sm4encdata.getOctets();
-        // sm4解密
-        Cipher cipher = Cipher.getInstance("SM4/ECB/NoPadding", new BouncyCastleProvider());
-        SecretKeySpec newKey = new SecretKeySpec(sm4key, "SM4");
-        cipher.init(Cipher.DECRYPT_MODE, newKey);
-        sm4encdata = cipher.doFinal(sm4encdata);
-        return Hex.toHexString(Arrays.copyOfRange(sm4encdata, 32, sm4encdata.length));
+        // thk's todo 2024/5/25 10:48 其实最好是根据OID直接初始化解密上下文
+        // 对称OID
+        ASN1Sequence symmetryOIDSequence = ASN1Sequence.getInstance(encdata.getObjectAt(1));
+        ASN1ObjectIdentifier symmetryOID = ASN1ObjectIdentifier.getInstance(symmetryOIDSequence.getObjectAt(0));
+        ASN1TaggedObject symmetryEncData = (ASN1TaggedObject) encdata.getObjectAt(2);
+        DEROctetString symmetryEncDataOS = (DEROctetString) symmetryEncData.getBaseObject();
+        // 对称密文
+        sm4encdata = symmetryEncDataOS.getOctets();
+        if (symmetryOID.equals(new ASN1ObjectIdentifier("1.2.156.10197.1.104"))) {
+            // sm4解密
+            Cipher cipher = Cipher.getInstance("SM4/ECB/NoPadding", new BouncyCastleProvider());
+            SecretKeySpec newKey = new SecretKeySpec(sm4key, "SM4");
+            cipher.init(Cipher.DECRYPT_MODE, newKey);
+            sm4encdata = cipher.doFinal(sm4encdata);
+            System.out.println("sm4解密输出HEX>> " + Hex.toHexString(sm4encdata));
+            System.out.println("sm4解密输出Base64>> " + Base64.toBase64String(sm4encdata));
+            // 这里根据不同CA来截取
+            if (encSm4Bytes.length == 113) {
+                String hexString = Hex.toHexString(Arrays.copyOfRange(sm4encdata, 0, 32));
+                System.out.println("sm4解密截取输出HEX>> " + hexString);
+                System.out.println("sm4解密截取输出Base64>> " + Base64.toBase64String(Arrays.copyOfRange(sm4encdata, 0, 32)));
+                return hexString;
+            } else {
+                String hexString = Hex.toHexString(Arrays.copyOfRange(sm4encdata, 32, sm4encdata.length));
+                System.out.println("sm4解密截取输出HEX>> " + hexString);
+                System.out.println("sm4解密截取输出Base64>> " + Base64.toBase64String(Arrays.copyOfRange(sm4encdata, 32, sm4encdata.length)));
+                return hexString;
+            }
+        } else if (symmetryOID.equals(OIWObjectIdentifiers.desECB)) {
+            // thk's todo 2024/5/25 11:01
+        }
+        return "";
     }
 
     public static String getQFromCfcaPkcs10(String pkcs10) {
@@ -914,6 +980,44 @@ public class Pkcs10Test {
 
         // 使用BouncyCastle提供的KeyFactory类根据EC公钥规范生成公钥对象
         return fact.generatePublic(ecPublicKeySpec);
+    }
+
+    @Test
+    @SneakyThrows
+    public void verifyP10() {
+        // 协同生成的
+        // 二代SM2 false
+        String P10 = "MIIBGTCBxQIBATBlMRIwEAYDVQQDDAnlp5rnq5HngpwxDzANBgNVBAsMBui3r+i+vjEPMA0GA1UECgwG5rWL6K+VMQ8wDQYDVQQHDAbph43luoYxDzANBgNVBAgMBumHjeW6hjELMAkGA1UEBgwCQ04wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAAQ41IlFMddxJ17/dXi6P31w/kRCWNwdcOkEBVPTdZRupkQw9XX2grvvDjFMTRfFU84RsY0f0w/o7EwkkuKp/NVEMAwGCCqBHM9VAYN1BQADQQBwfGXFsT551OsOxOW7zkbOakm+ORPboejJk/y2RItkFQFEdtXGyBfSAVnfgQr+woCYWKhgXzfPMG/UZeprMdV1";
+        P10 = "MIIBGTCBxQIBATBlMRIwEAYDVQQDDAnlp5rnq5HngpwxDzANBgNVBAsMBui3r+i+vjEPMA0GA1UECgwG5rWL6K+VMQ8wDQYDVQQHDAbph43luoYxDzANBgNVBAgMBumHjeW6hjELMAkGA1UEBgwCQ04wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAARqQUFv4q5EbBjCmS+lCRi/+4hCvDABFAEvEmF3PIHblEQioR+OVhoS2ZskPhsn77XdNduEgBg2/oNTTkfhy1CeMAwGCCqBHM9VAYN1BQADQQBy+THeZLGqSNqLdSQd/vjAte6lrl4JD6hRZgCXoJqwTUjGIn4ye6BSUKHZnjX85WTU2PAoRyafOgA87REloonJ";
+        // 一代SM2 false
+        P10 = "MIIBGTCBxQIBATBlMRIwEAYDVQQDDAnlp5rnq5HngpwxDzANBgNVBAsMBui3r+i+vjEPMA0GA1UECgwG5rWL6K+VMQ8wDQYDVQQHDAbph43luoYxDzANBgNVBAgMBumHjeW6hjELMAkGA1UEBgwCQ04wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAAQd4YcIs+72tTRSDUDiJkLNha19fhgSkn88ABo/Tc45C6lXuI8Jh1UREkl3dTt25W7f58sB9WTc+/9GXSbrwymAMAwGCCqBHM9VAYN1BQADQQDkc/pxhnmbXlgCfnSrouwrcENB9VarrbkGg2tqZoS37ODwQcxMd0vvuN8PRITqWAqwEJffgzKQih2PXP6vsRrv";
+        P10 = "MIIBGTCBxQIBATBlMRIwEAYDVQQDDAnlp5rnq5HngpwxDzANBgNVBAsMBui3r+i+vjEPMA0GA1UECgwG5rWL6K+VMQ8wDQYDVQQHDAbph43luoYxDzANBgNVBAgMBumHjeW6hjELMAkGA1UEBgwCQ04wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAASZKEMsO06VxxvX6XsMegzBRuOWtEC6/VGnyV8hYcwDbXyO1is5miU3EADoyGKNacIMwe33eahDZOzSQn0fsp22MAwGCCqBHM9VAYN1BQADQQAENuwDT4Q6TDgYWjPPGy2yY/yGlOK2b5KoGPLqOgiW2/B0sO3OGYMQd0ceSDpyTcf4bMJoHD4R1ucYFth8EtyW";
+        // 一代RSA true
+        // P10 = "MIICqDCCAZACAQEwZTESMBAGA1UEAwwJ5aea56uR54KcMQ8wDQYDVQQLDAbot6/ovr4xDzANBgNVBAoMBua1i+ivlTEPMA0GA1UEBwwG6YeN5bqGMQ8wDQYDVQQIDAbph43luoYxCzAJBgNVBAYMAkNOMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArqE4NpK8Co9OZPfgc0PqI0qv66Aej6dVya+7IXtnW7BD3Rp61RR7EewIYm5gFJf/o/e0erQrxyYzDd+3gbXNPr/oTkLnCXsk4Q1frOidvy7vz+vMzf1+lnJOYtAEeP+hW6PB/z2PT2DrkQiQEkfvowG8y38HUW0iP7MBFn2+HcjBOlKQGUjPfa0nFh8Bi0hWcKDjGWheQcrjNvqMtSgQ1uNF8xsbmjCx2w89s+2rtTElkUsCOBPJrO2+D/VjSCouCsdd4ou5OCpOIa++Jkx6uyMOKKJX+JzFVnA7+18OqiZU3t2QDvBJmEYJhPtcvDDf+sXVHLCvFzpkLbd5NaCJPQIDAQABMA0GCSqGSIb3DQEBBQUAA4IBAQBNUg6hZfd0kRQAdweB5JIH5hi3PcI/kt9e3ihj3RPFwvsNsk6rUuJHMhPsrEEcebRGaxzl9V+s1ejF8PF/CVKgz8Mlu+wfxjp2I9LPur3yqUYMo8IDy6sfVATFu7pJHjLVxLOS5LxEJXZTX1GEZM83lrHWiiPSAQ+WTXD/uEiWuvRbhoVgzvKIWEjfjApvbZQf4cQBLSnLLNTFYJBuLvNcjGA+aC6MtbeN5+EaE5/c8aIsZ53vzgbKTw1g9haO/Y/7BffAT3qQ+J5CErJYlOZKbCqcPfcyp1CZxSt+iLwsEZAog/5te3cP7HC6bVuCK7dWfCPeWlF5y+nDXLG/Ft9l";
+        // 我自己生成的 true
+        P10 = "MIIBQjCB6QIBADCBhjEPMA0GA1UECAwG6YeN5bqGMQ8wDQYDVQQHDAbph43luoYxIjAgBgkqhkiG9w0BCQEWEzEzOTgzMDUzNDU1QDE2My5jb20xCzAJBgNVBAYTAkNOMQ8wDQYDVQQKEwZHR0s5MTExDzANBgNVBAsTBkdHSzkxMTEPMA0GA1UEAxMGR0dLOTExMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEZ6mEgBhcP8vYM53yGZE8grXFvelJfbHkUbK3u7ytgiXOnJ5QJXfRcNQx3gi5B1oZgqAZtKPNOGjBbV8R6NNq5qAAMAoGCCqBHM9VAYN1A0gAMEUCIGrOP+Z57B1cgg4UAdESb+WsBjl0bgzFN1OdiGb7MZqTAiEA2JBJiBwi5cWturtEPeRl7PzAmgasNgTZU9VpKpK6Ml0=";
+        // 16修改0后
+        P10 = "MIHRMH4CAQEwHjEPMA0GA1UEAwwGMTIzNDU2MQswCQYDVQQGDAJDTjBZMBMGByqGSM49AgEGCCqBHM9VAYItA0IABCfD4lNs0tLdS76tGnkJlUv3hCvqOOgkFzp22qFWDkSd/uVberG4/TvDQ8o5OeuefKDPP8DQfxHMgXKzDlJGGMwwDAYIKoEcz1UBg3UFAANBAE8uFvuN8aqFtIzpELzMWQ3LZXt++EDy8smvy/RsLsNwrB78T3qLKCEk7gGP/nHhI/4Btz62sqXLjx57E6qLJ1g=";
+        PKCS10CertificationRequest pkcs10CertificationRequest = new PKCS10CertificationRequest(Base64.decode(P10));
+        SubjectPublicKeyInfo subjectPublicKeyInfo = pkcs10CertificationRequest.getSubjectPublicKeyInfo();
+        KeyFactory keyFact = KeyFactory.getInstance("EC", BC);
+        PublicKey p10Pub = keyFact.generatePublic(new X509EncodedKeySpec(subjectPublicKeyInfo.getEncoded()));
+        System.out.println("p10PubBase64>> " + Base64.toBase64String(p10Pub.getEncoded()));
+        System.out.println("p10PubHex>> " + Hex.toHexString(p10Pub.getEncoded()));
+        System.out.println(pkcs10CertificationRequest.isSignatureValid((new JcaX509ContentVerifierProviderBuilder()).setProvider(BC).build(subjectPublicKeyInfo)));
+    }
+
+    @Test
+    @SneakyThrows
+    public void analysisSM2EncKey() {
+        String signPri = "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQg/re2HViGP2uA7jkANG+Fe8pBPPhjpv6/bTuQRalnDIugCgYIKoEcz1UBgi2hRANCAAS2f9eYIYqgQqYvv/8zZFFVmd/8/+ci3HqsEC96sI80icd+8+sVW1bunQXuxExnD3AMJQ4Ob+pmp/LP8DoAHOqE";
+        // 协同 P7 encData SM2 加密证书私钥
+        String encPri = "MIIDugYJKoZIhvcNAQcEoIIDqzCCA6cCAQExgcgwgcUCAQAwQTA5MQswCQYDVQQGEwJDTjEqMCgGA1UEAwwh56e75Yqo5LqS6IGU572R5a6J5YWo5pyN5Yqh5bmz5Y+wAgQEaAt7MAoGCCqBHM9VAYItBHEEN5BByfJPSMT0N4qKUKTD2WAKRfLqEMBh71TMpD6mNqxg7PJM3XkvHZduZ5zJHYpy5Csehk9jrLukmkYca6J25uhhsmXMXLYVFtnjQ2xUlhfx4hnX0M7+7T02rsG5ProTIJo355gHzMmcQvKRNtfiMDEMMAoGCCqGSIb3DQIGMEkGCSqGSIb3DQEHBjAKBggqgRyBRQFoAYAwCnJLMPwUuW3pgyV0TZwHJES/RJsOGfhUIaLnWva3lL1nFNqzlAIn4zPWhEYjLnQNoIIBlTCCAZEwggE4oAMCAQICBARoC3swCgYIKoEcz1UBg3UwOTELMAkGA1UEBhMCQ04xKjAoBgNVBAMMIeenu+WKqOS6kuiBlOe9keWuieWFqOacjeWKoeW5s+WPsDAeFw0xNjExMTEwMjM3NThaFw0xNzExMTEwMjM3NThaMDkxCzAJBgNVBAYTAkNOMSowKAYDVQQDDCHnp7vliqjkupLogZTnvZHlronlhajmnI3liqHlubPlj7AwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAARGmDONmcOCdfg47uw3WA9b/IwGJ8RSdFdjVqViF8OyCw8O3L4T9AXFhIT4WY6/jxuHqoQ3a1vh43NQsohiILnioy4wLDALBgNVHQ8EBAMCBsAwHQYDVR0OBBYEFE9rbqRIy1nWWgNtbv81+H8w8sVBMAoGCCqBHM9VAYN1A0cAMEQCIG+gniXBXG5NTVWvwH8w0uEQc9BML24HiBW+50gUmn5CAiBmbsTHKl+LcqBYpV+v/7ZT+YdLhj6oqs4eoiHVLDiTpzGB5DCB4QIBADBBMDkxCzAJBgNVBAYTAkNOMSowKAYDVQQDDCHnp7vliqjkupLogZTnvZHlronlhajmnI3liqHlubPlj7ACBARoC3swCgYIKoZIhvcNAgagPzAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcGMCMGCSqGSIb3DQEJBDEWBBQIDnvZH1gNtggpYu0UhrY1QHrbpTAKBggqgRzPVQGCLQRAifMZI//lRfEsZ9JVjf1jLqaEiCYdBYswUc5M4W80CHJGXVl2OVvAEg8t3jqjrSp6TLZ9Dd6B6+zTiZZeYihYPw==";
+        // 协同 P7 encData RSA
+        encPri = "MIIGxQYJKoZIhvcNAQcEoIIGtjCCBrICAQExggFbMIIBVwIBADBBMDkxCzAJBgNVBAYTAkNOMSowKAYDVQQDDCHnp7vliqjkupLogZTnvZHlronlhajmnI3liqHlubPlj7ACBARoC3swCwYJKoZIhvcNAQEBBIIBACrbkP/pSh0V3L4nBVF08Bi8PKfuiRWcI9NJ/2eblwwfNksgeFTLDH2kHMptJeWn3vg4RBxl70c8Dp1JmNLygJmoNlAp986y6/38Tb/rbBvzNOU97rkHApDCnx9r5YAt/x/5ewFGRbeP4h7KVET3QFjVRedEJMYVOOeQd0m1UABTKKPoSmI1c7P4v+e5qHGEQVkktQe7GnuO/lQd3e1o5eg4KZD9Q39UcexriHD8+fYKcqF9Yw525oQ2bohWEi1o1dkj3YWUVj0RKhN0EdiEykffXFuCOV5pq0Fc9l5G8oLZrooSnXZxnpH2r9W1Yl3aNmPrwobCr2GNAks+HrQsYkIxCTAHBgUrDgMCGjCCAoAGCSqGSIb3DQEHBjAHBgUrDgMCBoCCAmjaMBiQT9AugF+9V1OEDVV3wUu6QoLaTrtRZkKSRlcQpwla8mcVYjwqFi7/k2AOCMufDd2viY3ox2pyv54n1DgNcFZ6N40VUt0qtO6J5NLWI5ZkcHSE0KwWngq3ncpz4XCrQBeMIYQV6UAK3YFQJzxRCOMO17h0CpzrRDr4sN0IMOQGf3Zgxh3c2iyj1IFRxBGqy0mb6q+Vk6/saIPLs4cm8JZ8TKCGw8E4ZdCsceBDVfGOysstDD/zwd9V8xwhKPIPWVtj/4/eomXsY+dp56iRhr4R+UNl5Z3RjYKUDfo397VxQRtBrGu80l4GLDLO7jI35dwoD8MjA4AcDH2NaNZB72RSSH63G6q8r+bvF6pEg6ClkjP+/Gpdi/eQNq9g3vqzi8pgouliHQLLCmR1XrX8tz54/2EIFTlROECg7OLRLkoBG4j+U7pRXvByWlo34/BvOXXGqsq/yr1yETESz7NjUUqwSSQ/kI5+ReytFCKTHxfHg47lPbk4C+H5fO5ceubIT4qUl8CeQP4vGaBdTZUAoLUMIyswnlzvB+7WaEtDRZKHi6dCpp4LF8okcs4mMI+vrm4r6LcHD7OvHqx6easbMjLXT4kMLn5j0RXy7EqVYzYinZk+5XAc65t83B47LHImSslOjwgT7WuJw2vmfg+nNix5MsqHEodcKwrYXQsLhlrVmF4N3Huz+dhghp2XIBTNiYIwnpH+dDfeNbDVdVeArVjX5YMU2z+OlO4N+vwIbCaEu+Y1FqKs3fOGVQFNq0su2Z2uNsq7s6/lMvbSc+6XJrHEw9alZ5D5nTu7BqFSGImYHuEjHaLdoIIBlTCCAZEwggE4oAMCAQICBARoC3swCgYIKoEcz1UBg3UwOTELMAkGA1UEBhMCQ04xKjAoBgNVBAMMIeenu+WKqOS6kuiBlOe9keWuieWFqOacjeWKoeW5s+WPsDAeFw0xNjExMTEwMjM3NThaFw0xNzExMTEwMjM3NThaMDkxCzAJBgNVBAYTAkNOMSowKAYDVQQDDCHnp7vliqjkupLogZTnvZHlronlhajmnI3liqHlubPlj7AwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAARGmDONmcOCdfg47uw3WA9b/IwGJ8RSdFdjVqViF8OyCw8O3L4T9AXFhIT4WY6/jxuHqoQ3a1vh43NQsohiILnioy4wLDALBgNVHQ8EBAMCBsAwHQYDVR0OBBYEFE9rbqRIy1nWWgNtbv81+H8w8sVBMAoGCCqBHM9VAYN1A0cAMEQCIG+gniXBXG5NTVWvwH8w0uEQc9BML24HiBW+50gUmn5CAiBmbsTHKl+LcqBYpV+v/7ZT+YdLhj6oqs4eoiHVLDiTpzGCASQwggEgAgEAMEEwOTELMAkGA1UEBhMCQ04xKjAoBgNVBAMMIeenu+WKqOS6kuiBlOe9keWuieWFqOacjeWKoeW5s+WPsAIEBGgLezAHBgUrDgMCGqA/MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwYwIwYJKoZIhvcNAQkEMRYEFE4/9UObHqnBTAknRBSEsDmNlPJ3MAsGCSqGSIb3DQEBAQSBgDeJkWzjqFHQpDO1edr7NZtOaNsdrhianlDZx7/ULIV3JqiZPojnQxFOL5HRUBxm5Tt4YZZbysH/drSTrRDNCbTyxfNWUWR8eKpxc2OiDSY3ja9syxw7uCtVVz50YFl+CkmMnxMor4j+IS0ooa4QmM+l9OHA5hxVuUb1octeJxEd";
+        // CMS P7 encData RSA
+        encPri = "MIIEbgYKKoEcz1UGAQQCBKCCBF4wggRaAgEBMYHSMIHPAgEAMEEwLTELMAkGA1UEBhMCQ04xDjAMBgNVBAoMBU1DU0NBMQ4wDAYDVQQDDAVNQ1NDQQIQM+H+NOHuKVG91xHTVW1SlzALBgkqgRzPVQGCLQMEejB4AiBGhxrZDMLeOsTSNCs3RyeOERJyUGMv/HW4trWuQwW46AIgbNUqcCms5NW9ezOxCls6Fa12OcRu2i8wBKjOH+Dh1iwEIH8sXCZiB55F9Ty8/H3TQQnAqeOc+xun//iBmdqpTlhMBBBWbpD1WXPmDYLuKMQ3/3cxMQwwCgYIKoEcz1UBgxEwWQYKKoEcz1UGAQQCATAJBgcqgRzPVQFogEB/mdbFFrBnBARmGrmk86lQf5nWxRawZwQEZhq5pPOpUGsW90Fu6cRUd4q1PCpwJfHYRF0a05iyWQOaA6UqWq4ioIICZjCCAmIwggIGoAMCAQICECEOvUigLs+O06Q1QzCasN8wDAYIKoEcz1UBg3UFADAtMQswCQYDVQQGEwJDTjEOMAwGA1UECgwFTUNTQ0ExDjAMBgNVBAMMBU1DU0NBMB4XDTIzMDgxNzAzNTcwNFoXDTMzMDgxNDAzNTcwNFowMTELMAkGA1UEBhMCQ04xDjAMBgNVBAoMBU1DU0NBMRIwEAYDVQQDDAlTWFNNMlNJR04wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAARt2y2t+Ii4iiG4VCsbda8IhS7dPdm4I1nYZ5e9f0ztfD6wBMDdBnssYNfJdvXI/coFGfbGXOIdZmi7gyH2DG6Po4IBADCB/TAfBgNVHSMEGDAWgBQwiP4/YqAl9PMrPaltpqBMC0zKtTAdBgNVHQ4EFgQUN4uhRjxJXEJds41dZTspl7Hg2/AwgboGA1UdHwSBsjCBrzAuoCygKoYoaHR0cDovL3d3dy5tY3NjYS5jb20uY24vc20yL2NybC9jcmwwLmNybDB9oHugeYZ3bGRhcDovL3d3dy5tY3NjYS5jb20uY246Mzg5L0NOPWNybDAsT1U9Q1JMLE89TUNTQ0EsQz1DTj9jZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnQwDAYIKoEcz1UBg3UFAANIADBFAiBCflesXG3BQu0TT6DhAeFOhoKh8NPaaQZeoaqy3OKnSwIhALX6/xPLUJe0V2jfL9vbFKf2ZvdXBLFS62wlq5QQlCGiMYGsMIGpAgEBMEEwLTELMAkGA1UEBhMCQ04xDjAMBgNVBAoMBU1DU0NBMQ4wDAYDVQQDDAVNQ1NDQQIQIQ69SKAuz47TpDVDMJqw3zAKBggqgRzPVQGDETALBgkqgRzPVQGCLQEESDBGAiEAvycDI0bG7TfGoAdcq4lPFokKJnCkyv6nRAEkIfPp2X4CIQDVwb9egr5F9BIMxledEbmZ8NnxhBWCGpFdIGafCxhmfw==";
+        analysisSM2EncKey(encPri, Hex.toHexString(Base64.decode(signPri)));
     }
 
 }
