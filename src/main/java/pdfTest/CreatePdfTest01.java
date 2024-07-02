@@ -738,7 +738,7 @@ public class CreatePdfTest01 {
         // contentInfo
         pdfPKCS7.setExternalDigest(signValue, null, encryption);
         TSAClientBouncyCastle tsaClientBouncyCastle = new TSAClientBouncyCastle("http://1.12.67.126:8082/tsa/sign?type=SM2");
-        byte[] pkcs7 = pdfPKCS7.getEncodedPKCS7(oriDigest, signingTime, tsaClientBouncyCastle, null, null, null, null, null);
+        byte[] pkcs7 = pdfPKCS7.getEncodedPKCS7(oriDigest, signingTime, tsaClientBouncyCastle, null, null, null, null, null, false, null);
         String pkcs7Hex = "<" + Hex.toHexString(pkcs7);
         byte[] pkcs7HexBytes = pkcs7Hex.getBytes(StandardCharsets.UTF_8);
         // <SigValue

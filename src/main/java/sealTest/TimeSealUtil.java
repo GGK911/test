@@ -23,8 +23,8 @@ public class TimeSealUtil {
 
     public static void main(String[] args) throws Exception {
         byte[] bytes = draw("2024-12-29 23:59:59");
-        bytes = draw("2024-12-29");
-        FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\sealTest\\test.png");
+        // bytes = draw("2024-12-29");
+        FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\sealTest\\test2.png");
     }
 
     public static byte[] draw(String timeStr) throws IOException {

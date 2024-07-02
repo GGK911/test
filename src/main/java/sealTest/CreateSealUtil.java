@@ -43,7 +43,8 @@ public class CreateSealUtil {
     private final static int IMAGE_SIZE = 300;
 
     // 画笔颜色
-    private final static Color COLOR = Color.RED;
+    private final static Color COLOR = Color.BLACK;
+    // private final static Color COLOR = Color.RED;
 
     // 字体
     private final static Map<com.itextpdf.text.Font, String> SPARE_FONT = new HashMap<>();
@@ -133,11 +134,11 @@ public class CreateSealUtil {
         // byte[] seal = createSquareSeal("张淋然");
         // byte[] seal = createSquareSeal("添加测试");
         // byte[] seal = createSquareSeal("国国国国国");
-        // byte[] seal = createSquareSeal("史蒂夫罗杰斯");
+        byte[] seal = createSquareSeal("大陆云盾");
         //
         // byte[] seal = createCircleSeal("\uD870\uDF86\uD84D\uDCC3\uD852\uDE4A\uE27E㵥\uE4A1四川华西妇幼细胞生物技术有限公司");
         // byte[] seal = createCircleSeal("图章字体测试");
-        byte[] seal = createCircleSeal("大陆云盾电子认证服务有限公司");
+        // byte[] seal = createCircleSeal("大陆云盾电子认证服务有限公司");
         FileUtil.writeBytes(seal, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\sealTest\\test2.png");
     }
 

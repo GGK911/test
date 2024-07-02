@@ -34,9 +34,7 @@ import org.bouncycastle.crypto.engines.SM2Engine;
 import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
-import org.bouncycastle.crypto.params.ParametersWithID;
 import org.bouncycastle.crypto.params.ParametersWithRandom;
-import org.bouncycastle.crypto.signers.SM2Signer;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil;
@@ -175,6 +173,31 @@ public class Pkcs10Test {
 
         PKCS10CertificationRequest csr = builder.build(signer);
         System.out.println("CSR>> " + Base64.toBase64String(csr.getEncoded()));
+    }
+
+    @Test
+    @SneakyThrows
+    public void createCsrFromPriKey() {
+        String priBase64 = "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgx3r/c0ObfrPT6WJOvWQt6JVxOi4NZDB+i/x/ZBIzs2mgCgYIKoEcz1UBgi2hRANCAARfCjARKQ0m8hS9UkVxecoKN4vD4dOJWGD6ROJJZnUSwrQuEe/YhgDRjcORywZ48PgvXQyW1auf1ZKcKtqsLK8E";
+        String pubBase64 = "MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEXwowESkNJvIUvVJFcXnKCjeLw+HTiVhg+kTiSWZ1EsK0LhHv2IYA0Y3DkcsGePD4L10MltWrn9WSnCrarCyvBA==";
+        KeyFactory keyFactory = KeyFactory.getInstance("EC", BC);
+        PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(priBase64)));
+        PublicKey publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(Base64.decode(pubBase64)));
+        String subjectParam = "CN=MSCA";
+        X500Principal subject = new X500Principal(subjectParam);
+        // SHA256withRSA算法
+        ContentSigner signer = new JcaContentSignerBuilder("SM3withSm2")
+                .setProvider(BC)
+                .build(privateKey);
+        // CSR builder
+        PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(subject, publicKey);
+        // 添加属性
+        // DERPrintableString password = new DERPrintableString("secret123");
+        // builder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, password);
+        // 创建
+        PKCS10CertificationRequest sm2Csr = builder.build(signer);
+        System.out.println("CSR>> " + Base64.toBase64String(sm2Csr.getEncoded()));
+
     }
 
     @Test

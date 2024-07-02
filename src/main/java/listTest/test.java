@@ -2,7 +2,10 @@ package listTest;
 
 import extense.Father;
 import extense.Son;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -19,4 +22,12 @@ public class test {
         sons.add(son);
 
     }
+
+    @Test
+    @SneakyThrows
+    public void matchTest() {
+        String[] typeCodeArrays = {"9904000", "9904001", "9904002", "9904003"};
+        System.out.println(Arrays.stream(typeCodeArrays).noneMatch(tc -> tc.equalsIgnoreCase("9904002")));
+    }
+
 }
