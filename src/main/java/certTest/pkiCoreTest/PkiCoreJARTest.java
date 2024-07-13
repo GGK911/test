@@ -1,6 +1,7 @@
-package certTest;
+package certTest.pkiCoreTest;
 
 import certTest.createCert.PemUtil;
+import cn.com.mcsca.pki.core.bouncycastle.asn1.x500.X500Name;
 import cn.com.mcsca.pki.core.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import cn.com.mcsca.pki.core.bouncycastle.cert.jcajce.JcaX509ContentVerifierProviderBuilder;
 import cn.com.mcsca.pki.core.bouncycastle.pkcs.PKCS10CertificationRequest;
@@ -14,6 +15,7 @@ import lombok.SneakyThrows;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -28,6 +30,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Date;
 
 /**
  * @author TangHaoKai
@@ -113,6 +116,23 @@ public class PkiCoreJARTest {
         String certPfxPassword = "L*c7tq2s";
         byte[] bytes = P12Util.generatePfx(signCertPriBase64, signCertBase64, certPfxPassword);
         System.out.println(Base64.toBase64String(bytes));
+    }
+
+    @Test
+    @SneakyThrows
+    public void parseCertItem() {
+        String signCertBase64 = "MIIEqTCCA5GgAwIBAgIQV6yU2Y6ZdtLxIqm4M+t2vzANBgkqhkiG9w0BAQsFADA9MQswCQYDVQQGEwJDTjEOMAwGA1UECgwFTUNTQ0ExDjAMBgNVBAsMBU1DU0NBMQ4wDAYDVQQDDAVNQ1NDQTAeFw0yNDA2MjkwNjUyNDJaFw0yNTA2MjkwNjUyNDJaMHExCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVNQ1NDQTEQMA4GA1UECwwHbG9jYWxSQTEbMBkGA1UEBQwSMzcxNzI0MjAwMjA2MDUyMjEwMSMwIQYDVQQDDBpUcGVyUlNBeDFA5ZSQ5aW95YevQDAxQDE1NjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKiKrHmbnmH/3AWLuaGmSj8ARxmzWKVxepJ96lax7i6gHDo9hh0a2T4HpjFdFs27Fi+680348m/4V5BvtnYHC9jrDW5q6mhfjEqPXP98PlkW5kDvsPLGLEui89MFPQZY/OyX4tn0bIs4BAxG84B6YS77gAFMT/kvUCU+N8jYavPUquSdlR1DnrfBcOWUi9wVyx4MaTqLPWh47IjcprqB7cxEvwTHXAxiRWfEtke8TFs70OHls3GgK7wOE4Q01Zph9YnYIOpynZCDHXqwyp32onNYgN3b+6czqYoufJAmJADm/JKzcQv55tO8Cf5P+k+xo6/cTNZ0BlutRO/+E9fF6KMCAwEAAaOCAW8wggFrMB8GA1UdIwQYMBaAFLlR6QHwqSMfik7pDmsH0AxKLaagMB0GA1UdDgQWBBQpnB5VhQmdHa9G39biFxLXqVt1vzBEBgNVHSAEPTA7MDkGByqBHIeECwQwLjAsBggrBgEFBQcCARYgaHR0cHM6Ly93d3cubWNzY2EuY29tLmNuL2Nwcy5odG0wCwYDVR0PBAQDAgbAMHgGA1UdHwRxMG8wSKBGoESkQjBAMQswCQYDVQQGEwJDTjEMMAoGA1UECgwDSklUMRAwDgYDVQQLDAdBREQxQ1JMMREwDwYDVQQDDAhjcmwxMTE3NjAjoCGgH4YdaHR0cDovLzEyNy4wLjAuMS9jcmwxMTE3Ni5jcmwwXAYIKwYBBQUHAQEEUDBOMCgGCCsGAQUFBzAChhxodHRwOi8vMTI3LjAuMC4xL2NhaXNzdWUuaHRtMCIGCCsGAQUFBzABhhZodHRwOi8vMTI3LjAuMC4xOjIwNDQzMA0GCSqGSIb3DQEBCwUAA4IBAQB8ZGTa4JtWkKomoZD3h4FaIiH3yGcTetLWQ8gSQsZGYl1Tu8G6d8Y9I02TQtxsK0eYF75G03oDi+FVWNJrv/uX8o6rSVWrmYENMB0KX4yVLIRORQnied3Ia4INVimj0LG5zZspXCzvE8TF61KHsNzhZFLIoQce6A1ByCMp5y7YqoHQd3l4tEDco18DPZoIYbrbWNffjeeGsJeZHkaP0eGsE26UdE9ZMXeZnQRmFKAGFIKIk8+dEyevx+JgzjztVXpCZ/86m5ICCc2wuP6lCJrMZCBTnWZNI36y+FoKHO2cdYX/mryU3zF+zxH6p3kIaRaeYiNCweGkX5sF9iQZYcfb";
+        X509Certificate x509Certificate = new X509Certificate(Base64.decode(signCertBase64));
+        Date notAfter = x509Certificate.getNotAfter();
+        Date notBefore = x509Certificate.getNotBefore();
+        X500Name subjectX500Name = x509Certificate.getSubjectX500Name();
+        X500Name issuerX500Name = x509Certificate.getIssuerX500Name();
+        String SN = Hex.toHexString(x509Certificate.getSerialNumber().toByteArray());
+        System.out.println("失效时间>> " + notAfter);
+        System.out.println("过期时间>> " + notBefore);
+        System.out.println("DN>> " + subjectX500Name.toString());
+        System.out.println("颁发者>> " + issuerX500Name.toString());
+        System.out.println("序列号>> " + SN);
     }
 
 }

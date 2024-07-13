@@ -1,4 +1,4 @@
-package certTest;
+package certTest.csr;
 
 import lombok.SneakyThrows;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;

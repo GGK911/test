@@ -1,4 +1,4 @@
-package certTest;
+package certTest.x509cert;
 
 /**
  * 枚举类，实现数字证书对象标识Oid与名称的转换

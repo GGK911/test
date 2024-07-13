@@ -1,5 +1,6 @@
 package pdfTest;
 
+import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -37,6 +38,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.compress.utils.IOUtils;
 import org.bouncycastle.util.encoders.Base64;
 
 import java.io.ByteArrayInputStream;
@@ -71,7 +73,9 @@ public class PdfUtil {
 
     static {
         try {
-            BASE_FONT = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
+            // BASE_FONT = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
+            byte[] bytes0 = IOUtils.toByteArray(ResourceUtil.getStream("font/SIMSUN.TTF"));
+            BASE_FONT = BaseFont.createFont("SIMSUN.TTF", BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, bytes0, null);
             Font font1 = FontFactory.getFont("src/main/resources/font/JinbiaoSong.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, Font.NORMAL, BaseColor.BLACK);
             Font font2 = FontFactory.getFont("src/main/resources/font/simsunb.ttf", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, Font.NORMAL, BaseColor.BLACK);
             SPARE_FONT = font1.getBaseFont();

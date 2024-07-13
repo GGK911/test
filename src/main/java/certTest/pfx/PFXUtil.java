@@ -1,4 +1,4 @@
-package certTest;
+package certTest.pfx;
 
 import cn.com.mcsca.extend.SecuEngine;
 import cn.com.mcsca.util.CertUtil;

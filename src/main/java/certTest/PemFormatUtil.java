@@ -24,7 +24,6 @@ public class PemFormatUtil {
      */
     @SneakyThrows
     public static String priKeyToPem(PrivateKey priKey) {
-        System.out.println("----------打印私钥");
         return pemFormat("PRIVATE KEY", priKey.getEncoded());
     }
 
@@ -36,7 +35,6 @@ public class PemFormatUtil {
      */
     @SneakyThrows
     public static String pubKeyToPem(PublicKey pubKey) {
-        System.out.println("----------打印公钥");
         return pemFormat("PUBLIC KEY", pubKey.getEncoded());
     }
 
@@ -55,7 +53,6 @@ public class PemFormatUtil {
         priPemWriter.writeObject(privateKeyPem);
         priPemWriter.close();
         priStrWriter.close();
-        System.out.println(priStrWriter);
         return priStrWriter.toString();
     }
 

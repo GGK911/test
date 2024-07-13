@@ -152,8 +152,8 @@ public class Pkcs10Test {
     public void createCsrTest02() {
         Security.addProvider(BC);
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", BC);
-        // generator.initialize(1024);
-        generator.initialize(2048);
+        generator.initialize(1024);
+        // generator.initialize(2048);
         // generator.initialize(4096);
         KeyPair keyPair = generator.generateKeyPair();
         final PublicKey aPublic = keyPair.getPublic();

@@ -1,26 +1,16 @@
-package certTest;
+package certTest.timeStamp;
 
-import certTest.bouncycastle.SHA256DigestCalculator;
 import certTest.saxon.rsa.RSAUtils;
-import cn.com.mcsca.bouncycastle.util.CollectionStore;
-import cn.hutool.core.convert.Convert;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.http.HttpRequest;
 import com.itextpdf.text.pdf.security.TSAClient;
-import com.itextpdf.text.pdf.security.TSAClientBouncyCastle;
 import lombok.SneakyThrows;
-import org.apache.commons.compress.utils.Lists;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.DERBitString;
-import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
-import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoGeneratorBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.DigestCalculator;
-import org.bouncycastle.operator.DigestCalculatorProvider;
 import org.bouncycastle.operator.bc.BcDigestCalculatorProvider;
 import org.bouncycastle.tsp.TSPAlgorithms;
 import org.bouncycastle.tsp.TimeStampRequest;
@@ -29,11 +19,8 @@ import org.bouncycastle.tsp.TimeStampResponse;
 import org.bouncycastle.tsp.TimeStampResponseGenerator;
 import org.bouncycastle.tsp.TimeStampToken;
 import org.bouncycastle.tsp.TimeStampTokenGenerator;
-import org.bouncycastle.tsp.cms.CMSTimeStampedData;
 import org.bouncycastle.tsp.cms.CMSTimeStampedDataGenerator;
 import org.bouncycastle.util.Store;
-import org.bouncycastle.util.encoders.Base64;
-import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -41,10 +28,8 @@ import java.security.KeyPairGenerator;
 import java.security.Provider;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Random;
 
 /**

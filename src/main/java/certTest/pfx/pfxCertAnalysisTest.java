@@ -1,9 +1,9 @@
-package certTest;
+package certTest.pfx;
 
+import certTest.PemFormatUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.SneakyThrows;
-import org.bouncycastle.pqc.jcajce.provider.bike.BCBIKEPublicKey;
 import org.bouncycastle.util.encoders.Base64;
 
 import java.io.File;

@@ -885,4 +885,40 @@ public class CreatePdfTest01 {
         FileUtil.writeBytes(bytes, "C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\create\\addImageTest.pdf");
     }
 
+    @Test
+    @SneakyThrows
+    public void addStrTest() {
+        String s = "·\u00B7--・\u30FB--•\u2022||";
+        s = "·\u00B7";
+
+        BaseFont baseFont = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
+        Font font1 = FontFactory.getFont("src/main/resources/font/JinbiaoSong.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, Font.NORMAL, BaseColor.BLACK);
+        Font font2 = FontFactory.getFont("src/main/resources/font/SIMSUN.TTF", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED, 12f, Font.NORMAL, BaseColor.BLACK);
+        BaseFont songFont = font2.getBaseFont();
+        BaseFont jinbiaoFont = font1.getBaseFont();
+        Font normalJBFont = new Font(jinbiaoFont, 12f);
+        Font normalSongFont = new Font(songFont, 12f);
+
+        // 正常字体
+        Font normalFont = new Font(baseFont, 12f);
+        Document document = new Document(PageSize.A4);
+        FileOutputStream out = new FileOutputStream("C:\\Users\\ggk911\\IdeaProjects\\test\\src\\main\\java\\pdfTest\\create.pdf");
+        // 2.创建PdfWriter 实例，并指定输出路径。
+        PdfWriter writer = PdfWriter.getInstance(document, out);
+        // 设置PDF版本
+        writer.setPdfVersion(PdfWriter.VERSION_1_6);
+        // open前 设置行距
+        writer.setInitialLeading(100f);
+        // 自定义事件:页眉和水印
+        writer.setPageEvent(new PdfCustomEvent2(baseFont));
+        // 3. 打开 document实例，开始document中添加内容
+        document.open();
+        // 4.添加内容
+        document.add(new Paragraph(s, normalFont));
+        document.add(new Paragraph(s, normalJBFont));
+        document.add(new Paragraph(s, normalSongFont));
+        // 5. 关闭
+        document.close();
+    }
+
 }

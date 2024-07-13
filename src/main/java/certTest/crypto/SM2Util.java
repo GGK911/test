@@ -1,4 +1,4 @@
-package certTest;
+package certTest.crypto;
 
 import org.bouncycastle.crypto.engines.SM2Engine;
 import org.bouncycastle.crypto.params.ECDomainParameters;

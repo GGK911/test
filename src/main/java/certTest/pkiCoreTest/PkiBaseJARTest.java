@@ -1,4 +1,4 @@
-package certTest;
+package certTest.pkiCoreTest;
 
 import cn.com.mcsca.pki.core.bouncycastle.jce.provider.BouncyCastleProvider;
 import cn.com.mcsca.pki.core.bouncycastle.util.encoders.Base64;

@@ -31,8 +31,14 @@ public class test {
     @Test
     @SneakyThrows
     public void asn1Integer() {
-        String xCoord = "318f02b9f4a07e56696909da2eaa2680";
-        ASN1Integer xCoordAsn1 = new ASN1Integer(Hex.decode(xCoord));
+        // String xCoord = "318f02b9f4a07e56696909da2eaa2680";
+        // ASN1Integer xCoordAsn1 = new ASN1Integer(Hex.decode(xCoord));
+
+        BigInteger randomBI = new BigInteger(256, new Random());
+        System.out.println(randomBI);
+        System.out.println(Hex.toHexString(randomBI.toByteArray()));
+        ASN1Integer asn1Object = new ASN1Integer(randomBI);
+        System.out.println(Hex.toHexString(asn1Object.getEncoded()));
     }
 
 }

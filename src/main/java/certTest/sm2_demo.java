@@ -1,11 +1,11 @@
 package certTest;
 
+import certTest.crypto.SM2Util;
 import certTest.saxon.CertUtils;
 import certTest.saxon.sm2.Sm2Utils;
 import cn.com.mcsca.extend.SecuEngine;
 import cn.com.mcsca.pki.core.util.SignatureUtil;
 import cn.com.mcsca.util.CertUtil;
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.crypto.BCUtil;
 import cn.hutool.crypto.SecureUtil;
@@ -369,6 +369,8 @@ public class sm2_demo {
         SecuEngine secuEngine = new SecuEngine();
         String pri22 = secuEngine.GenKey(2, 256);
         KeyFactory kf = KeyFactory.getInstance("EC", BC);
+
+        pri22 = "MIICBQIBADCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBBIIBDzCCAQsCAQEEIFVHQit4CxN1xEssh7zqPAK0NhE+KGIiZRKH+tKiMPNYoIHjMIHgAgEBMCwGByqGSM49AQECIQD////+/////////////////////wAAAAD//////////zBEBCD////+/////////////////////wAAAAD//////////AQgKOn6np2fXjRNWp5Lz2UJp/OXifUVq4+S3by9QU2UDpMEQQQyxK4sHxmBGV+ZBEZqOcmUj+MLv/JmC+FxWkWJM0x0x7w3NqL09necWb3O42tpIVPQqYd8xipHQALfMuUhOfCgAiEA/////v///////////////3ID32shxgUrU7v0CTnVQSMCAQE=";
         //初始化sm2加密
         BCECPrivateKey privateKey22 = (BCECPrivateKey) kf.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(pri22)));
         System.out.println("privateKey22>> " + Base64.toBase64String(privateKey22.getEncoded()));
@@ -426,7 +428,7 @@ public class sm2_demo {
         dHex = Hex.toHexString(Base64.decode("YVg6ANDQdeZK/+tA+7DdaJgiac7wJTAGrS3UytvgweU="));
         dHex = Hex.toHexString(Base64.decode("EKcqeNufxodDNOl6Nv5RbSw5GrKe+KwXlpkeHgITZlU="));
         dHex = Hex.toHexString(Base64.decode("teSBMBQiWjE0xHI8xAB4wxFsFxSzR0R1RsKhg5M/PbY="));
-        dHex = "85C951B440045BB1F5CB81BED431AA1404ED8DBF11914EAD33EC16E7B1BDAD1B";
+        dHex = "5547422b780b1375c44b2c87bcea3c02b436113e286222651287fad2a230f358";
         ECNamedCurveParameterSpec sm2Spec = ECNamedCurveTable.getParameterSpec("sm2p256v1");
         ECParameterSpec ecSpec = new ECParameterSpec(
                 sm2Spec.getCurve(),
@@ -482,7 +484,7 @@ public class sm2_demo {
         KeyFactory keyFactory = KeyFactory.getInstance("EC", BC);
         PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode("MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgx3r/c0ObfrPT6WJOvWQt6JVxOi4NZDB+i/x/ZBIzs2mgCgYIKoEcz1UBgi2hRANCAARfCjARKQ0m8hS9UkVxecoKN4vD4dOJWGD6ROJJZnUSwrQuEe/YhgDRjcORywZ48PgvXQyW1auf1ZKcKtqsLK8E")));
         BCECPrivateKey bcecPrivateKeyGetD = (BCECPrivateKey) privateKey;
-        System.out.println("GET-d-FROM-PRIVATEKEY>> " + Hex.toHexString(bcecPrivateKeyGetD.getD().toByteArray()));
+        System.out.println("GET-d-FROM-PRIVATEKEY>> " + Hex.toHexString(privateKey22.getD().toByteArray()));
 
         System.out.println("//*************************************************GET-Q-FROM-PUBLICKEY**********************************************************//");
 
@@ -498,7 +500,6 @@ public class sm2_demo {
         X509Certificate x509Certificate = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(Base64.decode(sm2CertBase64)));
         PublicKey getPubKeyFromCert = x509Certificate.getPublicKey();
         System.out.println("getPubKeyFromCert>> " + Base64.toBase64String(getPubKeyFromCert.getEncoded()));
-
 
     }
 
