@@ -17,6 +17,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontFormatException;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
@@ -43,8 +44,8 @@ public class CreateSealUtil {
     private final static int IMAGE_SIZE = 300;
 
     // 画笔颜色
-    private final static Color COLOR = Color.BLACK;
-    // private final static Color COLOR = Color.RED;
+    // private final static Color COLOR = Color.BLACK;
+    private final static Color COLOR = Color.RED;
 
     // 字体
     private final static Map<com.itextpdf.text.Font, String> SPARE_FONT = new HashMap<>();
@@ -134,7 +135,9 @@ public class CreateSealUtil {
         // byte[] seal = createSquareSeal("张淋然");
         // byte[] seal = createSquareSeal("添加测试");
         // byte[] seal = createSquareSeal("国国国国国");
-        byte[] seal = createSquareSeal("大陆云盾");
+        byte[] seal = createSquareSeal("国国国国国国国国");
+        // byte[] seal = createSquareSeal("塔布斯·赛里克江·亚里士多德");
+        // byte[] seal = createSquareSeal("大陆云盾");
         //
         // byte[] seal = createCircleSeal("\uD870\uDF86\uD84D\uDCC3\uD852\uDE4A\uE27E㵥\uE4A1四川华西妇幼细胞生物技术有限公司");
         // byte[] seal = createCircleSeal("图章字体测试");
@@ -189,11 +192,23 @@ public class CreateSealUtil {
                 bufferedImage = drawSixVerticalTwoRightIsometricFontStringTest(StrUtil.subString(name, 3, 4), StrUtil.subString(name, 4, 5), StrUtil.subString(name, 5, 6), StrUtil.subString(name, 0, 1), StrUtil.subString(name, 1, 2), StrUtil.subString(name, 2, 3));
             }
         } else {
-            System.out.println("字数过长，推荐自定义图章");
-            throw new RuntimeException("字数过长，推荐自定义图章");
+            // 横章
+            for (int i = 0; i < pointCount; i += 2) {
+                BufferedImage bufferedImagePre;
+                if (i + 2 > pointCount) {
+                    bufferedImagePre = drawOneStringHeight300(StrUtil.subString(name, i, i + 1));
+                } else {
+                    bufferedImagePre = drawTwoHorizonString(StrUtil.subString(name, i, i + 1), StrUtil.subString(name, i + 1, i + 2));
+                }
+                bufferedImage = transverseSplicingImage(bufferedImage, bufferedImagePre);
+            }
         }
         // 边框
-        bufferedImage = drawSquareOrder(bufferedImage);
+        if (pointCount <= 6) {
+            bufferedImage = drawSquareOrder(bufferedImage);
+        } else {
+            bufferedImage = drawSquareOrderSelfAdaption(bufferedImage);
+        }
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         try {
             ImageIO.write(bufferedImage, "png", outStream);
@@ -855,5 +870,60 @@ public class CreateSealUtil {
         graphics1.drawRect(0, 0, IMAGE_SIZE, IMAGE_SIZE);
         graphics1.dispose();
         return bufferedImage1;
+    }
+
+    /**
+     * 画矩形外线（自适应）
+     *
+     * @param bufferedImage 原始图像
+     * @return 图像
+     */
+    public static BufferedImage drawSquareOrderSelfAdaption(BufferedImage bufferedImage) {
+        BufferedImage bufferedImage1 = new BufferedImage(bufferedImage.getWidth(), bufferedImage.getHeight(), bufferedImage.getType());
+        Graphics2D graphics1 = bufferedImage1.createGraphics();
+        graphics1.setPaint(COLOR);
+        graphics1.drawImage(bufferedImage, 0, 0, bufferedImage.getWidth(), bufferedImage.getHeight(), null);
+        graphics1.setStroke(new BasicStroke((float) (bufferedImage.getHeight() * 0.053)));
+        graphics1.drawRect(0, 0, bufferedImage.getWidth(), bufferedImage.getHeight());
+        graphics1.dispose();
+        return bufferedImage1;
+    }
+
+    /**
+     * 横向拼接图片
+     *
+     * @param img1  左
+     * @param img2 右
+     * @return 拼接后
+     */
+    public static BufferedImage transverseSplicingImage(BufferedImage img1, BufferedImage img2) {
+        if (img1 == null && img2 != null) {
+            return img2;
+        }
+        // 确认两个图片的高度相同，如果不同则抛出异常或处理
+        if (img1.getHeight() != img2.getHeight()) {
+            throw new IllegalArgumentException("Images must have the same height to concatenate them horizontally.");
+        }
+
+        // 设置偏移量，右侧图片向左移动offsetX个像素
+        int offsetX = 25;
+
+        // 创建一个新的BufferedImage对象，宽度是两个图片宽度的总和减去偏移量，高度保持一致
+        int width = img1.getWidth() + img2.getWidth() - offsetX;
+        int height = img1.getHeight();
+        BufferedImage concatenatedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+        // 获取图形上下文
+        Graphics g = concatenatedImage.getGraphics();
+
+        // 将第一个图片绘制到新图像的左侧
+        g.drawImage(img1, 0, 0, null);
+
+        // 将第二个图片绘制到新图像的偏移位置
+        g.drawImage(img2, img1.getWidth() - offsetX, 0, null);
+
+        // 释放图形上下文
+        g.dispose();
+        return concatenatedImage;
     }
 }

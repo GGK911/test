@@ -62,7 +62,7 @@ public class CreateCSRTest extends MiniCATest {
     @Test
     @SneakyThrows
     public void createSM2CSR() {
-        String subjectParam = "CN=ggk911,C=MINICA";
+        String subjectParam = "CN=DLYD,C=MSCA";
         PEMKeyPair pemKeyPair = (PEMKeyPair) PemUtil.objectFromFile(Paths.get(ROOT, "sm2PriKey.key").toAbsolutePath().toString());
         PrivateKey privateKey = sm2KeyFactory.generatePrivate(new PKCS8EncodedKeySpec(pemKeyPair.getPrivateKeyInfo().getEncoded()));
         PublicKey publicKey = sm2KeyFactory.generatePublic(new X509EncodedKeySpec(pemKeyPair.getPublicKeyInfo().getEncoded()));

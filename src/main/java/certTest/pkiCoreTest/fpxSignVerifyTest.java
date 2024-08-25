@@ -56,17 +56,17 @@ public class fpxSignVerifyTest {
 
         String p1Signdata = new String(SignatureUtil.P1MessageSign("SHA256WITHRSA", "测试".getBytes(), priKey));
         System.out.println(p1Signdata);
-        String p7SignAttach = new String(SignatureUtil.P7MessageSignAttach("SHA256WITHRSA", "测试".getBytes("UTF-8"), priKey, x509Certificate));
+        String p7SignAttach = new String(SignatureUtil.P7MessageSignAttach("SHA256WITHRSA", "测试".getBytes("UTF-8"), priKey, x509Certificate, false));
         System.out.println(p7SignAttach);
-        String p7SignDetach = new String(SignatureUtil.P7MessageSignDetach("SHA256WITHRSA", "测试".getBytes("UTF-8"), priKey, x509Certificate));
+        String p7SignDetach = new String(SignatureUtil.P7MessageSignDetach("SHA256WITHRSA", "测试".getBytes("UTF-8"), priKey, x509Certificate, false));
         System.out.println(p7SignDetach);
 
 
         boolean rv = SignatureUtil.P1MessageVerify("SHA256WITHRSA", "测试".getBytes(), p1Signdata.getBytes(), x509Certificate.getPublickey());
         System.out.println(rv);
-        rv = SignatureUtil.P7MessageVerifyAttach(p7SignAttach.getBytes());
+        rv = SignatureUtil.P7MessageVerifyAttach(p7SignAttach.getBytes(), false);
         System.out.println(rv);
-        rv = SignatureUtil.P7MessageVerifyDetach("测试".getBytes(), p7SignDetach.getBytes());
+        rv = SignatureUtil.P7MessageVerifyDetach("测试".getBytes(), p7SignDetach.getBytes(), false);
         System.out.println(rv);
 
 

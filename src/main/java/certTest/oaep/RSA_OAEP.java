@@ -45,7 +45,7 @@ public class RSA_OAEP {
         OAEPParameterSpec oaepParameterSpec = new OAEPParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, PSource.PSpecified.DEFAULT);
         encryptionCipher.init(Cipher.ENCRYPT_MODE, rsaPublicKey, oaepParameterSpec);
         byte[] encryptBytes = encryptionCipher.doFinal(M.getBytes(StandardCharsets.UTF_8));
-        System.out.println("encrypt HEX>> " + Hex.toHexString(encryptBytes));
+        System.out.println("deSedeEncrypt HEX>> " + Hex.toHexString(encryptBytes));
 
 
         Cipher decryptionCipher = Cipher.getInstance("RSA/ECB/OAEPPadding");

@@ -17,25 +17,36 @@ public class regTest01 {
     @Test
     @SneakyThrows
     public void regTest() {
-        String input1 = ""; // 测试空字符串情况
-        String input2 = "RSA";
-        String input3 = "02";
-        String input4 = "01";
-
-        String regex = "^(?:RSA|SM2|rsa|sm2|01\\b|\\s*)$";
+        String regex = "^(?:RSA|SM2|rsa|sm2|01|\\s*)$";
         Pattern pattern = Pattern.compile(regex);
 
-        System.out.println("Input: " + input1);
-        System.out.println("Matched: " + matchPattern(pattern, input1));
+        // 测试字符串
+        String[] testStrings = {
+                "RSA",
+                "SM2",
+                "rsa",
+                "sm2",
+                "01",
+                " 01 ",
+                "01 ",
+                " SM2",
+                "sm2 ",
+                "RSA ",
+                " ",
+                "sm3",
+                "02",
+                "SM2&RSA"
+        };
 
-        System.out.println("Input: " + input2);
-        System.out.println("Matched: " + matchPattern(pattern, input2));
-
-        System.out.println("Input: " + input3);
-        System.out.println("Matched: " + matchPattern(pattern, input3));
-
-        System.out.println("Input: " + input4);
-        System.out.println("Matched: " + matchPattern(pattern, input4));
+        // 匹配字符串
+        for (String testString : testStrings) {
+            Matcher matcher = pattern.matcher(testString);
+            if (matcher.matches()) {
+                System.out.println("Matched: " + testString);
+            } else {
+                System.out.println("Not Matched: " + testString);
+            }
+        }
     }
 
     private static boolean matchPattern(Pattern pattern, String input) {

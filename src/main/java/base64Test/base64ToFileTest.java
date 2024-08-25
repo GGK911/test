@@ -34,7 +34,7 @@ public class base64ToFileTest {
     @SneakyThrows
     public void test02() {
         String inputFilePath = "src/main/java/base64Test/pdfBase64.txt"; // 输入文件路径
-        String outputFilePath = "src/main/java/base64Test/output.png"; // 输出文件路径
+        String outputFilePath = "src/main/java/base64Test/output.sel"; // 输出文件路径
 
         // 读取 Base64 编码的字符串
         String base64String = new String(Files.readAllBytes(Paths.get(inputFilePath)));

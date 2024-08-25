@@ -1,5 +1,6 @@
 package cipherTest;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.RandomUtil;
@@ -7,10 +8,13 @@ import cn.hutool.crypto.Mode;
 import cn.hutool.crypto.Padding;
 import cn.hutool.crypto.symmetric.SM4;
 import lombok.SneakyThrows;
+import org.bouncycastle.crypto.engines.SM4Engine;
+import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -56,7 +60,7 @@ public class SM4Example {
 
         System.out.println("生成的 IV Base64: " + Base64.toBase64String(ivBytes));
 
-        System.out.println("encrypt>> " + Base64.toBase64String(encryptBytes));
+        System.out.println("deSedeEncrypt>> " + Base64.toBase64String(encryptBytes));
         System.out.println("decrypt>> " + new String(decryptBytes));
     }
 
@@ -78,7 +82,7 @@ public class SM4Example {
         // cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(secretKey.getEncoded(), "SM4"));
         // cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] encryptedBytes = cipher.doFinal("Uvm0zK4yAESZyQf4FsAKSHnC+jlxLIqPLiTAvdWIAHT+tJwnGgmARsT7xbvHJI0c".getBytes());
-        System.out.println("encrypt Base64>> " + Base64.toBase64String(encryptedBytes));
+        System.out.println("deSedeEncrypt Base64>> " + Base64.toBase64String(encryptedBytes));
 
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec("7?6>?<13;0?94=96".substring(0, 16).getBytes(StandardCharsets.UTF_8), "SM4"));
         // cipher.init(Cipher.DECRYPT_MODE, secretKey);
@@ -154,6 +158,38 @@ public class SM4Example {
         System.out.println();
     }
 
+    @Test
+    @SneakyThrows
+    public void sm4Test2() {
+        Security.addProvider(new BouncyCastleProvider());
+        // 创建 KeyGenerator 对象，用于生成对称密钥
+        KeyGenerator keyGenerator = KeyGenerator.getInstance("SM4", "BC");
+        // 生成随机的 SM4 密钥
+        SecretKey secretKey = keyGenerator.generateKey();
+
+
+        SM4Engine sm4Engine = new SM4Engine();
+        sm4Engine.init(true, new KeyParameter(secretKey.getEncoded()));
+        byte[] input = "1234567812345678".getBytes(StandardCharsets.UTF_8);
+        byte[] output = new byte[input.length];
+        int times = input.length / 16;
+        for (int i = 0; i < times; i++) {
+            sm4Engine.processBlock(input, i * 16, output, i * 16);
+        }
+        System.out.println(Hex.toHexString(output));
+
+        sm4Engine.reset();
+
+        sm4Engine.init(false, new KeyParameter(secretKey.getEncoded()));
+        int times2 = output.length / 16;
+        byte[] output2 = new byte[output.length];
+        for (int i = 0; i < times2; i++) {
+            sm4Engine.processBlock(output, i * 16, output2, i * 16);
+        }
+        System.out.println(new String(output2));
+
+    }
+
     //加密为16进制，也可以加密成base64/字节数组
     public static String encryptSm4(String plaintext, String key) {
         SM4 sm4 = new SM4(Mode.ECB, Padding.PKCS5Padding, key.getBytes());
@@ -201,6 +237,65 @@ public class SM4Example {
     public static String decryptSm4(String ciphertext, SecretKey key, Padding padding) {
         SM4 sm4 = new SM4(Mode.ECB, padding, key);
         return sm4.decryptStr(ciphertext, CharsetUtil.CHARSET_UTF_8);
+    }
+
+    @Test
+    @SneakyThrows
+    public void hexToFile() {
+        String hexStr = "30410201013031300d060960864801650304020105000420f41fdaa4bd7d9478980c44f1ab3d6ba68749b37bc9cafa058d84da512ac86f0502060190bacb91620101ff";
+        FileUtil.writeBytes(Hex.decode(hexStr), "C:\\Users\\ggk911\\IdeaProjects\\test\\target\\ts.req");
+    }
+
+    @Test
+    @SneakyThrows
+    public void BCSm4EnginerTest() {
+        // 密钥
+        byte[] keyBytes = Hex.decode("0123456789ABCDEF0123456789ABCDEF");
+        KeyParameter key = new KeyParameter(keyBytes);
+
+        // 明文数据 (长度必须是16字节)
+        byte[] plaintext = Hex.decode("00112233445566778899AABBCCDDEEFF");
+
+        // 加密
+        byte[] ciphertext = encrypt(plaintext, key);
+        System.out.println("Ciphertext: " + Hex.toHexString(ciphertext));
+
+        // 解密
+        byte[] decryptedText = decrypt(ciphertext, key);
+        System.out.println("Decrypted Text: " + Hex.toHexString(decryptedText));
+
+    }
+
+    public static byte[] encrypt(byte[] plaintext, KeyParameter key) throws Exception {
+        SM4Engine engine = new SM4Engine();
+        engine.init(true, key); // true 表示加密
+
+        byte[] ciphertext = new byte[plaintext.length];
+        int offset = 0;
+
+        // 分组加密，每次加密 16 字节
+        while (offset < plaintext.length) {
+            engine.processBlock(plaintext, offset, ciphertext, offset);
+            offset += engine.getBlockSize();
+        }
+
+        return ciphertext;
+    }
+
+    public static byte[] decrypt(byte[] ciphertext, KeyParameter key) throws Exception {
+        SM4Engine engine = new SM4Engine();
+        engine.init(false, key); // false 表示解密
+
+        byte[] decryptedText = new byte[ciphertext.length];
+        int offset = 0;
+
+        // 分组解密，每次解密 16 字节
+        while (offset < ciphertext.length) {
+            engine.processBlock(ciphertext, offset, decryptedText, offset);
+            offset += engine.getBlockSize();
+        }
+
+        return decryptedText;
     }
 
 }

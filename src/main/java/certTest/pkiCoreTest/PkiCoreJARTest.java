@@ -12,6 +12,7 @@ import cn.com.mcsca.pki.core.util.SignatureUtil;
 import cn.com.mcsca.pki.core.x509.X509Certificate;
 import com.alibaba.fastjson.JSONObject;
 import lombok.SneakyThrows;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.util.encoders.Base64;
@@ -67,7 +68,7 @@ public class PkiCoreJARTest {
 
     @Test
     @SneakyThrows
-    public void signVerify() {
+    public void requestSignVerify() {
         String P10 = "MIIBGTCBxQIBATBlMRIwEAYDVQQDDAnlp5rnq5HngpwxDzANBgNVBAsMBui3r+i+vjEPMA0GA1UECgwG5rWL6K+VMQ8wDQYDVQQHDAbph43luoYxDzANBgNVBAgMBumHjeW6hjELMAkGA1UEBgwCQ04wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAAQ41IlFMddxJ17/dXi6P31w/kRCWNwdcOkEBVPTdZRupkQw9XX2grvvDjFMTRfFU84RsY0f0w/o7EwkkuKp/NVEMAwGCCqBHM9VAYN1BQADQQBwfGXFsT551OsOxOW7zkbOakm+ORPboejJk/y2RItkFQFEdtXGyBfSAVnfgQr+woCYWKhgXzfPMG/UZeprMdV1";
 
         PKCS10CertificationRequest request = new PKCS10CertificationRequest(Base64.decode(P10));
@@ -133,6 +134,29 @@ public class PkiCoreJARTest {
         System.out.println("DN>> " + subjectX500Name.toString());
         System.out.println("颁发者>> " + issuerX500Name.toString());
         System.out.println("序列号>> " + SN);
+    }
+
+    @Test
+    @SneakyThrows
+    public void signVerify() {
+        // keyNum2
+        String pubKeyStr = "MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEz1znOnEnicHusf67UuI37VqYWHD1+jK4Kv4qBGBgW7EQHF5tscA9jp4uf69CUsnxWrB2WOnIyyymhz1uR4okBQ==";
+        // keyNum1
+        pubKeyStr = "MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEqBnJ6CL1bSZFksT3skIcizpOfI2LOuTQxSMpKmA8eNgbeWv+8uSKOrBMbxt8ehrVNJG8HTjQABJI32F1B0sqLQ==";
+        KeyFactory keyFactory = KeyFactory.getInstance("EC", BC);
+        BCECPublicKey bcecPublicKey = (BCECPublicKey) keyFactory.generatePublic(new X509EncodedKeySpec(Base64.decode(pubKeyStr)));
+
+        byte[] message;
+        byte[] signBytes;
+        message = "abc".getBytes(StandardCharsets.UTF_8);
+        // message = Hex.decode("616263");
+        // message = Hex.decode("03b66bef730642e9e7adaa7fe0862d52fd61d8e21ba25d3f768592427357fa54");
+        // message = Hex.decode("66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0");
+        signBytes = Hex.decode("3046022100fd23c8c4cc1f2b815c69f4167c3947c6639a55d829dea532240350cfc0a1f96d022100c848ad04659893a0ef426b6a9c39a0c08eea21fb39817123e1391a070f99e0ba");
+
+
+        boolean signVerify = SignatureUtil.P1MessageVerify("SM3WITHSM2", message, Base64.encode(signBytes), bcecPublicKey);
+        System.out.println(signVerify);
     }
 
 }

@@ -1,9 +1,9 @@
 package jsonTest;
 
-import cn.com.mcsca.pki.core.fastjson.JSONObject;
-import cn.com.mcsca.pki.core.fastjson.serializer.SerializerFeature;
 import cn.com.mcsca.pki.core.util.SignatureUtil;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

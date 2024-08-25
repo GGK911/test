@@ -662,7 +662,7 @@ public class GmUtil {
 //        PublicKey publicKey = getPublickeyFromX509File(bais);
 //        System.out.println(publicKey);
 
-//        // sm2 encrypt and decrypt test ---------------------
+//        // sm2 deSedeEncrypt and decrypt test ---------------------
 //        KeyPair kp = generateKeyPair();
 //        PublicKey publicKey2 = kp.getPublic();
 //        PrivateKey privateKey2 = kp.getPrivate();
@@ -673,7 +673,7 @@ public class GmUtil {
 
 
 
-//        // sm4 encrypt and decrypt test ---------------------
+//        // sm4 deSedeEncrypt and decrypt test ---------------------
 //        //0123456789abcdeffedcba9876543210 + 0123456789abcdeffedcba9876543210 -> 681edf34d206965e86b3e94f536e4246
 //        byte[] plain = Hex.decode("0123456789abcdeffedcba98765432100123456789abcdeffedcba98765432100123456789abcdeffedcba9876543210");
 //        byte[] key = Hex.decode("0123456789abcdeffedcba9876543210");

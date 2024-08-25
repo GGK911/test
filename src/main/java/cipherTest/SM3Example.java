@@ -3,7 +3,7 @@ package cipherTest;
 import cn.com.mcsca.pki.core.bouncycastle.jce.provider.BouncyCastleProvider;
 import cn.com.mcsca.pki.core.bouncycastle.util.encoders.Hex;
 
-import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
@@ -19,9 +19,10 @@ public class SM3Example {
     public static void main(String[] args) throws Exception {
         // 1.文件
         Path path = Paths.get("C:\\Users\\ggk911\\Desktop\\2.png");
-        byte[] bytes = Files.readAllBytes(path);
+        // byte[] bytes = Files.readAllBytes(path);
         // 2.信息
-        // byte[] bytes = "1234567890".getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = Hex.decode("616263");
+        bytes = "1234567812345678".getBytes(StandardCharsets.UTF_8);
 
         // 创建 SM3 哈希函数实例
         MessageDigest sm3Digest = MessageDigest.getInstance("SM3", new BouncyCastleProvider());

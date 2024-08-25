@@ -1,5 +1,6 @@
 package pdfTest;
 
+import cn.hutool.core.io.FileUtil;
 import com.itextpdf.awt.geom.Rectangle2D.Float;
 import com.itextpdf.text.pdf.PdfDictionary;
 import com.itextpdf.text.pdf.PdfName;
@@ -26,6 +27,11 @@ import java.util.List;
  * @version V1.0 2024/5/30 10:16
  */
 public class PdfKeyWordFinderUtil {
+
+    public static void main(String[] args) throws Exception {
+        byte[] pdfBytes = FileUtil.readBytes("C:\\Users\\ggk911\\Desktop\\aip填充.pdf");
+        findKeywordPositions(pdfBytes, "测试");
+    }
 
     public static List<float[]> findKeywordPositions(byte[] pdfData, String keyword) throws IOException {
         List<float[]> result = new ArrayList<>();
@@ -176,9 +182,11 @@ public class PdfKeyWordFinderUtil {
             this.pageNum = pageNum;
         }
 
+        @Override
         public void beginTextBlock() {
         }
 
+        @Override
         public void renderText(TextRenderInfo renderInfo) {
             List<TextRenderInfo> characterRenderInfos = renderInfo.getCharacterRenderInfos();
             for (TextRenderInfo textRenderInfo : characterRenderInfos) {
@@ -200,9 +208,11 @@ public class PdfKeyWordFinderUtil {
             }
         }
 
+        @Override
         public void endTextBlock() {
         }
 
+        @Override
         public void renderImage(ImageRenderInfo renderInfo) {
         }
 

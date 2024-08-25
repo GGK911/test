@@ -1,7 +1,6 @@
 package certTest.digest;
 
 import certTest.saxon.rsa.RSAUtils;
-import cn.hutool.core.io.FileUtil;
 import lombok.SneakyThrows;
 import org.bouncycastle.asn1.gm.GMObjectIdentifiers;
 import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
@@ -32,7 +31,7 @@ import java.util.HashMap;
 public class digest_demo {
     private static final Provider BC = new BouncyCastleProvider();
 
-    private static final byte[] bytes;
+    private static byte[] bytes;
     private static final BcDigestCalculatorProvider calculatorProvider;
 
     static {
@@ -40,7 +39,7 @@ public class digest_demo {
         filePath = "C:\\Users\\ggk911\\Desktop\\IMG_0558.JPG";
 
         // bytes = FileUtil.readBytes(filePath);
-        bytes = "abc".getBytes(StandardCharsets.UTF_8);
+        bytes = Hex.decode("3045022042267ae3e5959a22d0803b2ad13aed20e042972cdbfa7042a9722f0e1cf994b40221008ed54e0948876c44127d05367847b6a7d062f9cf73b4140e802fc1cf9ea567e1");
         calculatorProvider = new BcDigestCalculatorProvider();
     }
 

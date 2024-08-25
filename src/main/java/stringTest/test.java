@@ -122,4 +122,10 @@ public class test {
         System.out.println(str.contains("·"));
     }
 
+    @Test
+    @SneakyThrows
+    public void nullStrTest() {
+        System.out.println(String.valueOf(null));
+    }
+
 }

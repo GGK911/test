@@ -152,8 +152,8 @@ public class Pkcs10Test {
     public void createCsrTest02() {
         Security.addProvider(BC);
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", BC);
-        generator.initialize(1024);
-        // generator.initialize(2048);
+        // generator.initialize(1024);
+        generator.initialize(2048);
         // generator.initialize(4096);
         KeyPair keyPair = generator.generateKeyPair();
         final PublicKey aPublic = keyPair.getPublic();
@@ -1041,6 +1041,17 @@ public class Pkcs10Test {
         // CMS P7 encData RSA
         encPri = "MIIEbgYKKoEcz1UGAQQCBKCCBF4wggRaAgEBMYHSMIHPAgEAMEEwLTELMAkGA1UEBhMCQ04xDjAMBgNVBAoMBU1DU0NBMQ4wDAYDVQQDDAVNQ1NDQQIQM+H+NOHuKVG91xHTVW1SlzALBgkqgRzPVQGCLQMEejB4AiBGhxrZDMLeOsTSNCs3RyeOERJyUGMv/HW4trWuQwW46AIgbNUqcCms5NW9ezOxCls6Fa12OcRu2i8wBKjOH+Dh1iwEIH8sXCZiB55F9Ty8/H3TQQnAqeOc+xun//iBmdqpTlhMBBBWbpD1WXPmDYLuKMQ3/3cxMQwwCgYIKoEcz1UBgxEwWQYKKoEcz1UGAQQCATAJBgcqgRzPVQFogEB/mdbFFrBnBARmGrmk86lQf5nWxRawZwQEZhq5pPOpUGsW90Fu6cRUd4q1PCpwJfHYRF0a05iyWQOaA6UqWq4ioIICZjCCAmIwggIGoAMCAQICECEOvUigLs+O06Q1QzCasN8wDAYIKoEcz1UBg3UFADAtMQswCQYDVQQGEwJDTjEOMAwGA1UECgwFTUNTQ0ExDjAMBgNVBAMMBU1DU0NBMB4XDTIzMDgxNzAzNTcwNFoXDTMzMDgxNDAzNTcwNFowMTELMAkGA1UEBhMCQ04xDjAMBgNVBAoMBU1DU0NBMRIwEAYDVQQDDAlTWFNNMlNJR04wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAARt2y2t+Ii4iiG4VCsbda8IhS7dPdm4I1nYZ5e9f0ztfD6wBMDdBnssYNfJdvXI/coFGfbGXOIdZmi7gyH2DG6Po4IBADCB/TAfBgNVHSMEGDAWgBQwiP4/YqAl9PMrPaltpqBMC0zKtTAdBgNVHQ4EFgQUN4uhRjxJXEJds41dZTspl7Hg2/AwgboGA1UdHwSBsjCBrzAuoCygKoYoaHR0cDovL3d3dy5tY3NjYS5jb20uY24vc20yL2NybC9jcmwwLmNybDB9oHugeYZ3bGRhcDovL3d3dy5tY3NjYS5jb20uY246Mzg5L0NOPWNybDAsT1U9Q1JMLE89TUNTQ0EsQz1DTj9jZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnQwDAYIKoEcz1UBg3UFAANIADBFAiBCflesXG3BQu0TT6DhAeFOhoKh8NPaaQZeoaqy3OKnSwIhALX6/xPLUJe0V2jfL9vbFKf2ZvdXBLFS62wlq5QQlCGiMYGsMIGpAgEBMEEwLTELMAkGA1UEBhMCQ04xDjAMBgNVBAoMBU1DU0NBMQ4wDAYDVQQDDAVNQ1NDQQIQIQ69SKAuz47TpDVDMJqw3zAKBggqgRzPVQGDETALBgkqgRzPVQGCLQEESDBGAiEAvycDI0bG7TfGoAdcq4lPFokKJnCkyv6nRAEkIfPp2X4CIQDVwb9egr5F9BIMxledEbmZ8NnxhBWCGpFdIGafCxhmfw==";
         analysisSM2EncKey(encPri, Hex.toHexString(Base64.decode(signPri)));
+    }
+
+    @Test
+    @SneakyThrows
+    public void getPubKeyFromCsr() {
+        String csr = "MIIBGTCBxQIBATBlMRIwEAYDVQQDDAnlp5rnq5HngpwxDzANBgNVBAsMBui3r+i+vjEPMA0GA1UECgwG5rWL6K+VMQ8wDQYDVQQHDAbph43luoYxDzANBgNVBAgMBumHjeW6hjELMAkGA1UEBgwCQ04wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAASFi5ZSQKpSGZyUfQd+/E3EYa/PXfRpftNmM0VnJAlu1X5MukVkoBC9UAayyVkO4+MdxEUGa/cl3X9YXTUv/LGqMAwGCCqBHM9VAYN1BQADQQBHCrV6gYjuTsFKAV925wNjmZzVw2UmUlG9PPIdMeoN7d3JNYEaEkADcD6uc7wH+KYdeTTVdj3teicxhK2ysFdM";
+        csr = "MIIBQzCB6QIBADCBhjEPMA0GA1UECAwG6YeN5bqGMQ8wDQYDVQQHDAbph43luoYxIjAgBgkqhkiG9w0BCQEWEzEzOTgzMDUzNDU1QDE2My5jb20xCzAJBgNVBAYTAkNOMQ8wDQYDVQQKEwZHR0s5MTExDzANBgNVBAsTBkdHSzkxMTEPMA0GA1UEAxMGR0dLOTExMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEhMB5KWo+cBr4pKuNMJg8yyJkRxByzj+KCMYcvWLk35LvoNgYCzVXb2JoJ1JBH7xcAiF93Psmr/sk1+XPvsLVB6AAMAoGCCqBHM9VAYN1A0kAMEYCIQCgNKE4uvsGWb0x+Xds2dmwffZ0forSfV6OCw/uiunHgAIhALOpWfa3FIdTJMmZGdeSs12rrMv9nzk1jwmg4NDW+IUd";
+        csr = "MIHaMIGAAgEAMB4xDTALBgNVBAYTBE1TQ0ExDTALBgNVBAMTBERMWUQwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAARfCjARKQ0m8hS9UkVxecoKN4vD4dOJWGD6ROJJZnUSwrQuEe/YhgDRjcORywZ48PgvXQyW1auf1ZKcKtqsLK8EoAAwCgYIKoEcz1UBg3UDSQAwRgIhAIgH1z+ZqcfeGIsvJAWTlIZuPZYM8QXEWg55D8UWhFjlAiEAmdS0MURJzjKCQSeYfEa+uPXmh5tXRhrHGGh3m0gi1gI=";
+        org.bouncycastle.jce.PKCS10CertificationRequest rsaCertRequest = new org.bouncycastle.jce.PKCS10CertificationRequest(Base64.decode(csr));
+        SubjectPublicKeyInfo subjectPublicKeyInfo = rsaCertRequest.getCertificationRequestInfo().getSubjectPublicKeyInfo();
+        System.out.println(Base64.toBase64String(subjectPublicKeyInfo.getPublicKey().getEncoded()));
     }
 
 }
