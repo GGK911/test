@@ -83,12 +83,15 @@ public class SM4Example {
         // cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] encryptedBytes = cipher.doFinal("Uvm0zK4yAESZyQf4FsAKSHnC+jlxLIqPLiTAvdWIAHT+tJwnGgmARsT7xbvHJI0c".getBytes());
         System.out.println("deSedeEncrypt Base64>> " + Base64.toBase64String(encryptedBytes));
+        String encHex = Hex.toHexString(encryptedBytes);
+        System.out.println(String.format("%-16s", "encHex>> ") + encHex);
 
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec("7?6>?<13;0?94=96".substring(0, 16).getBytes(StandardCharsets.UTF_8), "SM4"));
         // cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] cipherBytes = Base64.decode("dC0wQR2WxAiLas9I74TaegdO9Rjx2V/b7m/O6wrk2mIEv8LB8Jo/ZFolqls3J74CcZHANReV1ZI2fFUMnYATlyrG3JRbFMaDB8dv0iTXyzzBg6dNX5mzyGr8IL7Hrwh3znaFaj7QT3Z4vKIXno9cwJCLZ36zRts943PEQYXXwU32rZOInIrrD9q3ojOnINngdcJ7eyMeyZh4y4DOFoDyGkV4evM7JEOpq9Rpe0BY51kaN1py9VXINn8b8nyM2tCW71/pG095+xr+qGMfuof/dNzfXfUI7EdgspbNByuGJe1dL9Mc/3rBnESMdV2IAx84RN9cQ0gwwEdBYvM3/gSj0gGdLcDVMxJwEjCuQdhHOzsHoFZ5RZxLuI/AiYJDPYeR");
         byte[] decryptedBytes = cipher.doFinal(cipherBytes);
         System.out.println("decrypt>> " + new String(decryptedBytes));
+
 
     }
 

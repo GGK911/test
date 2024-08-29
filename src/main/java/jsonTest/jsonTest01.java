@@ -4,6 +4,7 @@ import cn.com.mcsca.pki.core.util.SignatureUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import extense.Person;
 import lombok.AllArgsConstructor;
@@ -125,6 +126,12 @@ public class jsonTest01 {
     public com.alibaba.fastjson.JSONObject add(com.alibaba.fastjson.JSONObject jsonObject) {
         jsonObject.put("456", "654");
         return jsonObject;
+    }
+
+    @Test
+    @SneakyThrows
+    public void serial() {
+
     }
 
 }

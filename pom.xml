@@ -55,6 +55,10 @@
                     <artifactId>slf4j-api</artifactId>
                     <groupId>org.slf4j</groupId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.skyscreamer</groupId>
+                    <artifactId>jsonassert</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <!--driver-->
@@ -634,11 +638,14 @@
             <version>3.9.1</version>
         </dependency>
 
-
+        <!--- redis依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
 
 
         <!--本地jar包-->
-
 
 
     </dependencies>

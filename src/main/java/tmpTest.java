@@ -1,10 +1,10 @@
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
@@ -65,6 +65,48 @@ public class tmpTest {
         certExts.put("1.2.3", "test1");
         String listJsonStr = JSONUtil.toJsonStr(certExts);
         System.out.println(String.format("%-16s", "listJsonStr>> ") + listJsonStr);
+    }
+
+    @Test
+    @SneakyThrows
+    public void stringTest() {
+        String certDn = "CN=TperRSAx1@唐好凯@01@005";
+        String key = "";
+        String[] certDns = certDn.split(",");
+        int i = 0;
+        String cn = "";
+        StringBuilder stringBuffer = new StringBuilder();
+        for (String certSubject : certDns) {
+            if (i > 0) {
+                stringBuffer.append(",");
+            }
+            if (StringUtils.isEmpty(cn)) {
+                String[] cert = certSubject.split("=");
+                if (cert.length > 0 && "CN".equals(cert[0])) {
+                    if (!StringUtils.isEmpty(cert[1]) && cert[1].lastIndexOf("@") != -1) {
+                        String numberCount = cert[1].substring(cert[1].lastIndexOf("@") + 1);
+                        if (!StringUtils.isEmpty(cert[1]) && StringUtils.isNumeric(numberCount)) {
+                            // thk's todo 2024/8/28 17:09 这里的dbIndex是真的吗？不根据配置文件来？？
+                            Long raCertCountNumber = 6L;
+                            String addNumber = String.valueOf(raCertCountNumber);
+                            stringBuffer.append(cert[0]).append("=").append(cert[1], 0, cert[1].lastIndexOf("@")).append("@");
+                            for (int q = 0, b = 3 - addNumber.length(); q < b; q++) {
+                                stringBuffer.append("0");
+                            }
+                            stringBuffer.append(addNumber);
+
+                            cn = stringBuffer.toString();
+                        }
+                    }
+                } else {
+                    stringBuffer.append(certSubject);
+                }
+            } else {
+                stringBuffer.append(certSubject);
+            }
+            i++;
+        }
+        System.out.println(String.format("%-16s", "stringBuffer>> ") + stringBuffer);;
     }
 
 }

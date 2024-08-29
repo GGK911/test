@@ -17,7 +17,7 @@ spring:
       #       docker 访问宿主机
 #      url: jdbc:mysql://host.docker.internal:3306/mshieldbox?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong
       # 本机
-      url: jdbc:mysql://localhost:3306/mcs_epact2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong
+      url: jdbc:mysql://192.168.7.6:3306/mcs_epact2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong
       username: root
       password: 123456
       initial-size: 5 # 初始化时建立物理连接的个数。默认0
@@ -71,6 +71,19 @@ spring:
     allow-circular-references: true # 开启循环依赖
   jpa:
     open-in-view: true # 视图渲染时可以执行sql
+# reids相关配置
+  redis:
+    host: 192.168.7.151 # redis服务器地址
+    port: 6379 # 端口
+    password: # 密码，默认为空
+    database: 3 # 数据库索引（默认为0）
+    jedis:
+      pool:
+        max-wait: 10000 # 连接池对打阻塞等待时间（负表示没有限制）
+        max-active: 100 # 连接池最大连接数(负表示没有限制)
+        max-idle: 20 # 连接池中的最大空闲链接
+        min-idle: 0 # 连接池中的最小空闲链接
+    timeout: 3000 # 链接超时时间
 # minio配置
 minio:
   endpoint: http://183.66.184.22:803 # Minio服务所在地址

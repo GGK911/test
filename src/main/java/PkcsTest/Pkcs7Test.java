@@ -1,8 +1,10 @@
 package PkcsTest;
 
+import certTest.createCert.PemUtil;
 import cn.com.mcsca.bouncycastle.util.encoders.Base64;
 import cn.com.mcsca.itextpdf.text.pdf.security.BouncyCastleDigest;
 import cn.com.mcsca.itextpdf.text.pdf.security.DigestAlgorithms;
+import cn.com.mcsca.pki.core.util.SignatureUtil;
 import cn.hutool.core.io.FileUtil;
 import lombok.SneakyThrows;
 import org.bouncycastle.asn1.ASN1Encodable;
@@ -13,22 +15,33 @@ import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.security.KeyFactory;
 import java.security.MessageDigest;
+import java.security.PrivateKey;
+import java.security.Provider;
 import java.security.Security;
 import java.security.Signature;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.spec.PKCS8EncodedKeySpec;
 
 /**
  * @author TangHaoKai
  * @version V1.0 2024/1/5 18:29
  **/
 public class Pkcs7Test {
+
+    private static final Provider BC = new BouncyCastleProvider();
+
+    private static final String ROOT = "src/main/java/certTest/createCert";
 
     @SneakyThrows
     public static void main(String[] args) {
@@ -367,12 +380,65 @@ public class Pkcs7Test {
             ASN1TaggedObject taggedObject2 = (ASN1TaggedObject) signerInfoSequence.getObjectAt(3);
             // ASN1Set signAttr2 = ASN1Set.getInstance(signAttr, false);
 
-
-
         }
-
     }
 
+    @Test
+    @SneakyThrows
+    public void pkiCoreRSAP7Test() {
+        byte[] bytes = FileUtil.readBytes(Paths.get(ROOT + "/TSCert.cer").toAbsolutePath().toString());
+        cn.com.mcsca.pki.core.x509.X509Certificate x509Certificate = new cn.com.mcsca.pki.core.x509.X509Certificate(bytes);
 
+        PEMKeyPair pemCAKeyPair = (PEMKeyPair) PemUtil.objectFromFile(Paths.get(ROOT + "/TSPriKey.key").toAbsolutePath().toString());
+        KeyFactory kf = KeyFactory.getInstance("RSA", BC);
+        PrivateKey privateKey = kf.generatePrivate(new PKCS8EncodedKeySpec(pemCAKeyPair.getPrivateKeyInfo().getEncoded()));
+
+        String M = "GGK911";
+
+        // 分离
+        byte[] p7MessageSignDetach = SignatureUtil.P7MessageSignDetach("SHA1WITHRSA", M.getBytes(StandardCharsets.UTF_8), privateKey, x509Certificate);
+        System.out.println("RSA P7 Detach>> " + new String(p7MessageSignDetach));
+
+        boolean p7MessageVerifyDetach = SignatureUtil.P7MessageVerifyDetach(M.getBytes(StandardCharsets.UTF_8), p7MessageSignDetach);
+        System.out.println(p7MessageVerifyDetach);
+
+        // 嵌入
+        byte[] p7MessageSignAttach = SignatureUtil.P7MessageSignAttach("SHA1WITHRSA", M.getBytes(StandardCharsets.UTF_8), privateKey, x509Certificate);
+        System.out.println("RSA P7 Attach>> " + new String(p7MessageSignAttach));
+
+        boolean p7MessageVerifyAttach = SignatureUtil.P7MessageVerifyAttach(p7MessageSignAttach);
+        System.out.println(p7MessageVerifyAttach);
+
+
+        // boolean p7SignVerify = SignatureUtil.P7SignVerify(M.getBytes(StandardCharsets.UTF_8), SignedData.getInstance(p7MessageSignDetach));
+    }
+
+    String sm2CertBase64 = "MIICmDCCAj+gAwIBAgIBAzAKBggqgRzPVQGDdTBYMQswCQYDVQQGEwJDTjEOMAwGA1UECgwFQ2hpbmExFTATBgNVBAsMDEludGVybWVkaWF0ZTEiMCAGCSqGSIb3DQEJARYTMTM5ODMwNTM0NTVAMTYzLmNvbTAeFw0yNDAxMDIwOTA5NTFaFw0yNTAxMDEwOTA5NTFaMGYxCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVDaGluYTESMBAGA1UEBwwJQ2hvbmdxaW5nMQ8wDQYDVQQDDAZHR0s5MTExIjAgBgkqhkiG9w0BCQEWEzEzOTgzMDUzNDU1QDE2My5jb20wWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAASNnEXTr1xvyeiCFyjvJMCitVR0UJ63UzfU4ftoGA0ejs3Pn/CLatCIzLfwjzimiqGf7jG8UxfOEdDY8QElLkqeo4HrMIHoMB0GA1UdDgQWBBSTRP7T62AAKxdBjQ5MDpIvQ+eaDDAfBgNVHSMEGDAWgBSKnV+2ua3/iWvHd8pNx80wRQmJYjAJBgNVHR8EAjAAMF8GCCsGAQUFBwEBAQH/BFAwTjAoBggrBgEFBQcwAYIcaHR0cDovLzEyNy4wLjAuMS9jYWlzc3VlLmh0bTAiBggrBgEFBQcwAoIWaHR0cDovLzEyNy4wLjAuMToyMDQ0MzAOBgNVHQ8BAf8EBAMCBsAwEgYDVR0TAQH/BAgwBgEB/wIBAzAWBgNVHSUBAf8EDDAKBggrBgEFBQcDCDAKBggqgRzPVQGDdQNHADBEAiBiMmP80Y2HbleOlOgGYSSpjANtC8rb8VxQ6/Fju2tiJwIgAjdUN740mQgwH6bTYoDw9oygZG8RVcpnrXYUWIVNt64=";
+    String sm2PriBase64 = "MIGHAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBG0wawIBAQQg2TSyBsSej2+rzLbzosJISpHpvxnHkytt/ZFya/v3bk6hRANCAASNnEXTr1xvyeiCFyjvJMCitVR0UJ63UzfU4ftoGA0ejs3Pn/CLatCIzLfwjzimiqGf7jG8UxfOEdDY8QElLkqe";
+
+    @Test
+    @SneakyThrows
+    public void pkiCoreSM2P7Test() {
+        cn.com.mcsca.pki.core.x509.X509Certificate x509Certificate = new cn.com.mcsca.pki.core.x509.X509Certificate(org.bouncycastle.util.encoders.Base64.decode(sm2CertBase64));
+        KeyFactory kf = KeyFactory.getInstance("EC", BC);
+        PrivateKey privateKey = kf.generatePrivate(new PKCS8EncodedKeySpec(org.bouncycastle.util.encoders.Base64.decode(sm2PriBase64)));
+
+        String M = "分离嵌入GGK911";
+
+        // 分离
+        byte[] p7MessageSignDetach = SignatureUtil.P7MessageSignDetach("SM3withSM2", M.getBytes(StandardCharsets.UTF_8), privateKey, x509Certificate);
+        System.out.println("SM2 P7 Detach>> " + new String(p7MessageSignDetach));
+
+        boolean p7MessageVerifyDetach = SignatureUtil.P7MessageVerifyDetach(M.getBytes(StandardCharsets.UTF_8), p7MessageSignDetach);
+        System.out.println(p7MessageVerifyDetach);
+
+        // 嵌入
+        byte[] p7MessageSignAttach = SignatureUtil.P7MessageSignAttach("SM3withSM2", M.getBytes(StandardCharsets.UTF_8), privateKey, x509Certificate);
+        System.out.println("SM2 P7 Attach>> " + new String(p7MessageSignAttach));
+
+        boolean p7MessageVerifyAttach = SignatureUtil.P7MessageVerifyAttach(p7MessageSignAttach);
+        System.out.println(p7MessageVerifyAttach);
+
+    }
 
 }

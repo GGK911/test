@@ -85,6 +85,8 @@ public class EnvelopeUtil {
 
         String fujian = changePriEnvelopBy35276(Base64.toBase64String(Hex.decode(dHex)), encCert, signCert, randomKey);
         System.out.println(String.format("%-16s", "fujian>> ") + fujian);
+
+
     }
 
     /**
@@ -94,10 +96,10 @@ public class EnvelopeUtil {
      * @param encsm2pristr 加密私钥
      * @param encsm2cert   加密证书
      * @param signcert     签名证书
-     * @param pwd          非对称算法私钥
+     * @param symKey          非对称算法私钥
      * @return 信封
      */
-    public static String changePriEnvelopBy35276(String encsm2pristr, String encsm2cert, String signcert, byte[] pwd) throws IOException {
+    public static String changePriEnvelopBy35276(String encsm2pristr, String encsm2cert, String signcert, byte[] symKey) throws IOException {
         byte[] sm2pri = Base64.decode(encsm2pristr);
         byte[] xy = getSm2PubKey(encsm2cert);
         if (sm2pri.length == 31) {
@@ -113,22 +115,27 @@ public class EnvelopeUtil {
             }
         }
 
-        //对称密钥加密
-        byte[] cbp = symmetricEncryption(sm2pri, pwd, false, "");
-
+        // 对称密钥加密加密私钥
+        byte[] encEncPri = symmetricEncryption(sm2pri, symKey, false, "");
+        int symCipherLength = encEncPri.length;
+        System.out.println(String.format("%-16s", "symCipherLength>> ") + symCipherLength);
+        // 从签名证书中拿到公钥
         SubjectPublicKeyInfo spki = getPubInfoFromCert(Base64.decode(signcert));
-        //公钥加密对称密钥pwd SM2Cipher
-        String pubkeyenc = PubkeyEncryption(spki, pwd);
+        // 公钥加密对称密钥pwd
+        String encSymPri = PubkeyEncryption(spki, symKey);
 
         ASN1EncodableVector asn1ev = new ASN1EncodableVector();
 
         ASN1ObjectIdentifier digestAlgOID = new ASN1ObjectIdentifier("1.2.156.10197.1.104.1");
         AlgorithmIdentifier algID = new AlgorithmIdentifier(digestAlgOID, DERNull.INSTANCE);
-
+        // 标识
         asn1ev.add(algID);
-        asn1ev.add(ASN1Sequence.fromByteArray(Base64.decode(pubkeyenc)));
+        // 被加密后的 对称密钥
+        asn1ev.add(ASN1Sequence.fromByteArray(Base64.decode(encSymPri)));
+        // 加密公钥Q
         asn1ev.add(new DERBitString(xy));
-        asn1ev.add(new DERBitString(cbp));
+        // 被对称密钥加密后的 加密私钥d
+        asn1ev.add(new DERBitString(encEncPri));
 
         DERSequence derseq = new DERSequence(asn1ev);
         return Base64.toBase64String(derseq.getEncoded());
