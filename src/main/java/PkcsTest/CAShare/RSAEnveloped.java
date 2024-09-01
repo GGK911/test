@@ -1,12 +1,15 @@
-package PkcsTest.CA互认;
+package PkcsTest.CAShare;
 
+import cipherTest.DynamicEncryptUtil;
 import cn.com.mcsca.pki.core.common.MCSCAException;
 import lombok.SneakyThrows;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1OutputStream;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.DERNull;
 import org.bouncycastle.asn1.DEROctetString;
@@ -24,11 +27,6 @@ import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
-import org.bouncycastle.crypto.AsymmetricBlockCipher;
-import org.bouncycastle.crypto.encodings.PKCS1Encoding;
-import org.bouncycastle.crypto.engines.RSAEngine;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
-import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
@@ -77,6 +75,19 @@ public class RSAEnveloped {
         // 封装别人的信封
         byte[] envelopedRSAEncPri = envelopedRSAEncPri(encPriBytes, Base64.decode(signCert));
         System.out.println("envelopedRSAEncPri>> " + Hex.toHexString(envelopedRSAEncPri));
+
+        // 私钥数据 去掉pkcs8结构
+        ByteArrayInputStream bIn = new ByteArrayInputStream(encPriBytes);
+        ASN1InputStream dIn = new ASN1InputStream(bIn);
+        ASN1Sequence seq = (ASN1Sequence) dIn.readObject();
+        DEROctetString dos = (DEROctetString) seq.getObjectAt(2);
+        byte[] rsaPri = dos.getOctets();
+
+        // 对称加密
+        String alg = "desede";
+        SecretKey symKey = DynamicEncryptUtil.getKeyByAlg(alg);
+        byte[] encrypt = DynamicEncryptUtil.encrypt(rsaPri, symKey.getEncoded(), null, alg, false);
+
 
     }
 

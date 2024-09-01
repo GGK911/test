@@ -1,4 +1,5 @@
-package PkcsTest.CA互认;
+package PkcsTest.CAShare;
+
 
 import cfca.mobile.constant.CFCAPublicConstant;
 

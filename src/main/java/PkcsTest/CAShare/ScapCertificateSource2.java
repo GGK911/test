@@ -1,4 +1,4 @@
-package PkcsTest.CA互认;
+package PkcsTest.CAShare;
 
 import certTest.KeyUtil2;
 import cn.com.mcsca.pki.core.bouncycastle.crypto.CryptoException;

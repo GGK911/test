@@ -1,4 +1,4 @@
-package PkcsTest.CA互认;
+package PkcsTest.CAShare;
 
 import lombok.SneakyThrows;
 import org.bouncycastle.asn1.ASN1EncodableVector;
@@ -74,6 +74,7 @@ public class RSAEnveloped2 {
         byte[] rsaPri = dos.getOctets();
         String rsaPriHex = Hex.toHexString(rsaPri);
         System.out.println(String.format("%-16s", "rsaPriHex>> ") + rsaPriHex);
+
 
         // 对称加密
         // 创建 KeyGenerator 对象，用于生成对称密钥

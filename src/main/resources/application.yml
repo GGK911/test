@@ -1,89 +1,90 @@
 # 服务基础配置
 server:
-  #  port: 8080 # 服务端口
-  port: 8077 # 服务端口
+#  port: 8080 # 服务端口
+  port: 8001 # 服务端口
+#  port: 8077 # 服务端口
   servlet.context-path: /test # 服务前缀
-spring:
-  servlet:
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
-  datasource:
-    # 连接池配置：
-    druid:
-      driver-class-name: com.mysql.cj.jdbc.Driver
-        # docker mysqlmaster
-        #      url: jdbc:mysql://localhost:8088/mcs_epact2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong
-      #       docker 访问宿主机
-#      url: jdbc:mysql://host.docker.internal:3306/mshieldbox?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong
-      # 本机
-      url: jdbc:mysql://192.168.7.6:3306/mcs_epact2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong
-      username: root
-      password: 123456
-      initial-size: 5 # 初始化时建立物理连接的个数。默认0
-      max-active: 5 # 最大连接池数量，默认8
-      min-idle: 5 # 最小连接池数量
-      max-wait: 2000 # 获取连接时最大等待时间，单位毫秒。
-      keep-alive: true
-      async-init: true
-      time-between-eviction-runs-millis: 5000 # 周期性剔除长时间呆在池子里未被使用的空闲连接
-      min-evictable-idle-time-millis: 30000 # 设置连接最少存活时长和最大存活时长，超过上限才会被清理
-      max-evictable-idle-time-millis: 31000 # 设置连接最少存活时长和最大存活时长，超过上限才会被清理
-      validation-query: SELECT 1 from dual # 测试query
-      test-while-idle: true # 从连接池获取连接后，如果超过被空闲剔除周期，是否做一次连接有效性检查
-      test-on-borrow: true # 从连接池获取连接后，是否马上执行一次检查
-      test-on-return: false # 归还连接到连接池时是否马上做一次检查
-      pool-prepared-statements: false # 是否缓存preparedStatement，也就是PSCache。PSCache对支持游标的数据库性能提升巨大，比如说oracle。在mysql下建议关闭。
-      max-pool-prepared-statement-per-connection-size: -1 # 要启用PSCache，必须配置大于0，当大于0时，poolPreparedStatements自动触发修改为true。在Druid中，不会存在Oracle下PSCache占用内存过多的问题，可以把这个数值配置大一些，比如说100
-      # 启用Druid内置的Filter，会使用默认的配置。可自定义配置，见下方的各个filter节点。
-      filters: stat,wall
-      # StatViewServlet监控器。开启后，访问http://域名/druid/index.html
-      stat-view-servlet:
-        enabled: true # 开启 StatViewServlet，即开启监控功能
-        login-username: daniel # 访问监控页面时登录的账号
-        login-password: 1234 # 密码
-        url-pattern: /druid/* # Servlet的映射地址，不填写默认为"/druid/*"。如填写其它地址，访问监控页面时，要使用相应的地址
-        reset-enable: false # 是否允许重置数据（在页面的重置按钮）。（停用后，依然会有重置按钮，但重置后不会真的重置数据）
-        allow: 127.0.0.1 # 监控页面访问白名单。默认为127.0.0.1。与黑名单一样，支持子网掩码，如128.242.127.1/24。多个ip用英文逗号分隔
-        deny: 18.2.1.3 # 监控页面访问黑名单
-      # 配置 WebStatFilter（StatFilter监控器中的Web模板）
-      web-stat-filter:
-        enabled: true # 开启 WebStatFilter，即开启监控功能中的 Web 监控功能
-        url-pattern: /* # 映射地址，即统计指定地址的web请求
-        exclusions: '*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*' # 不统计的web请求，如下是不统计静态资源及druid监控页面本身的请求
-        session-stat-enable: true # 是否启用session统计
-        session-stat-max-count: 1 # session统计的最大个数，默认是1000。当统计超过这个数，只统计最新的
-        principal-session-name: userName # 所存用户信息的serssion参数名。Druid会依照此参数名读取相应session对应的用户名记录下来（在监控页面可看到）。如果指定参数不是基础数据类型，将会自动调用相应参数对象的toString方法来取值
-        principal-cookie-name: userName # 与上类似，但这是通过Cookie名取到用户信息
-        profile-enable: true # 监控单个url调用的sql列表（试了没生效，以后需要用再研究）
-      filter:
-        wall:
-          enabled: true  # 开启SQL防火墙功能
-          config:
-            select-allow: true # 允许执行Select查询操作
-            delete-allow: false # 不允许执行delete操作
-            create-table-allow: false # 不允许创建表
-        stat:
-          enabled: true
-          log-slow-sql: true # 显示SQL
-          slow-sql-millis: 2000 # 慢SQL时间
-  main:
-    allow-circular-references: true # 开启循环依赖
-  jpa:
-    open-in-view: true # 视图渲染时可以执行sql
-# reids相关配置
-  redis:
-    host: 192.168.7.151 # redis服务器地址
-    port: 6379 # 端口
-    password: # 密码，默认为空
-    database: 3 # 数据库索引（默认为0）
-    jedis:
-      pool:
-        max-wait: 10000 # 连接池对打阻塞等待时间（负表示没有限制）
-        max-active: 100 # 连接池最大连接数(负表示没有限制)
-        max-idle: 20 # 连接池中的最大空闲链接
-        min-idle: 0 # 连接池中的最小空闲链接
-    timeout: 3000 # 链接超时时间
+#spring:
+#  servlet:
+#    multipart:
+#      max-file-size: 100MB
+#      max-request-size: 100MB
+#  datasource:
+#    # 连接池配置：
+#    druid:
+#      driver-class-name: com.mysql.cj.jdbc.Driver
+#        # docker mysqlmaster
+#        #      url: jdbc:mysql://localhost:8088/mcs_epact2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong
+#      #       docker 访问宿主机
+##      url: jdbc:mysql://host.docker.internal:3306/mshieldbox?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong
+#      # 本机
+#      url: jdbc:mysql://192.168.7.6:3306/mcs_epact2?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong
+#      username: root
+#      password: 123456
+#      initial-size: 5 # 初始化时建立物理连接的个数。默认0
+#      max-active: 5 # 最大连接池数量，默认8
+#      min-idle: 5 # 最小连接池数量
+#      max-wait: 2000 # 获取连接时最大等待时间，单位毫秒。
+#      keep-alive: true
+#      async-init: true
+#      time-between-eviction-runs-millis: 5000 # 周期性剔除长时间呆在池子里未被使用的空闲连接
+#      min-evictable-idle-time-millis: 30000 # 设置连接最少存活时长和最大存活时长，超过上限才会被清理
+#      max-evictable-idle-time-millis: 31000 # 设置连接最少存活时长和最大存活时长，超过上限才会被清理
+#      validation-query: SELECT 1 from dual # 测试query
+#      test-while-idle: true # 从连接池获取连接后，如果超过被空闲剔除周期，是否做一次连接有效性检查
+#      test-on-borrow: true # 从连接池获取连接后，是否马上执行一次检查
+#      test-on-return: false # 归还连接到连接池时是否马上做一次检查
+#      pool-prepared-statements: false # 是否缓存preparedStatement，也就是PSCache。PSCache对支持游标的数据库性能提升巨大，比如说oracle。在mysql下建议关闭。
+#      max-pool-prepared-statement-per-connection-size: -1 # 要启用PSCache，必须配置大于0，当大于0时，poolPreparedStatements自动触发修改为true。在Druid中，不会存在Oracle下PSCache占用内存过多的问题，可以把这个数值配置大一些，比如说100
+#      # 启用Druid内置的Filter，会使用默认的配置。可自定义配置，见下方的各个filter节点。
+#      filters: stat,wall
+#      # StatViewServlet监控器。开启后，访问http://域名/druid/index.html
+#      stat-view-servlet:
+#        enabled: true # 开启 StatViewServlet，即开启监控功能
+#        login-username: daniel # 访问监控页面时登录的账号
+#        login-password: 1234 # 密码
+#        url-pattern: /druid/* # Servlet的映射地址，不填写默认为"/druid/*"。如填写其它地址，访问监控页面时，要使用相应的地址
+#        reset-enable: false # 是否允许重置数据（在页面的重置按钮）。（停用后，依然会有重置按钮，但重置后不会真的重置数据）
+#        allow: 127.0.0.1 # 监控页面访问白名单。默认为127.0.0.1。与黑名单一样，支持子网掩码，如128.242.127.1/24。多个ip用英文逗号分隔
+#        deny: 18.2.1.3 # 监控页面访问黑名单
+#      # 配置 WebStatFilter（StatFilter监控器中的Web模板）
+#      web-stat-filter:
+#        enabled: true # 开启 WebStatFilter，即开启监控功能中的 Web 监控功能
+#        url-pattern: /* # 映射地址，即统计指定地址的web请求
+#        exclusions: '*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*' # 不统计的web请求，如下是不统计静态资源及druid监控页面本身的请求
+#        session-stat-enable: true # 是否启用session统计
+#        session-stat-max-count: 1 # session统计的最大个数，默认是1000。当统计超过这个数，只统计最新的
+#        principal-session-name: userName # 所存用户信息的serssion参数名。Druid会依照此参数名读取相应session对应的用户名记录下来（在监控页面可看到）。如果指定参数不是基础数据类型，将会自动调用相应参数对象的toString方法来取值
+#        principal-cookie-name: userName # 与上类似，但这是通过Cookie名取到用户信息
+#        profile-enable: true # 监控单个url调用的sql列表（试了没生效，以后需要用再研究）
+#      filter:
+#        wall:
+#          enabled: true  # 开启SQL防火墙功能
+#          config:
+#            select-allow: true # 允许执行Select查询操作
+#            delete-allow: false # 不允许执行delete操作
+#            create-table-allow: false # 不允许创建表
+#        stat:
+#          enabled: true
+#          log-slow-sql: true # 显示SQL
+#          slow-sql-millis: 2000 # 慢SQL时间
+#  main:
+#    allow-circular-references: true # 开启循环依赖
+#  jpa:
+#    open-in-view: true # 视图渲染时可以执行sql
+## reids相关配置
+#  redis:
+#    host: 192.168.7.151 # redis服务器地址
+#    port: 6379 # 端口
+#    password: # 密码，默认为空
+#    database: 3 # 数据库索引（默认为0）
+#    jedis:
+#      pool:
+#        max-wait: 10000 # 连接池对打阻塞等待时间（负表示没有限制）
+#        max-active: 100 # 连接池最大连接数(负表示没有限制)
+#        max-idle: 20 # 连接池中的最大空闲链接
+#        min-idle: 0 # 连接池中的最小空闲链接
+#    timeout: 3000 # 链接超时时间
 # minio配置
 minio:
   endpoint: http://183.66.184.22:803 # Minio服务所在地址
@@ -99,4 +100,5 @@ minio:
 logging:
   config: classpath:logback-spring.xml
   file:
-    path: D:/logs/test
+#    path: D:/logs/test # win
+    path: /home/ggk911/application/test/logs # linux
