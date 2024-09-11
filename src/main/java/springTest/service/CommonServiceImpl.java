@@ -174,6 +174,26 @@ public class CommonServiceImpl {
         return sign;
     }
 
+    public Object createSignValueByHutoolJson(String priKey, String reqParam) {
+        log.info("开始生产签名值，priKey={},reqParam={}", priKey, reqParam);
+        log.info("签名私钥：{}", priKey);
+        com.alibaba.fastjson.JSONObject requestMap = com.alibaba.fastjson.JSONObject.parseObject(reqParam);
+        Map<String, Object> map = new HashMap<>();
+        map.put("reqHead", requestMap.get("reqHead"));
+        map.put("reqBody", requestMap.get("reqBody"));
+        String text = JSONUtil.toJsonStr(map);
+        String sign = "";
+        try {
+            log.info("签名原文：{}", text);
+            sign = new SecuEngine().SignDataBySM2(priKey, text.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            log.error("签名异常");
+            e.printStackTrace();
+        }
+        log.info("签名值...{}", sign);
+        return sign;
+    }
+
     /**
      * 验签
      *
@@ -310,4 +330,11 @@ public class CommonServiceImpl {
         return res;
     }
 
+    public Object createSignValue5(String mode, String priKey, String reqParam) {
+        if (mode.equalsIgnoreCase("mcsca")) {
+            return createSignValue(priKey, reqParam);
+        } else {
+            return createSignValueByHutoolJson(priKey, reqParam);
+        }
+    }
 }

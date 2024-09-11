@@ -57,11 +57,19 @@ public class CommonController {
                                   @RequestParam("reqParam") String reqParam) {
         return commonService.createSignValue(priKey, reqParam);
     }
+
     @PostMapping(value = "/common/signValue4")
     public Object createSignValue4(@RequestParam("priKey") String priKey,
-                                  @RequestParam("reqHead") String reqHead,
-                                  @RequestParam("reqBody") String reqBody) {
+                                   @RequestParam("reqHead") String reqHead,
+                                   @RequestParam("reqBody") String reqBody) {
         return commonService.createSignValue4(priKey, reqHead, reqBody);
+    }
+
+    @PostMapping(value = "/common/signValue5")
+    public Object createSignValue5(@RequestParam("mode") String mode,
+                                   @RequestParam("priKey") String priKey,
+                                   @RequestParam("reqParam") String reqParam) {
+        return commonService.createSignValue5(mode, priKey, reqParam);
     }
 
 
@@ -84,7 +92,7 @@ public class CommonController {
 
     @PostMapping(value = "/common/verifySignValue2")
     public Object verifySignValue(@RequestParam("pubKey") String pubKey,
-                                   @RequestParam("reqParam") String reqParam) {
+                                  @RequestParam("reqParam") String reqParam) {
         return commonService.verifySignValue(pubKey, reqParam);
     }
 
