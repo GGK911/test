@@ -171,7 +171,11 @@ public class CommonServiceImpl {
             e.printStackTrace();
         }
         log.info("签名值...{}", sign);
-        return sign;
+
+        JSONObject res = new JSONObject();
+        res.set("sign", sign);
+        res.set("oriText", text);
+        return res.toString();
     }
 
     public Object createSignValueByHutoolJson(String priKey, String reqParam) {
@@ -191,7 +195,10 @@ public class CommonServiceImpl {
             e.printStackTrace();
         }
         log.info("签名值...{}", sign);
-        return sign;
+        JSONObject res = new JSONObject();
+        res.set("sign", sign);
+        res.set("oriText", text);
+        return res.toString();
     }
 
     /**
