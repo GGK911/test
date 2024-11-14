@@ -52,7 +52,7 @@
 </div>
 <script>
     var stompClient = null;
-    var sockjs_url = '/stomp';
+    var sockjs_url = '/test/stomp';
 
     function connect() {
         var sockjs = new SockJS(sockjs_url);
@@ -64,7 +64,11 @@
             console.log('Connected: ' + frame);
             stompClient.subscribe('/topic/notify', function (greeting) {
                 console.log("返回内容：" + greeting.body);
-                print('服务器：', greeting.body);
+                print('服务器notify：', greeting.body);
+            });
+            stompClient.subscribe('/user/topic/reply', function (greeting) {
+                console.log("返回内容：" + greeting.body);
+                print('服务器reply：', greeting.body);
             });
         });
     }

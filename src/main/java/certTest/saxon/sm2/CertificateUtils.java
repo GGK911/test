@@ -40,6 +40,7 @@ import org.bouncycastle.pkcs.bc.BcPKCS12MacCalculatorBuilder;
 import org.bouncycastle.pkcs.bc.BcPKCS12PBEOutputEncryptorBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS12SafeBagBuilder;
 import org.bouncycastle.pkcs.jcajce.JcePKCSPBEInputDecryptorProviderBuilder;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
@@ -183,7 +184,9 @@ public class CertificateUtils {
         // 签发者公私钥
         KeyPair issuerKeyPair = Sm2Utils.generateKeyPair();
         PrivateKey issuerPrivateKey = issuerKeyPair.getPrivate();
+        System.out.println("PrivateKey>> " + Hex.toHexString(issuerPrivateKey.getEncoded()));
         PublicKey issuerPublicKey = issuerKeyPair.getPublic();
+        System.out.println("PublicKey>> " + Hex.toHexString(issuerPublicKey.getEncoded()));
 
         // 密钥用途KeyUsage.digitalSignature | KeyUsage.dataEncipherment
         KeyUsage keyUsage = new KeyUsage(KeyUsage.digitalSignature | KeyUsage.nonRepudiation);
