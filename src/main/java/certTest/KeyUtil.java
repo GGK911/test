@@ -6,7 +6,6 @@ import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -62,7 +61,11 @@ public class KeyUtil {
     }
 
     public static PrivateKey parsePriKey(String pri) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
-        String alg = getAlgFromPriKeyOrPubKey(Base64.decode(pri));
+        return parsePriKey(Base64.decode(pri));
+    }
+
+    public static PrivateKey parsePriKey(byte[] priBytes) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        String alg = getAlgFromPriKeyOrPubKey(priBytes);
         if (alg.isEmpty()) {
             throw new RuntimeException("识别算法异常");
         }
@@ -72,11 +75,15 @@ public class KeyUtil {
         } else {
             keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
         }
-        return keyFactory.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(pri)));
+        return keyFactory.generatePrivate(new PKCS8EncodedKeySpec(priBytes));
     }
 
     public static PublicKey parsePubKey(String pub) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
-        String alg = getAlgFromPriKeyOrPubKey(Base64.decode(pub));
+        return parsePubKey(Base64.decode(pub));
+    }
+
+    public static PublicKey parsePubKey(byte[] pubBytesa) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        String alg = getAlgFromPriKeyOrPubKey(pubBytesa);
         if (alg.isEmpty()) {
             throw new RuntimeException("识别算法异常");
         }
@@ -86,7 +93,7 @@ public class KeyUtil {
         } else {
             keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
         }
-        return keyFactory.generatePublic(new X509EncodedKeySpec(Base64.decode(pub)));
+        return keyFactory.generatePublic(new X509EncodedKeySpec(pubBytesa));
     }
 
     public static int getKeyLengthFromPublicKey(PublicKey publicKey) {

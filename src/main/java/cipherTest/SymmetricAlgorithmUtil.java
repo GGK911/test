@@ -1,5 +1,6 @@
 package cipherTest;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Hex;
 
@@ -15,7 +16,10 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
+import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 对称加密工具类
@@ -23,9 +27,40 @@ import java.util.Arrays;
  * @author TangHaoKai
  * @version V1.0 2024/8/30 9:38
  */
-public class DynamicEncryptUtil {
+public class SymmetricAlgorithmUtil {
 
     private static final Provider BC = new BouncyCastleProvider();
+    // 存储算法名称与对应的OID
+    private static final Map<String, ASN1ObjectIdentifier> algorithmOidMap = new HashMap<>();
+
+    static {
+        // 常见对称加密算法和OID的映射
+        algorithmOidMap.put("3DES", new ASN1ObjectIdentifier("1.2.840.113549.3.7")); // Triple DES
+        algorithmOidMap.put("DESEDE", new ASN1ObjectIdentifier("1.2.840.113549.3.7")); // Triple DES
+        algorithmOidMap.put("DES-EDE3-CBC", new ASN1ObjectIdentifier("1.2.840.113549.3.7"));
+        algorithmOidMap.put("AES-128-CBC", new ASN1ObjectIdentifier("2.16.840.1.101.3.4.1.2"));
+        algorithmOidMap.put("AES-192-CBC", new ASN1ObjectIdentifier("2.16.840.1.101.3.4.1.22"));
+        algorithmOidMap.put("AES-256-CBC", new ASN1ObjectIdentifier("2.16.840.1.101.3.4.1.42"));
+        algorithmOidMap.put("DES-CBC", new ASN1ObjectIdentifier("1.3.14.3.2.7"));
+        algorithmOidMap.put("RC2-CBC", new ASN1ObjectIdentifier("1.2.840.113549.3.2"));
+        algorithmOidMap.put("RC4", new ASN1ObjectIdentifier("1.2.840.113549.3.4"));
+        algorithmOidMap.put("SM4", new ASN1ObjectIdentifier("1.2.156.10197.1.104"));
+        algorithmOidMap.put("CAMELLIA-128-CBC", new ASN1ObjectIdentifier("1.2.392.200011.61.1.1.1.2"));
+        algorithmOidMap.put("CAMELLIA-192-CBC", new ASN1ObjectIdentifier("1.2.392.200011.61.1.1.1.22"));
+        algorithmOidMap.put("CAMELLIA-256-CBC", new ASN1ObjectIdentifier("1.2.392.200011.61.1.1.1.42"));
+        algorithmOidMap.put("IDEA", new ASN1ObjectIdentifier("1.3.6.1.4.1.188.7.1.1.2"));
+        algorithmOidMap.put("SEED", new ASN1ObjectIdentifier("1.2.410.200004.1.4"));
+    }
+
+    /**
+     * 根据算法名称获取对应的ASN1ObjectIdentifier对象
+     *
+     * @param algorithmName 算法名称
+     * @return 对应的ASN1ObjectIdentifier，如果未找到则返回null
+     */
+    public static ASN1ObjectIdentifier getOIDByAlgorithmName(String algorithmName) {
+        return algorithmOidMap.get(algorithmName.toUpperCase());
+    }
 
     /**
      * 通过算法生成密钥
@@ -49,6 +84,28 @@ public class DynamicEncryptUtil {
     }
 
     /**
+     * 生产加密算法的向量
+     *
+     * @param alg 加密算法
+     * @return 向量
+     */
+    public static byte[] getIVByAlg(String alg) {
+        int ivLength = 0;
+        if ("sm4".equalsIgnoreCase(alg) || "aes".equalsIgnoreCase(alg)) {
+            ivLength = 16;
+        } else if ("desede".equalsIgnoreCase(alg)) {
+            ivLength = 8;
+        } else {
+            throw new RuntimeException("未知加密算法，生成IV是失败");
+        }
+        // 生成随机的初始化向量 (IV) 8位
+        byte[] ivBytes = new byte[ivLength];
+        SecureRandom random = new SecureRandom();
+        random.nextBytes(ivBytes);
+        return ivBytes;
+    }
+
+    /**
      * 对称加密
      *
      * @param indata    明文
@@ -59,10 +116,12 @@ public class DynamicEncryptUtil {
      * @return 密文
      */
     public static byte[] encrypt(byte[] indata, byte[] key, byte[] iv, String alg, boolean isPadding) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+
         // 自动选择算法
         if (alg == null || alg.isEmpty()) {
             alg = selectAlgorithmByKeyLength(key.length);
         } else {
+            alg = alg.toUpperCase();
             // 检查算法和密钥长度的匹配
             checkKeyLengthForAlgorithm(key.length, alg);
         }
@@ -120,7 +179,7 @@ public class DynamicEncryptUtil {
                     throw new IllegalArgumentException("AES requires a 16, 24, or 32-byte key.");
                 }
                 break;
-            case "DESede":
+            case "DESEDE":
                 if (keyLength != 14 && keyLength != 24) {
                     throw new IllegalArgumentException("DESede requires a 14-byte (112-bit) or 24-byte (168-bit) key.");
                 }

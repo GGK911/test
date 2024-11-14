@@ -57,6 +57,11 @@ public class Pkcs7Test2 {
         boolean p7MessageVerifyAttach = SignatureUtil.P7MessageVerifyAttach(p7MessageSignAttach);
         System.out.println("P7嵌入>> " + p7MessageVerifyAttach);
 
+        // 嵌入验证
+        boolean p7MessageVerifyAttach2 = SignatureUtil.P7MessageVerifyAttach("MIIELgYKKoEcz1UGAQQCAqCCBB4wggQaAgEBMQwwCgYIKoEcz1UBgxEwOgYKKoEcz1UGAQQCAaAsBCp7CiAgInNob3dUZXh0IiA6ICIiLAogICJzaG93RmxhZyIgOiAiMDAiCn2gggMbMIIDFzCCArygAwIBAgIQMcDt4vSYa6bd7qbdBLKcNTAMBggqgRzPVQGDdQUAMC0xCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVNQ1NDQTEOMAwGA1UEAwwFTUNTQ0EwHhcNMjQwOTA0MDYwNDM5WhcNMjQxMDA0MDYwNDM5WjB7MQswCQYDVQQGEwJDTjEOMAwGA1UECgwFTUNTQ0ExEDAOBgNVBAsMB2xvY2FsUkExGzAZBgNVBAUMEjM0MTEyNjE5NzcwOTIxODM2NjEtMCsGA1UEAwwkMTc5NzgzMjMxMzk4NDI4NjcyMEDlhajmuKDpgZNAMDFAMDExMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAENMzT3V1Vs/3Q48XMChAvvBdbi/vFsaxUwMZsgmvNfQLZoefMYZ4BNwrdDE+CsaYy35Po/KoWjYUsmcXbBkymKaOCAWwwggFoMAsGA1UdDwQEAwIE8DAfBgNVHSMEGDAWgBQwiP4/YqAl9PMrPaltpqBMC0zKtTAdBgNVHQ4EFgQULI+l9FJ8ku1qjWB74SgZ0aBZlmkwgboGA1UdHwSBsjCBrzAuoCygKoYoaHR0cDovL3d3dy5tY3NjYS5jb20uY24vc20yL2NybC9jcmwwLmNybDB9oHugeYZ3bGRhcDovL3d3dy5tY3NjYS5jb20uY246Mzg5L0NOPWNybDAsT1U9Q1JMLE89TUNTQ0EsQz1DTj9jZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnQwXAYIKwYBBQUHAQEEUDBOMCgGCCsGAQUFBzAChhxodHRwOi8vMTI3LjAuMC4xL2NhaXNzdWUuaHRtMCIGCCsGAQUFBzABhhZodHRwOi8vMTI3LjAuMC4xOjIwNDQzMAwGCCqBHM9VAYN1BQADRwAwRAIgfQ25LfnPJvY330oQQMrJjDWA1keQhEi0E6/JNm7yaPECIDjTeeook7aco6oc0Nek2VwHWWNgfZcgYV91ZDQ3medQMYGrMIGoAgEBMEEwLTELMAkGA1UEBhMCQ04xDjAMBgNVBAoMBU1DU0NBMQ4wDAYDVQQDDAVNQ1NDQQIQMcDt4vSYa6bd7qbdBLKcNTAKBggqgRzPVQGDETALBgkqgRzPVQGCLQEERzBFAiEAw+nNj+t0O8Z37Gv2l3vb26WIYUjRRmq2OLTbdYFnix8CIHqqoddfP9EPhFSphoqTGZqxav7e8CSi0N7oZoRmEWTk".getBytes(StandardCharsets.UTF_8));
+        System.out.println("P7嵌入2>> " + p7MessageVerifyAttach2);
+
+
         // 对称 DESede
         // 使用 Triple DES 密钥进行加密和解密
         KeyGenerator keyGen = KeyGenerator.getInstance("DESede");
@@ -94,6 +99,10 @@ public class Pkcs7Test2 {
         sm2PubCertBase64 = "MIIBRTCB7aADAgECAgcEYtU35+9OMAoGCCqBHM9VAYN1MCoxCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVDaGluYTELMAkGA1UECwwCQ0EwHhcNMjMwNjI0MDkyMzA0WhcNMjQwNjI0MDkyNDA0WjAqMQswCQYDVQQGEwJDTjEOMAwGA1UECgwFQ2hpbmExCzAJBgNVBAsMAkNBMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAE9vz6u7MKW3YfvpQiGRgA8xuU3iQrPKSR9hKmv7jL1BZUY62gOtH4ERbDD4iS5SNtho34w+BIJpJyhkLPOhxYzDAKBggqgRzPVQGDdQNHADBEAiB6TsUAmx/8ABnq05BDMpsf9sIBQYhvsWLaj1EervwjcgIgCSAxYChHBLt8rHfvokW/PgJWcixSrfeTjc3ib/rKYP0=";
         sm2PubCertBase64 = "MIICsTCCAlSgAwIBAgIQcXOk5/ReSk50YPYOOK5y0zAMBggqgRzPVQGDdQUAMC0xCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVNQ1NDQTEOMAwGA1UEAwwFTUNTQ0EwHhcNMjQwNjI1MDIwNTI1WhcNMjQwNzI1MDIwNTI1WjBxMQswCQYDVQQGEwJDTjEOMAwGA1UECgwFTUNTQ0ExEDAOBgNVBAsMB2xvY2FsUkExCzAJBgNVBAUMAjExMTMwMQYDVQQDDCoxNDgzOTg3NzQ2MjIwNTAzMDQwQOa1i+ivleWFrOWPuG9uZUAwMkAwMDIwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAATB6pJ1ZS5bT5bXKRvk/0d4+lKG4052YMxthW7dPQCtyV1+1is3q9ICz6j2bRB6gB6pkkwlwoW0Q3HEPcyGc0bwo4IBDjCCAQowHwYDVR0jBBgwFoAUMIj+P2KgJfTzKz2pbaagTAtMyrUwHQYDVR0OBBYEFDdYtWtClmJCPy8G48lZFh9aL7V8MAsGA1UdDwQEAwIE8DCBugYDVR0fBIGyMIGvMC6gLKAqhihodHRwOi8vd3d3Lm1jc2NhLmNvbS5jbi9zbTIvY3JsL2NybDEuY3JsMH2ge6B5hndsZGFwOi8vd3d3Lm1jc2NhLmNvbS5jbjozODkvQ049Y3JsMSxPVT1DUkwsTz1NQ1NDQSxDPUNOP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q/YmFzZT9vYmplY3RjbGFzcz1jUkxEaXN0cmlidXRpb25Qb2ludDAMBggqgRzPVQGDdQUAA0kAMEYCIQDGTFECy7oBe4rNDd0DUbtywa8exNTeFZPGmeReXcoYjgIhAIpOz5pH3lKi0WS8hsfnfvlndwAIMyqQ05PYp9tegY3z";
 
+        sm2PubBase64 = "MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEW3VeY0oztsoS7NoA81DnenrOn4sELm9bIEmAwHgPtdlojeH1RPtMRc4loRqR+OaX8qnl91p0hIlKIHxPJlKl9w==";
+        sm2PriBase64 = "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgvI2vl1x6bBCk1RDGmZC/kMzBQSN8jcmzlYcySJYxAsSgCgYIKoEcz1UBgi2hRANCAARbdV5jSjO2yhLs2gDzUOd6es6fiwQub1sgSYDAeA+12WiN4fVE+0xFziWhGpH45pfyqeX3WnSEiUogfE8mUqX3";
+        sm2PubCertBase64 = "MIICjDCCAjGgAwIBAgIQOE2qoBJ32jboZ0ey6nQ0njAMBggqgRzPVQGDdQUAMC0xCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVNQ1NDQTEOMAwGA1UEAwwFTUNTQ0EwHhcNMjQwOTE5MTcwMTAxWhcNMjQwOTI4MTcwMTAxWjBAMQswCQYDVQQGEwJDTjELMAkGA1UEKgwCQ1ExJDAiBgNVBAMMG+a1i+ivlUFCQ0QxMjM0NTY3MTcyNzE0NjgyMTBZMBMGByqGSM49AgEGCCqBHM9VAYItA0IABFt1XmNKM7bKEuzaAPNQ53p6zp+LBC5vWyBJgMB4D7XZaI3h9UT7TEXOJaEakfjml/Kp5fdadISJSiB8TyZSpfejggEcMIIBGDALBgNVHQ8EBAMCBPAwDAYDVR0TBAUwAwEBADAfBgNVHSMEGDAWgBTxIgpnmI3147KqwxdrwEIfvku9djAdBgNVHQ4EFgQUvh8mW9Z9VI4N9B09eUYlXw8L3U8wgboGA1UdHwSBsjCBrzAuoCygKoYoaHR0cDovL3d3dy5tY3NjYS5jb20uY24vc20yL2NybC9jcmwwLmNybDB9oHugeYZ3bGRhcDovL3d3dy5tY3NjYS5jb20uY246Mzg5L0NOPWNybDAsT1U9Q1JMLE89TUNTQ0EsQz1DTj9jZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnQwDAYIKoEcz1UBg3UFAANHADBEAiAPhG7CgOZaVYHGBk2Adbfp3BA2Adl+VaqwfyfmK+3U+QIgN3/3mTMO3AqLNl4L/yUdBAqJ5I6BmHD1gOGiruZ9Bak=";
+
         X509Certificate x509Certificate1 = new X509Certificate(Base64.decode(sm2PubCertBase64));
         // 私钥
         KeyFactory keyFactory = KeyFactory.getInstance("EC", BC);
@@ -109,10 +118,13 @@ public class Pkcs7Test2 {
         System.out.println("P7分离>> " + p7MessageVerifyDetach);
 
         // 嵌入
-        // byte[] p7MessageSignAttach = SignatureUtil.P7MessageSignAttach("SM3withSM2", M.getBytes(), privateKey, x509Certificate1);
-        // boolean p7MessageVerifyAttach = SignatureUtil.P7MessageVerifyAttach(p7MessageSignAttach);
-        // System.out.println("P7嵌入>> " + p7MessageVerifyAttach);
-
+        byte[] message = M.getBytes();
+        message = "C11000055538611b8becc4f4f6a8a0b1de1d7a15e9d".getBytes(StandardCharsets.UTF_8);
+        byte[] p7MessageSignAttach = SignatureUtil.P7MessageSignAttach("SM3withSM2", message, privateKey, x509Certificate1);
+        String p7aBase64 = Base64.toBase64String(p7MessageSignAttach);
+        System.out.println(String.format("%-16s", "p7aBase64>> ") + p7aBase64);
+        boolean p7MessageVerifyAttach = SignatureUtil.P7MessageVerifyAttach(p7MessageSignAttach);
+        System.out.println("P7嵌入>> " + p7MessageVerifyAttach);
 
     }
 

@@ -35,9 +35,15 @@ public class CreateCSRTest extends MiniCATest {
     @SneakyThrows
     public void createRSACSR() {
         String subjectParam = "CN=ggk911,C=MINICA";
+        // subjectParam = "CN=*.msca.org.cn,O=MSCA,L=Chongqing,S=Chongqing,C=CN";
+
         PEMKeyPair pemKeyPair = (PEMKeyPair) PemUtil.objectFromFile(Paths.get(ROOT, "priKey.key").toAbsolutePath().toString());
         PrivateKey privateKey = rsaKeyFactory.generatePrivate(new PKCS8EncodedKeySpec(pemKeyPair.getPrivateKeyInfo().getEncoded()));
+        // privateKey = rsaKeyFactory.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode("MIIEwAIBADANBgkqhkiG9w0BAQEFAASCBKowggSmAgEAAoIBAQDsyoL17YEHXBCEx7r4iZaEQ/Dv1KJUnqeyw68RhvYYsC2ygiA3LXQZaJHFNeB8cU5de+7N3dPdJZgf0poHHfc0H7RTDDDZ8c/GPfA/v+zakAKL1GGPK+Bhbe0hqHVfVIVdl7yfzwvCXGbn2FBOMG8wMQxSXFV9/iIeqtHkfEZ9fgux4VCkh7dfK1nKikH719yWV3k4+f6qteHj/EeeuTlw59M7A8P+Ut7ucyTQ4pmMc2Tm9g9Cj0RiseK4xzQFZDlGmGRLmBFFsMr9cIZt6PY5kznfti2DoXxL0G+97+jOpkKWFPMb+C8styfHTkJcxJjwrnDGiiwR7CSarIUBsMcdAgMBAAECggEBAOmatG6IvCWVlxpXrUZq/ppIKNeCcA+JYipDUWC6Q+mBTePw6nVlG0fB2SW1DF3YrpYdoS9qLAzdfOHQNHLXBj1fFdhki4FIRVHvYyiRYMsTDeADS6gigj+8Yhg1iG3fBZ+bBdSnP5Ok80TBLCCnOdpSWTSbsSAWanTU0zNVw3kize+59cXjT6lzV9MN9sxDdBdxsF7lStsH3prtQ+EOPlV15OboRGt+i4kDJDOCgJwPF+TyjlQQP2AFtE5wWtcCsF+Qe38aTkrRT+mIGRRD/TapMLI23z62l5G7btkqpRB/TvsSd4qMQfjsKykzvL5Y75gFxiHYsoxUmQkIgU31HCUCgYEA8qn5Fh8QXds4T1H1v3JNlNht5HoJU7Vjvuqui6L1IH/YsaUr00vBaAUFuJhOZ9tFbsya6aS49pBtjSvufxoSjfGivZL874a3mK5sTUyiEggBqZse3mFWJT09ByAR4Wl2MtxuOeXfUX30rQxvQXh75mBpp7EPzki+hDTYwiaHJLcCgYEA+c3pwELfFfa2/YmsjGlLDcycYkOgosjebyiw8Zjz6x+tVapFEOqvn6wk2DynhBEaXrpfYOc/XO8BJwWUigxrDEld5mw+ibKW+Y7e9kniknmxXl1zSrmI++qZmVbxdQZTOkStubG+lnqJnvk6tIdnYTZY9l2xDZcqXdAMxrsIpssCgYEAhn1RwcLhrULsSHniO4K8ILx622APf0dOyucCaf2c4bA5hutGCMs5m878xrwS6FiMeMYJLWjP4kdVkCJDAkqO8gBz86Fdcds2Mfapq4XHZTruwPNp/lHwDp+MDUDm6AktKy8kIA6Y4G9wheAYYS7HbH0O0ZO+cNO8U0V+xMvZpq0CgYEAxvrRZjceEhW6f0xp6FJ62VwReWhbDS+plqu3/koSiUhrPqBpcWcvS6XIl4IBAX7KHYihLsQkwbcTmOyl/CyWHGxYYpH4YqCiB9lZGp+R3ZEXyo3vpycQyXF+thj+LnRCWViZdR/zK1QiSUJHE8QDgfjTdjL9NFEkCyQM+UPESW8CgYEAuBdo/pER7VOYhW8wSnEsPHjg0xDmX1V0G7oumqa4DN7no7mH4xBQdE1jBFWhykAneBxczikL0Q88e76vyqItvok/OOYoJc+aENvhzWcS0ebruz/muT1UDA3uUiWF2F+NmUNEw7XumAlPGEDil419dHOMbhV07yTQugCcEex6e7U=")));
+
         PublicKey publicKey = rsaKeyFactory.generatePublic(new X509EncodedKeySpec(pemKeyPair.getPublicKeyInfo().getEncoded()));
+        // publicKey = rsaKeyFactory.generatePublic(new X509EncodedKeySpec(Base64.decode("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7MqC9e2BB1wQhMe6+ImWhEPw79SiVJ6nssOvEYb2GLAtsoIgNy10GWiRxTXgfHFOXXvuzd3T3SWYH9KaBx33NB+0Uwww2fHPxj3wP7/s2pACi9RhjyvgYW3tIah1X1SFXZe8n88Lwlxm59hQTjBvMDEMUlxVff4iHqrR5HxGfX4LseFQpIe3XytZyopB+9fclld5OPn+qrXh4/xHnrk5cOfTOwPD/lLe7nMk0OKZjHNk5vYPQo9EYrHiuMc0BWQ5RphkS5gRRbDK/XCGbej2OZM537Ytg6F8S9Bvve/ozqZClhTzG/gvLLcnx05CXMSY8K5wxoosEewkmqyFAbDHHQIDAQAB")));
+
         X500Principal subject = new X500Principal(subjectParam);
         ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA")
                 .setProvider(BC)
@@ -63,6 +69,7 @@ public class CreateCSRTest extends MiniCATest {
     @SneakyThrows
     public void createSM2CSR() {
         String subjectParam = "CN=DLYD,C=MSCA";
+        subjectParam = "CN=10.255.7.6,C=CN";
         PEMKeyPair pemKeyPair = (PEMKeyPair) PemUtil.objectFromFile(Paths.get(ROOT, "sm2PriKey.key").toAbsolutePath().toString());
         PrivateKey privateKey = sm2KeyFactory.generatePrivate(new PKCS8EncodedKeySpec(pemKeyPair.getPrivateKeyInfo().getEncoded()));
         PublicKey publicKey = sm2KeyFactory.generatePublic(new X509EncodedKeySpec(pemKeyPair.getPublicKeyInfo().getEncoded()));

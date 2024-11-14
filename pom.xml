@@ -110,6 +110,8 @@
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
+            <!--<version>4.6.4</version>-->
+            <!--<version>5.8.10</version>-->
             <version>5.8.22</version>
         </dependency>
         <!--itextpdf-->
@@ -154,7 +156,6 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.10</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
         <dependency>
@@ -214,6 +215,20 @@
             <version>1.0</version>
             <scope>system</scope>
             <systemPath>${project.basedir}\src\main\java\PkcsTest\CAShare\SCAP-v5.2.0.1.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.jit</groupId>
+            <artifactId>ca</artifactId>
+            <version>5.0.6.8</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}\src\main\resources\jar\ca-5.0.6.8.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.jit</groupId>
+            <artifactId>km</artifactId>
+            <version>5.0.6.8</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}\src\main\resources\jar\km-5.0.6.8.jar</systemPath>
         </dependency>
 
         <!-- poi Start -->
@@ -535,6 +550,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!--此依赖是OFD添加附件，需要的依赖，非必须-->
+        <!--<dependency>-->
+        <!--  <groupId>net.lingala.zip4j</groupId>-->
+        <!--  <artifactId>zip4j</artifactId>-->
+        <!--  <version>2.11.5</version>-->
+        <!--</dependency>-->
+
         <dependency>
             <groupId>ws.schild</groupId>
             <artifactId>jave-all-deps</artifactId>
@@ -642,6 +664,33 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!--CA互认-->
+        <dependency>
+            <groupId>com.cebpubservice.cashare</groupId>
+            <artifactId>cebpubservice-java-sdk-Core</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cebpubservice.cashare</groupId>
+            <artifactId>cebpubservice-CAShare-java-sdk-ComponentsCatalog</artifactId>
+            <version>1.0.4</version>
+        </dependency>
+
+        <!--<dependency>-->
+        <!--    <groupId>org.springframework.cloud</groupId>-->
+        <!--    <artifactId>spring-cloud-dependencies</artifactId>-->
+        <!--    <version>2021.0.9</version>-->
+        <!--    <type>pom</type>-->
+        <!--    <scope>import</scope>-->
+        <!--</dependency>-->
+
+        <!--knife4j文档-->
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-openapi2-spring-boot-starter</artifactId>
+            <version>4.4.0</version>
         </dependency>
 
 

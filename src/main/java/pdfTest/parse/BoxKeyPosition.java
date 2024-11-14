@@ -20,8 +20,8 @@ public class BoxKeyPosition extends PDFTextStripper {
 
     private char[] key;
     private byte[] src;
-    private List<float[]> list = new ArrayList<float[]>();
-    private List<float[]> pagelist = new ArrayList<float[]>();
+    private List<float[]> list = new ArrayList<>();
+    private List<float[]> pagelist = new ArrayList<>();
 
     public BoxKeyPosition(String keyWords, byte[] src) throws IOException {
         super();

@@ -1,16 +1,20 @@
 package PkcsTest.CAShare;
 
-import cipherTest.DynamicEncryptUtil;
+import certTest.CertUtil;
+import certTest.KeyUtil;
+import cipherTest.SymmetricAlgorithmUtil;
 import cn.com.mcsca.pki.core.common.MCSCAException;
 import lombok.SneakyThrows;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1OutputStream;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
+import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.DERNull;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
@@ -27,6 +31,7 @@ import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
+import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
@@ -42,7 +47,9 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.KeyFactory;
+import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.PublicKey;
 import java.security.SecureRandom;
@@ -76,6 +83,8 @@ public class RSAEnveloped {
         byte[] envelopedRSAEncPri = envelopedRSAEncPri(encPriBytes, Base64.decode(signCert));
         System.out.println("envelopedRSAEncPri>> " + Hex.toHexString(envelopedRSAEncPri));
 
+        System.out.println("*********************************************************************************************");
+
         // 私钥数据 去掉pkcs8结构
         ByteArrayInputStream bIn = new ByteArrayInputStream(encPriBytes);
         ASN1InputStream dIn = new ASN1InputStream(bIn);
@@ -83,10 +92,58 @@ public class RSAEnveloped {
         DEROctetString dos = (DEROctetString) seq.getObjectAt(2);
         byte[] rsaPri = dos.getOctets();
 
-        // 对称加密
+        // 对称加密私钥
         String alg = "desede";
-        SecretKey symKey = DynamicEncryptUtil.getKeyByAlg(alg);
-        byte[] encrypt = DynamicEncryptUtil.encrypt(rsaPri, symKey.getEncoded(), null, alg, false);
+        byte[] iv = null;
+        SecretKey symKey = SymmetricAlgorithmUtil.getKeyByAlg(alg);
+        byte[] priEncryptBytes = SymmetricAlgorithmUtil.encrypt(rsaPri, symKey.getEncoded(), null, alg, false);
+
+        PublicKey publicKey = CertUtil.getPubKeyFromCert(Base64.decode(signCert));
+        BCRSAPublicKey rsaPublicKey = (BCRSAPublicKey) publicKey;
+        BigInteger publicExponent = rsaPublicKey.getPublicExponent();
+
+        PrivateKey privateKey = KeyUtil.parsePriKey(encPriBytes);
+        BCRSAPrivateKey bcrsaPrivateKey = (BCRSAPrivateKey) privateKey;
+        BigInteger priMoudlus = bcrsaPrivateKey.getModulus();
+
+
+        Cipher cipher = Cipher.getInstance("RSA/None/PKCS1Padding", BC); //RSA_PKCS1_PADDING
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+        byte[] rsaEncBytes = cipher.doFinal(symKey.getEncoded());
+
+        // 密钥数据
+        ASN1EncodableVector asnPubkey = new ASN1EncodableVector();
+        asnPubkey.add(new ASN1Integer(priMoudlus));
+        asnPubkey.add(new ASN1Integer(publicExponent));
+        DERSequence derPubkey = new DERSequence(asnPubkey);
+
+        //第三部分数据 包含 RSA oid和公钥
+        ASN1EncodableVector asnEncRsaPub = new ASN1EncodableVector();
+        ASN1ObjectIdentifier rsaAlgOID = new ASN1ObjectIdentifier("1.2.840.113549.1.1.1");
+        AlgorithmIdentifier algID = new AlgorithmIdentifier(rsaAlgOID, DERNull.INSTANCE);
+        asnEncRsaPub.add(algID);
+        asnEncRsaPub.add(new DERBitString(derPubkey.getEncoded()));
+        DERSequence derEncRsaPub = new DERSequence(asnEncRsaPub);
+
+        //第一部分数据包含 3desc oid
+        ASN1ObjectIdentifier desAlgOID = new ASN1ObjectIdentifier("1.2.840.113549.3.7");
+        AlgorithmIdentifier desalgID;
+        if (iv != null) {
+            desalgID = new AlgorithmIdentifier(desAlgOID, new DEROctetString(iv));
+        } else {
+            desalgID = new AlgorithmIdentifier(desAlgOID, DERNull.INSTANCE);
+        }
+
+        ASN1EncodableVector asnEncRsa = new ASN1EncodableVector();
+        asnEncRsa.add(desalgID);
+        asnEncRsa.add(new DERBitString(rsaEncBytes));
+        asnEncRsa.add(ASN1Sequence.fromByteArray(derEncRsaPub.getEncoded()));
+        asnEncRsa.add(new DERBitString(priEncryptBytes));
+        DERSequence derseq = new DERSequence(asnEncRsa);
+
+        String envelopedHex = Hex.toHexString(derseq.getEncoded());
+        System.out.println(String.format("%-16s", "envelopedHex>> ") + envelopedHex);
+
 
 
     }

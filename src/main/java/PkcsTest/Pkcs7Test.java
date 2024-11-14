@@ -419,11 +419,15 @@ public class Pkcs7Test {
     @Test
     @SneakyThrows
     public void pkiCoreSM2P7Test() {
+
+        sm2CertBase64 = "MIIDCjCCAq6gAwIBAgIQXBU7etWKyU0NlUBhqkHsoDAMBggqgRzPVQGDdQUAMC0xCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVNQ1NDQTEOMAwGA1UEAwwFTUNTQ0EwHhcNMjQxMDA3MTcwMTAxWhcNMjQxMDI4MTcwMTAxWjBAMQswCQYDVQQGEwJDTjELMAkGA1UEKgwCQ1ExJDAiBgNVBAMMG+a1i+ivlUFCQ0QxMjM0NTY3MTcyODQ1NzkyMDBZMBMGByqGSM49AgEGCCqBHM9VAYItA0IABFt1XmNKM7bKEuzaAPNQ53p6zp+LBC5vWyBJgMB4D7XZaI3h9UT7TEXOJaEakfjml/Kp5fdadISJSiB8TyZSpfejggGZMIIBlTALBgNVHQ8EBAMCBPAwDAYDVR0TBAUwAwEBADAfBgNVHSMEGDAWgBTxIgpnmI3147KqwxdrwEIfvku9djAdBgNVHQ4EFgQUvh8mW9Z9VI4N9B09eUYlXw8L3U8wgboGA1UdHwSBsjCBrzAuoCygKoYoaHR0cDovL3d3dy5tY3NjYS5jb20uY24vc20yL2NybC9jcmwwLmNybDB9oHugeYZ3bGRhcDovL3d3dy5tY3NjYS5jb20uY246Mzg5L0NOPWNybDAsT1U9Q1JMLE89TUNTQ0EsQz1DTj9jZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnQwewYFKlYVAQEEcgxwMDQzNjMwMzQ4MjA5NjI2MTY5NjQ3NTJlNjM2ZjZkODIwYzYyNjE2OTY2NzU2MjYxNmYyZTYzNmY2ZDgyMGM3Nzc3NzcyZTYyNjE2OTY0NzUyZTYzNmU4MjBiNjE3MDZmNmM2YzZmMmU2MTc1NzQ2ZjAMBggqgRzPVQGDdQUAA0gAMEUCIF1q/ixF7l6MystJO4dj98q/4hebUqS8HZnV88P5R9vjAiEAn9Ys/eo37zKAJv0NZoSBvoy7uWS1X6vNq5gpZHK1064=";
+        sm2PriBase64 = "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgvI2vl1x6bBCk1RDGmZC/kMzBQSN8jcmzlYcySJYxAsSgCgYIKoEcz1UBgi2hRANCAARbdV5jSjO2yhLs2gDzUOd6es6fiwQub1sgSYDAeA+12WiN4fVE+0xFziWhGpH45pfyqeX3WnSEiUogfE8mUqX3";
+
         cn.com.mcsca.pki.core.x509.X509Certificate x509Certificate = new cn.com.mcsca.pki.core.x509.X509Certificate(org.bouncycastle.util.encoders.Base64.decode(sm2CertBase64));
         KeyFactory kf = KeyFactory.getInstance("EC", BC);
         PrivateKey privateKey = kf.generatePrivate(new PKCS8EncodedKeySpec(org.bouncycastle.util.encoders.Base64.decode(sm2PriBase64)));
 
-        String M = "分离嵌入GGK911";
+        String M = "C1100005553518a64c9454d4cf590230962820e78c7";
 
         // 分离
         byte[] p7MessageSignDetach = SignatureUtil.P7MessageSignDetach("SM3withSM2", M.getBytes(StandardCharsets.UTF_8), privateKey, x509Certificate);

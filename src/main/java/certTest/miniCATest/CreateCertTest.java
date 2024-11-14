@@ -1,9 +1,15 @@
 package certTest.miniCATest;
 
 import certTest.createCert.PemUtil;
+import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DateUtil;
 import lombok.SneakyThrows;
 import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -48,8 +54,10 @@ public class CreateCertTest extends MiniCATest {
         X509v3CertificateBuilder v3CertGen = new JcaX509v3CertificateBuilder(
                 rootCert.getSubject(),
                 snAllocator,
-                new Date(System.currentTimeMillis()),
-                new Date(System.currentTimeMillis() + (5L * 365 * 24 * 60 * 60 * 1000)),
+                DateUtil.offset(DateUtil.date(), DateField.YEAR, -2),
+                // new Date(System.currentTimeMillis()),
+                DateUtil.offset(DateUtil.date(), DateField.YEAR, -1),
+                // new Date(System.currentTimeMillis() + (5L * 365 * 24 * 60 * 60 * 1000)),
                 certReq.getSubject(),
                 certReq.getSubjectPublicKeyInfo());
         // 扩展工具
@@ -132,6 +140,24 @@ public class CreateCertTest extends MiniCATest {
         //         Extension.extendedKeyUsage,
         //         true,
         //         new ExtendedKeyUsage(KeyPurposeId.id_kp_timeStamping));
+        // 使用者可选名称
+        GeneralName[] subjectAltNames = new GeneralName[]{
+                new GeneralName(GeneralName.dNSName, "www.msca.com"),
+                new GeneralName(GeneralName.dNSName, "mcsca.com"),
+                new GeneralName(GeneralName.dNSName, "msca.com"),
+                new GeneralName(GeneralName.dNSName, "*.msca.com"),
+                new GeneralName(GeneralName.dNSName, "*.mcsca.com"),
+                new GeneralName(GeneralName.dNSName, "www.mcsca.com")
+        };
+        GeneralNames asn1Encodable = new GeneralNames(subjectAltNames);
+        v3CertGen.addExtension(
+                Extension.subjectAlternativeName,
+                false,
+                asn1Encodable
+        );
+
+
+
         ContentSigner signer = new JcaContentSignerBuilder("SM3withSM2").setProvider(BC).build(rootSM2PrivateKey);
         X509CertificateHolder certificateHolder = v3CertGen.build(signer);
         X509Certificate certificate = new JcaX509CertificateConverter().setProvider(BC).getCertificate(certificateHolder);

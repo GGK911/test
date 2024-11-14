@@ -2,6 +2,7 @@ package cipherTest;
 
 import cn.com.mcsca.pki.core.bouncycastle.jce.provider.BouncyCastleProvider;
 import cn.com.mcsca.pki.core.bouncycastle.util.encoders.Hex;
+import org.bouncycastle.crypto.digests.SM3Digest;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -30,6 +31,7 @@ public class SM3Example {
         byte[] hash = sm3Digest.digest(bytes);
         // 打印
         System.out.println(Hex.toHexString(hash));
+
     }
 
 }

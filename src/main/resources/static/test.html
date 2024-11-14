@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="bootstrap.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <style>
+        .pagination-wrap .pagination {
+            flex-wrap: wrap;
+        }
+
+        .pagination-wrap .page-item {
+            margin: 2px; /* 调整页码按钮之间的间距 */
+        }
+    </style>
+
+</head>
+<body>
+
+<button id="refreshButton" class="btn btn-primary">开始自动刷新</button>
+
+<nav aria-label="Page navigation" class="pagination-wrap">
+    <ul id="pagination" class="pagination justify-content-center flex-wrap"></ul>
+</nav>
+
+<div id="recentDataCount">
+    <!-- 显示最近一分钟的数据统计 -->
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- 左侧表格，显示前50条数据 -->
+        <div class="col-md-6">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>CA ID</th>
+                    <th>记录时间</th>
+                    <th>响应时间 (ms)</th>
+                    <th>消息</th>
+                    <th>成功状态</th>
+                </tr>
+                </thead>
+                <tbody id="tableBodyLeft">
+                <!-- 左侧表格的行数据 -->
+                </tbody>
+            </table>
+        </div>
+        <!-- 右侧表格，显示后50条数据 -->
+        <div class="col-md-6">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>CA ID</th>
+                    <th>记录时间</th>
+                    <th>响应时间 (ms)</th>
+                    <th>消息</th>
+                    <th>成功状态</th>
+                </tr>
+                </thead>
+                <tbody id="tableBodyRight">
+                <!-- 右侧表格的行数据 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="bootstrap.js"></script>
+<script src="http_code.jquery.com_jquery-3.6.0.js"></script>
+<script>
+    const pageSize = 500;
+    let currentPage = 1;
+    let allData = [];
+    let refreshInterval; // 保存定时器的 ID
+    let isRefreshing = false; // 是否正在自动刷新
+
+    // 请求所有数据
+    function recent() {
+        $.post({
+            url: 'http://127.0.0.1:8181/mcsca-dis/getApplyCertSpeed',
+            success: function (response) {
+                if (response.code === 200) {
+                    allData = response.response; // 保存所有数据到全局变量
+                    allData.reverse(); // 颠倒数据顺序
+                    renderPageData(); // 渲染当前页数据
+                    renderPagination(); // 渲染分页控件
+                    const counts = countRecentData(response.response); // 获取分类后的数据条数
+                    renderRecentDataCount(counts); // 渲染到页面
+                } else {
+                    $('#tableBodyLeft, #tableBodyRight').html(`<tr><td colspan="5">请求失败，错误信息: ${response.message}</td></tr>`);
+                }
+            },
+            error: function () {
+                $('#tableBodyLeft, #tableBodyRight').html(`<tr><td colspan="5">请求失败，请稍后重试。</td></tr>`);
+            }
+        });
+    }
+
+    // 渲染当前页数据
+    function renderPageData() {
+        $('#tableBodyLeft').empty();
+        $('#tableBodyRight').empty();
+
+        // 计算当前页数据的起始和结束索引
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, allData.length);
+
+        // 计算每个表格显示的数据条数（左右各一半）
+        const halfPageSize = Math.floor(pageSize / 2);
+
+        // 左边表格：前半部分数据
+        for (let i = startIndex; i < startIndex + halfPageSize && i < endIndex; i++) {
+            const item = allData[i];
+            $('#tableBodyLeft').append(
+                `<tr>
+                    <td>${item.caId || 'N/A'}</td>
+                    <td>${item.currentTime || 'N/A'}</td>
+                    <td>${item.time || 'N/A'}</td>
+                    <td>${item.msg || 'N/A'}</td>
+                    <td>${item.isSuccess || 'N/A'}</td>
+                </tr>`
+            );
+        }
+
+        // 右边表格：后半部分数据
+        for (let i = startIndex + halfPageSize; i < endIndex; i++) {
+            const item = allData[i];
+            $('#tableBodyRight').append(
+                `<tr>
+                    <td>${item.caId || 'N/A'}</td>
+                    <td>${item.currentTime || 'N/A'}</td>
+                    <td>${item.time || 'N/A'}</td>
+                    <td>${item.msg || 'N/A'}</td>
+                    <td>${item.isSuccess || 'N/A'}</td>
+                </tr>`
+            );
+        }
+    }
+
+    // 渲染分页控件
+    function renderPagination() {
+        const pagination = $('#pagination');
+        pagination.empty();
+        const totalPages = Math.ceil(allData.length / pageSize);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const pageItem = $(`<li class="page-item ${i === currentPage ? 'active' : ''}"></li>`);
+            const pageLink = $(`<a class="page-link" href="#">${i}</a>`);
+            pageLink.on('click', function (e) {
+                e.preventDefault();
+                if (currentPage !== i) {
+                    currentPage = i;
+                    renderPageData();
+                    renderPagination();
+                }
+            });
+            pageItem.append(pageLink);
+            pagination.append(pageItem);
+        }
+    }
+
+    // 渲染到页面
+    function renderRecentDataCount(counts) {
+        let output = '';
+        for (let caId in counts) {
+            output += `<p>最近一分钟内CA ID: ${caId} - 的数据条数: ${counts[caId]}</p>`;
+        }
+        $('#recentDataCount').html(output);
+    }
+
+    // 统计最近一分钟的数据条数，并按 CA ID 分类
+    function countRecentData(data) {
+        if (data.length === 0) return {};
+
+        const latestTime = new Date(data[0].currentTime); // 获取最新数据的时间（倒序中第一条数据）
+        const oneMinuteAgo = new Date(latestTime.getTime() - 60 * 1000); // 获取一分钟前的时间
+
+        let counts = {};  // 用来存储每个 CA ID 的计数
+
+        // 遍历数据，判断每条数据的时间是否在最新数据时间的前一分钟内
+        for (let i = 0; i < data.length; i++) {
+            const itemTime = new Date(data[i].currentTime);
+
+            // 如果当前数据的时间已经超过一分钟前，退出循环
+            if (itemTime < oneMinuteAgo) {
+                break;  // 数据已经超过一分钟，不需要继续检查
+            }
+
+            if (itemTime <= latestTime) {
+                const caId = data[i].caId;
+                // 按 CA ID 分类统计
+                if (!counts[caId]) {
+                    counts[caId] = 0;
+                }
+                counts[caId]++;
+            }
+        }
+
+        return counts;
+    }
+
+    // 自动刷新控制
+    $('#refreshButton').on('click', function () {
+        if (isRefreshing) {
+            clearInterval(refreshInterval);
+            $(this).text('开始自动刷新');
+        } else {
+            recent(); // 初次点击立即请求一次数据
+            refreshInterval = setInterval(recent, 2000); // 每2秒刷新数据
+            $(this).text('停止自动刷新');
+        }
+        isRefreshing = !isRefreshing;
+    });
+
+    // 初次加载时请求所有数据并初始化分页
+    $(document).ready(function () {
+        recent();
+    });
+</script>
+</body>
+</html>

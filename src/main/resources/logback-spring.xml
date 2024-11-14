@@ -16,6 +16,9 @@
 		</encoder>
 	</appender>
 
+	<!-- 只显示 ERROR 级别及以上的日志 -->
+	<logger name="org.apache.pdfbox" level="ERROR" />
+
 	<!-- INFO文件日志 -->
 	<appender name="FILE_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
